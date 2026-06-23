@@ -36,6 +36,7 @@ export async function getTodayPrayerTimes(_req: Request, res: Response) {
   try {
     const data = await fetchTimings(todayDDMMYYYY());
     res.json({ data });
+    return data;
   } catch {
     res.status(502).json({ error: 'Failed to fetch prayer times' });
   }
@@ -50,6 +51,7 @@ export async function getPrayerTimesByDate(req: Request, res: Response) {
   try {
     const data = await fetchTimings(date);
     res.json({ data });
+    return data;
   } catch {
     res.status(502).json({ error: 'Failed to fetch prayer times' });
   }
