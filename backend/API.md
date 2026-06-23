@@ -1,4 +1,4 @@
-# ISR Backend API
+# ISR Backend APIs
 
 Base URL (dev): `http://localhost:4000`
 
