@@ -66,8 +66,7 @@ isr-website/
 
 | Page / Feature     | Description                                                                 |
 |--------------------|-----------------------------------------------------------------------------|
-| **Home**           | Landing page with hero section, mission statement, and highlights           |
-| **Prayer Times**   | Daily prayer times fetched from an external API for RMIT's location         |
+| **Home**           | Landing page with hero section, prayer times, and highlights                |
 | **Events**         | Upcoming and past ISR events, managed by admins via an authenticated panel  |
 | **Mission & Vision** | ISR's core values, mission, and vision statements                         |
 | **About Us**       | Information about ISR and its committee                                     |
