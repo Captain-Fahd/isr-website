@@ -127,3 +127,81 @@ GET /api/prayer-times/calendar?year=2026&month=6
 ```
 
 **Error** `502 Bad Gateway` — upstream Al-Adhan API unreachable.
+
+---
+
+## Auth
+
+Admin authentication via Supabase. Protected routes require `Authorization: Bearer <access_token>` and `app_metadata.role === "admin"`.
+
+---
+
+### `POST /api/auth/signin`
+
+Sign in with email and password.
+
+**Request body**
+
+| Field | Type | Required |
+|---|---|---|
+| `email` | string | yes |
+| `password` | string | yes |
+
+**Response** `200 OK`
+```json
+{
+  "data": {
+    "user": {
+      "id": "...",
+      "email": "admin@isr.org",
+      "app_metadata": { "role": "admin" }
+    },
+    "session": {
+      "access_token": "...",
+      "refresh_token": "...",
+      "expires_in": 3600,
+      "token_type": "bearer"
+    }
+  }
+}
+```
+
+Returns the Supabase auth payload wrapped in `{ "data": ... }`. Use `data.session.access_token` for protected requests.
+
+**Error** `400 Bad Request`
+
+```json
+{ "error": "Invalid login credentials" }
+```
+
+---
+
+### `GET /api/auth/me`
+
+Return the authenticated admin user.
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Response** `200 OK`
+```json
+{
+  "data": {
+    "user": {
+      "id": "...",
+      "email": "admin@isr.org",
+      "app_metadata": { "role": "admin" }
+    }
+  }
+}
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `401` | `{ "error": "Unauthorized" }` — missing, malformed, or invalid token |
+| `403` | `{ "error": "Forbidden" }` — valid token but user is not an admin |
