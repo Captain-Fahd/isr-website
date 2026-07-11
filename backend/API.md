@@ -205,3 +205,160 @@ Return the authenticated admin user.
 |---|---|
 | `401` | `{ "error": "Unauthorized" }` — missing, malformed, or invalid token |
 | `403` | `{ "error": "Forbidden" }` — valid token but user is not an admin |
+
+---
+
+## Events
+
+Event data is stored in Postgres (via Prisma) and event poster images are stored in Supabase
+Storage. Read endpoints are **public**; create/update/delete are **admin-only** (require
+`Authorization: Bearer <access_token>` with `app_metadata.role === "admin"`).
+
+An event has the shape:
+
+```json
+{
+  "id": 1,
+  "name": "Eid Dinner",
+  "date": "2026-08-01T18:00:00.000Z",
+  "imageUrl": "https://<project>.supabase.co/storage/v1/object/public/event-images/...",
+  "description": "Community Eid celebration dinner.",
+  "ticketUrl": "https://tickets.example.com/eid"
+}
+```
+
+Create/update requests use **`multipart/form-data`** (not JSON), because they include the image
+file. Text fields (`name`, `date`, `description`, `ticketUrl`) are sent as form fields alongside
+an `image` file field.
+
+---
+
+### `GET /api/events`
+
+List all events, ordered by date.
+
+**Query parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `filter` | string | Optional. `upcoming` → events with `date >= now` (ascending). `past` → events with `date < now` (descending). Omit for all events (ascending). |
+
+**Response** `200 OK`
+```json
+{ "data": [ { "id": 1, "name": "Eid Dinner", "date": "...", "imageUrl": "...", "description": "...", "ticketUrl": "..." } ] }
+```
+
+**Error** `500` — `{ "error": "Failed to fetch events" }`
+
+---
+
+### `GET /api/events/:id`
+
+Fetch a single event by id.
+
+**Response** `200 OK`
+```json
+{ "data": { "id": 1, "name": "Eid Dinner", "date": "...", "imageUrl": "...", "description": "...", "ticketUrl": "..." } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "Invalid event id" }` |
+| `404` | `{ "error": "Event not found" }` |
+| `500` | `{ "error": "Failed to fetch event" }` |
+
+---
+
+### `POST /api/events`
+
+Create an event. **Admin only.** `multipart/form-data`.
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Form fields**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | yes | |
+| `date` | string | yes | Any value parseable by `Date` (e.g. ISO 8601 `2026-08-01T18:00:00Z`) |
+| `description` | string | yes | |
+| `ticketUrl` | string | yes | |
+| `image` | file | yes | Image mimetype only, max 5 MB. Uploaded to Supabase Storage. |
+
+**Response** `201 Created`
+```json
+{ "data": { "id": 1, "name": "Eid Dinner", "date": "...", "imageUrl": "...", "description": "...", "ticketUrl": "..." } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "name, date, description and ticketUrl are required" }` / `{ "error": "date must be a valid date" }` / `{ "error": "An image file is required" }` |
+| `401` | `{ "error": "Unauthorized" }` |
+| `403` | `{ "error": "Forbidden" }` |
+| `500` | `{ "error": "Failed to create event" }` |
+
+---
+
+### `PUT /api/events/:id`
+
+Update an event. **Admin only.** `multipart/form-data`. All fields are optional — only the
+provided fields are changed. If an `image` file is included, the new image is uploaded and the
+old one is removed from storage; otherwise the existing `imageUrl` is kept.
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Form fields** — same as `POST`, but all optional (including `image`).
+
+**Response** `200 OK`
+```json
+{ "data": { "id": 1, "name": "Eid Dinner (updated)", "date": "...", "imageUrl": "...", "description": "...", "ticketUrl": "..." } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "Invalid event id" }` / `{ "error": "date must be a valid date" }` |
+| `401` | `{ "error": "Unauthorized" }` |
+| `403` | `{ "error": "Forbidden" }` |
+| `404` | `{ "error": "Event not found" }` |
+| `500` | `{ "error": "Failed to update event" }` |
+
+---
+
+### `DELETE /api/events/:id`
+
+Delete an event and its stored image. **Admin only.**
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Response** `200 OK`
+```json
+{ "data": { "id": 1 } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "Invalid event id" }` |
+| `401` | `{ "error": "Unauthorized" }` |
+| `403` | `{ "error": "Forbidden" }` |
+| `404` | `{ "error": "Event not found" }` |
+| `500` | `{ "error": "Failed to delete event" }` |

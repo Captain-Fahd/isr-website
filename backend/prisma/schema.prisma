@@ -4,7 +4,7 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -13,10 +13,10 @@ datasource db {
 }
 
 model Event {
-  id        Int      @id @default(autoincrement())
-  name      String
-  date      DateTime
-  imageUrl  String
+  id          Int      @id @default(autoincrement())
+  name        String
+  date        DateTime
+  imageUrl    String
   description String
-  ticketUrl String
+  ticketUrl   String
 }
