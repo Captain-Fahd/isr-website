@@ -148,8 +148,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```env
 PORT=4000
 SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 PRAYER_API_URL=https://api.aladhan.com/v1
+DATABASE_URL=your_database_url
 ```
 
 ---
