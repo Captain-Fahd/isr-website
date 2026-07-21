@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
+import PrayerTimesTable from '@/components/PrayerTimesTable'
 
 export default function Hero() {
   const [logoPhase, setLogoPhase] = useState(0)
@@ -19,76 +20,57 @@ export default function Hero() {
   ]
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-isr-cream via-white to-isr-yellow flex items-center justify-center py-20 px-4">
-      <div className="container-isr text-center max-w-4xl mx-auto">
-        {/* Brand mark */}
-        <div className="mb-10 flex justify-center">
-          {logoPhase < logoSources.length ? (
-            <div className="relative rounded-[28px] bg-white/75 p-4 shadow-[0_16px_36px_rgba(91,11,5,0.08)] ring-1 ring-black/5 backdrop-blur-sm">
-              <div className="absolute inset-x-6 top-1/2 h-10 -translate-y-1/2 rounded-full bg-isr-turquoise/10 blur-2xl" />
-              <Image
-                src={logoSources[logoPhase]}
-                alt="ISR logo"
-                width={220}
-                height={150}
-                className="relative z-10 mx-auto h-auto w-[170px] sm:w-[220px] object-contain"
-                onError={() => setLogoPhase((current) => current + 1)}
-                priority
-              />
+    <section className="min-h-screen bg-gradient-to-br from-isr-cream via-white to-isr-yellow flex items-center py-16 px-4 sm:py-20">
+      <div className="container-isr w-full">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+          <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
+            <div className="mb-8 flex justify-center lg:justify-start">
+              {logoPhase < logoSources.length ? (
+                <div className="relative rounded-[28px] bg-white/75 p-3 shadow-[0_16px_36px_rgba(91,11,5,0.08)] ring-1 ring-black/5 backdrop-blur-sm sm:p-4">
+                  <div className="absolute inset-x-6 top-1/2 h-10 -translate-y-1/2 rounded-full bg-isr-turquoise/10 blur-2xl" />
+                  <Image
+                    src={logoSources[logoPhase]}
+                    alt="ISR logo"
+                    width={180}
+                    height={120}
+                    className="relative z-10 mx-auto h-auto w-[140px] object-contain sm:w-[180px] lg:mx-0"
+                    onError={() => setLogoPhase((current) => current + 1)}
+                    priority
+                  />
+                </div>
+              ) : (
+                <div className="inline-flex items-center justify-center rounded-full border border-isr-light-blue/40 bg-white/80 px-4 py-2 text-sm font-semibold tracking-[0.2em] text-isr-turquoise shadow-sm">
+                  ISR
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="mx-auto inline-flex items-center justify-center rounded-full border border-isr-light-blue/40 bg-white/80 px-4 py-2 text-sm font-semibold tracking-[0.2em] text-isr-turquoise shadow-sm">
-              ISR
+
+            <h1 className="mb-4 text-3xl font-bold text-isr-dark-red sm:text-4xl md:text-5xl lg:text-6xl">
+              Islamic Society of RMIT
+            </h1>
+
+            <p className="mb-3 text-lg font-semibold text-isr-turquoise sm:text-xl">
+              United in Faith, Community, and Purpose
+            </p>
+
+            <p className="mb-8 text-base leading-relaxed text-gray-700 sm:text-lg">
+              ISR is an inclusive community for Muslim students at RMIT University.
+              We celebrate our faith through weekly Jumuah prayers, meaningful events,
+              and fostering a supportive network for all members.
+            </p>
+
+            <div className="flex justify-center lg:justify-start">
+              <Link
+                href="/events"
+                className="rounded-lg border-2 border-isr-bright-red px-8 py-3 font-semibold text-isr-bright-red transition-colors hover:bg-isr-bright-red hover:text-white"
+              >
+                Explore Events
+              </Link>
             </div>
-          )}
-        </div>
-
-        {/* Main Heading */}
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 text-isr-dark-red">
-          Islamic Society of RMIT
-        </h1>
-
-        {/* Tagline */}
-        <p className="text-lg md:text-2xl text-isr-turquoise font-semibold mb-4">
-          United in Faith, Community, and Purpose
-        </p>
-
-        {/* Description */}
-        <p className="text-base md:text-lg text-gray-700 mb-12 leading-relaxed max-w-2xl mx-auto">
-          ISR is an inclusive community for Muslim students at RMIT University. 
-          We celebrate our faith through weekly Jumuah prayers, meaningful events, 
-          and fostering a supportive network for all members.
-        </p>
-
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-          <Link
-            href="/prayer-times"
-            className="px-8 py-3 bg-isr-turquoise text-white font-semibold rounded-lg hover:bg-isr-dark-red transition-colors"
-          >
-            View Prayer Times
-          </Link>
-          <Link
-            href="/events"
-            className="px-8 py-3 border-2 border-isr-bright-red text-isr-bright-red font-semibold rounded-lg hover:bg-isr-bright-red hover:text-white transition-colors"
-          >
-            Explore Events
-          </Link>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-16 pt-12 border-t border-isr-light-blue border-opacity-30">
-          <div>
-            <p className="text-3xl md:text-4xl font-bold text-isr-turquoise">Weekly</p>
-            <p className="text-sm md:text-base text-gray-600">Jumuah Prayers</p>
           </div>
-          <div>
-            <p className="text-3xl md:text-4xl font-bold text-isr-bright-red">100+</p>
-            <p className="text-sm md:text-base text-gray-600">Community Members</p>
-          </div>
-          <div>
-            <p className="text-3xl md:text-4xl font-bold text-isr-dark-red">12+</p>
-            <p className="text-sm md:text-base text-gray-600">Events Per Year</p>
+
+          <div className="mx-auto w-full max-w-md lg:max-w-none">
+            <PrayerTimesTable />
           </div>
         </div>
       </div>
