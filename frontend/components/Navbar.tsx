@@ -21,11 +21,12 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 px-4 pt-4 pb-2">
       <div className="container-isr">
-        <div
-          className={`border border-isr-light-blue/30 bg-isr-cream/70 shadow-lg backdrop-blur-md transition-[border-radius] duration-300 ease-out ${
-            isOpen ? 'rounded-3xl' : 'rounded-full'
-          }`}
-        >
+        {/* Fixed-height track: the pill overlays it so opening the drawer
+            never changes the navbar's layout height. */}
+        <div className="relative h-14">
+        {/* Radius is pinned to half the bar height (h-14) so the pill shape
+            never changes as the drawer grows — only the bottom edge moves. */}
+        <div className="absolute inset-x-0 top-0 overflow-hidden rounded-[1.75rem] border border-isr-light-blue/30 bg-isr-cream/70 shadow-lg backdrop-blur-md">
         <div className="relative z-10 flex h-14 shrink-0 items-center justify-between px-4 sm:px-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
@@ -84,16 +85,16 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Menu — drawer expands downward */}
+        {/* Mobile Menu — drawer expands vertically downward */}
         <div
-          className={`grid overflow-hidden transition-[grid-template-rows] duration-300 ease-out md:hidden ${
+          className={`grid transition-[grid-template-rows] duration-300 ease-out md:hidden ${
             isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
           }`}
         >
           <div className="overflow-hidden">
             <div
-              className={`border-t border-isr-light-blue/30 px-4 pb-4 transition-opacity duration-300 ${
-                isOpen ? 'opacity-100' : 'opacity-0'
+              className={`border-t border-isr-light-blue/30 px-4 pb-4 transition-all duration-300 ease-out ${
+                isOpen ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
               }`}
             >
             {navLinks.map((link) => (
@@ -118,6 +119,7 @@ export default function Navbar() {
             </div>
             </div>
           </div>
+        </div>
         </div>
         </div>
       </div>
