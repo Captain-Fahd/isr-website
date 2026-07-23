@@ -20,7 +20,7 @@ export default function Hero() {
   ]
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-isr-cream via-white to-isr-yellow flex items-center py-16 px-4 sm:py-20">
+    <section className="flex min-h-screen items-center px-4 py-16 sm:py-20">
       <div className="container-isr w-full">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
