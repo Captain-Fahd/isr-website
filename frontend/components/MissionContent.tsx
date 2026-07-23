@@ -1,7 +1,7 @@
-import { HandshakeIcon, StarOrnament, BookIcon, GlobeIcon } from '@/components/Icons'
+import { CommunityIcon, FaithIcon, BookIcon, GlobeIcon } from '@/components/Icons'
 import { coreValues, missionText, visionText } from '@/lib/missionContent'
 
-const valueIcons = [HandshakeIcon, StarOrnament, BookIcon, GlobeIcon] as const
+const valueIcons = [CommunityIcon, FaithIcon, BookIcon, GlobeIcon] as const
 
 type MissionContentProps = {
   showCoreValues?: boolean
@@ -29,9 +29,9 @@ export default function MissionContent({ showCoreValues = false }: MissionConten
             {coreValues.map((value, index) => {
               const Icon = valueIcons[index]
               return (
-                <div key={value.title} className="text-center">
-                  <div className="mb-2 text-isr-turquoise">
-                    <Icon />
+                <div key={value.title} className="flex flex-col items-center text-center">
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-isr-cream text-isr-turquoise">
+                    <Icon className="h-7 w-7" />
                   </div>
                   <h3 className="mb-2 font-bold text-gray-900">{value.title}</h3>
                   <p className="text-sm text-gray-600">{value.desc}</p>

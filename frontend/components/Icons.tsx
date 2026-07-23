@@ -43,40 +43,56 @@ export function ArrowRight({ className = 'w-4 h-4 inline-block ml-2' }: { classN
   )
 }
 
-export function StarOrnament({ className = 'w-12 h-12 mx-auto' }: { className?: string }) {
+export function CommunityIcon({ className = 'w-7 h-7' }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden>
-      <g stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="24" cy="24" r="10" fill="none" />
-        <path d="M24 12v-6M24 42v-6M12 24h-6M42 24h-6M33.5 14.5l4.24-4.24M10.26 37.74l4.24-4.24M33.5 33.5l4.24 4.24M10.26 10.26l4.24 4.24" />
-      </g>
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="9" cy="8.5" r="3.2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3.5 19.5a5.5 5.5 0 0 1 11 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M16.2 5.9a3.2 3.2 0 0 1 0 6.1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M17 14.6a5.5 5.5 0 0 1 3.5 4.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }
 
-export function HandshakeIcon({ className = 'w-8 h-8 mx-auto' }: { className?: string }) {
+export function FaithIcon({ className = 'w-7 h-7' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M2 12l5 5 7-7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M22 12l-5 5-7-7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M15.4 3.6a8.6 8.6 0 1 0 4.2 14.6A7 7 0 0 1 15.4 3.6z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M18.4 6.1l.85 1.72 1.9.28-1.37 1.34.32 1.89-1.7-.9-1.7.9.33-1.89-1.38-1.34 1.9-.28z"
+        fill="currentColor"
+      />
     </svg>
   )
 }
 
-export function BookIcon({ className = 'w-8 h-8 mx-auto' }: { className?: string }) {
+export function BookIcon({ className = 'w-7 h-7' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M12 6.8C10.6 5.5 8.7 4.8 6.6 4.8H3.5v12.6h3.1c2.1 0 4 .7 5.4 2 1.4-1.3 3.3-2 5.4-2h3.1V4.8h-3.1c-2.1 0-4 .7-5.4 2z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M12 6.8v12.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }
 
-export function GlobeIcon({ className = 'w-8 h-8 mx-auto' }: { className?: string }) {
+export function GlobeIcon({ className = 'w-7 h-7' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M2 12h20M12 2v20M4.5 4.5c3 3 3 11 0 14.5M19.5 4.5c-3 3-3 11 0 14.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="8.8" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3.4 9.5h17.2M3.4 14.5h17.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <ellipse cx="12" cy="12" rx="4.2" ry="8.8" stroke="currentColor" strokeWidth="1.3" />
     </svg>
   )
 }
