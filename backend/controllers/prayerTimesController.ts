@@ -1,17 +1,24 @@
 import { Request, Response } from 'express';
 
 const ALADHAN_BASE = 'https://api.aladhan.com/v1';
-const CITY = 'Melbourne';
-const COUNTRY = 'Australia';
+// Coordinates for Melbourne — timingsByCity geocoding fails from Node fetch.
+const LATITUDE = -37.8136;
+const LONGITUDE = 144.9631;
 const METHOD = 3; // Muslim World League
 
 const OMIT_TIMINGS = new Set(['Imsak', 'Midnight', 'Firstthird', 'Lastthird']);
 
 type ApiData = { timings: Record<string, string>; date: unknown; meta: unknown };
 
+function normalizeTime(time: string): string {
+  return time.split(' ')[0];
+}
+
 function filterTimings(data: ApiData): ApiData {
   const timings = Object.fromEntries(
-    Object.entries(data.timings).filter(([key]) => !OMIT_TIMINGS.has(key))
+    Object.entries(data.timings)
+      .filter(([key]) => !OMIT_TIMINGS.has(key))
+      .map(([key, time]) => [key, normalizeTime(time)])
   );
   return { ...data, timings };
 }
@@ -25,7 +32,7 @@ function todayDDMMYYYY(): string {
 }
 
 async function fetchTimings(date: string) {
-  const url = `${ALADHAN_BASE}/timingsByCity/${date}?city=${CITY}&country=${COUNTRY}&method=${METHOD}`;
+  const url = `${ALADHAN_BASE}/timings/${date}?latitude=${LATITUDE}&longitude=${LONGITUDE}&method=${METHOD}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`AlAdhan API responded with ${res.status}`);
   const json = await res.json() as { data: ApiData };
@@ -63,7 +70,7 @@ export async function getMonthlyCalendar(req: Request, res: Response) {
   const month = Number(req.query.month) || now.getMonth() + 1;
 
   try {
-    const url = `${ALADHAN_BASE}/calendarByCity/${year}/${month}?city=${CITY}&country=${COUNTRY}&method=${METHOD}`;
+    const url = `${ALADHAN_BASE}/calendar/${year}/${month}?latitude=${LATITUDE}&longitude=${LONGITUDE}&method=${METHOD}`;
     const apiRes = await fetch(url);
     if (!apiRes.ok) throw new Error(`AlAdhan API responded with ${apiRes.status}`);
     const json = await apiRes.json() as { data: ApiData[] };

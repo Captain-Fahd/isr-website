@@ -46,11 +46,31 @@ export function isEventPast(isoDate: string): boolean {
   return new Date(isoDate).getTime() < Date.now()
 }
 
+/**
+ * Orders events for display: upcoming first (soonest at the top), then past
+ * events from most recent down to the oldest.
+ */
+export function sortEventsForDisplay(events: Event[]): Event[] {
+  const now = Date.now()
+
+  return [...events].sort((a, b) => {
+    const aTime = new Date(a.date).getTime()
+    const bTime = new Date(b.date).getTime()
+    const aUpcoming = aTime >= now
+    const bUpcoming = bTime >= now
+
+    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1
+    return aUpcoming ? aTime - bTime : bTime - aTime
+  })
+}
+
+function fetchOptions(): RequestInit | undefined {
+  return typeof window === 'undefined' ? { next: { revalidate: 60 } } : undefined
+}
+
 export async function fetchEvents(filter: EventsFilter = 'all'): Promise<Event[]> {
   const query = filter === 'all' ? '' : `?filter=${filter}`
-  const response = await fetch(`${API_BASE_URL}/api/events${query}`, {
-    next: { revalidate: 60 },
-  })
+  const response = await fetch(`${API_BASE_URL}/api/events${query}`, fetchOptions())
 
   if (!response.ok) {
     throw new Error('Failed to fetch events')
@@ -61,9 +81,7 @@ export async function fetchEvents(filter: EventsFilter = 'all'): Promise<Event[]
 }
 
 export async function fetchEventById(id: number): Promise<Event | null> {
-  const response = await fetch(`${API_BASE_URL}/api/events/${id}`, {
-    next: { revalidate: 60 },
-  })
+  const response = await fetch(`${API_BASE_URL}/api/events/${id}`, fetchOptions())
 
   if (response.status === 404) return null
   if (!response.ok) {

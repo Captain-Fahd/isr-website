@@ -1,9 +1,9 @@
 "use client"
 
 import { useCallback, useEffect, useState } from 'react'
-import { API_BASE_URL } from '@/lib/api'
 import {
   DAILY_PRAYERS,
+  fetchPrayerTimes,
   getNextPrayer,
   type DailyPrayer,
   type PrayerTimesData,
@@ -25,12 +25,9 @@ export default function PrayerTimesTable() {
     setError(null)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/prayer-times`)
-      if (!response.ok) throw new Error('Failed to fetch prayer times')
-
-      const json = (await response.json()) as { data: PrayerTimesData }
-      setData(json.data)
-      setNextPrayer(getNextPrayer(json.data.timings))
+      const prayerData = await fetchPrayerTimes()
+      setData(prayerData)
+      setNextPrayer(getNextPrayer(prayerData.timings))
     } catch {
       setData(null)
       setError('Unable to load prayer times right now.')

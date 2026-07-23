@@ -3,10 +3,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
-import { API_BASE_URL } from '@/lib/api'
 import {
+  fetchEvents,
   formatEventDate,
   isEventPast,
+  sortEventsForDisplay,
   type Event,
   type EventsFilter,
 } from '@/lib/events'
@@ -119,12 +120,8 @@ export default function EventsTimeline() {
     setError(null)
 
     try {
-      const query = selectedFilter === 'all' ? '' : `?filter=${selectedFilter}`
-      const response = await fetch(`${API_BASE_URL}/api/events${query}`)
-      if (!response.ok) throw new Error('Failed to fetch events')
-
-      const json = (await response.json()) as { data: Event[] }
-      setEvents(json.data)
+      const data = await fetchEvents(selectedFilter)
+      setEvents(sortEventsForDisplay(data))
     } catch {
       setEvents([])
       setError('Unable to load events right now.')

@@ -3,8 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
-import { API_BASE_URL } from '@/lib/api'
-import { formatEventDate, type Event } from '@/lib/events'
+import { fetchEvents, formatEventDate, type Event } from '@/lib/events'
 import { ArrowRight } from '@/components/Icons'
 
 const ACCENT_BARS = ['bg-isr-turquoise', 'bg-isr-bright-red', 'bg-isr-dark-red'] as const
@@ -19,11 +18,8 @@ export default function EventsPreview() {
     setError(null)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/events?filter=upcoming`)
-      if (!response.ok) throw new Error('Failed to fetch events')
-
-      const json = (await response.json()) as { data: Event[] }
-      setEvents(json.data.slice(0, 3))
+      const data = await fetchEvents('upcoming')
+      setEvents(data.slice(0, 3))
     } catch {
       setEvents([])
       setError('Unable to load upcoming events.')
