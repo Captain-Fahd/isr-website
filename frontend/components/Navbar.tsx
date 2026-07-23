@@ -4,22 +4,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 
-// Logo image files (place in `public/images/`): isr_logo_dark.JPG and isr_logo_gold.JPG
+// Logo: isr_logo_transparent.png in `public/images/`
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
-  const [logoPhase, setLogoPhase] = useState(0)
-
-  const logoSources = [
-    '/images/isr_logo_dark.JPG',
-    '/images/isr_logo_gold.JPG',
-    '/images/isr_logo_dark.jpg',
-    '/images/isr_logo_gold.jpg',
-    '/images/isr_logo_dark.jpeg',
-    '/images/isr_logo_gold.jpeg',
-    '/images/isr_logo_dark.png',
-    '/images/isr_logo_gold.png',
-  ]
+  const [logoFailed, setLogoFailed] = useState(false)
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -33,22 +22,22 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 px-4 pt-4 pb-2">
       <div className="container-isr">
         <div
-          className={`overflow-hidden border border-isr-light-blue/30 bg-isr-cream/70 shadow-lg backdrop-blur-md transition-all duration-300 ease-out ${
+          className={`border border-isr-light-blue/30 bg-isr-cream/70 shadow-lg backdrop-blur-md transition-[border-radius] duration-300 ease-out ${
             isOpen ? 'rounded-3xl' : 'rounded-full'
           }`}
         >
-        <div className="flex justify-between items-center h-14 px-4 sm:px-6">
+        <div className="relative z-10 flex h-14 shrink-0 items-center justify-between px-4 sm:px-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
             {/** Load logo with a fallback sequence: dark -> gold -> common extensions -> badge */}
-            {logoPhase < logoSources.length ? (
+            {!logoFailed ? (
               <Image
-                src={logoSources[logoPhase]}
+                src="/images/isr_logo_transparent.png"
                 alt="ISR logo"
                 width={40}
                 height={40}
-                className="object-contain rounded"
-                onError={() => setLogoPhase((current) => current + 1)}
+                className="object-contain"
+                onError={() => setLogoFailed(true)}
               />
             ) : (
               <div className="w-8 h-8 bg-isr-turquoise rounded-full flex items-center justify-center">
@@ -97,7 +86,7 @@ export default function Navbar() {
 
         {/* Mobile Menu — drawer expands downward */}
         <div
-          className={`grid transition-[grid-template-rows] duration-300 ease-out md:hidden ${
+          className={`grid overflow-hidden transition-[grid-template-rows] duration-300 ease-out md:hidden ${
             isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
           }`}
         >
