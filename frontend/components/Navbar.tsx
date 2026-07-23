@@ -23,9 +23,8 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/', label: 'Home' },
-    { href: '/prayer-times', label: 'Prayer Times' },
-    { href: '/events', label: 'Events' },
     { href: '/mission', label: 'Mission' },
+    { href: '/events', label: 'Events' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
   ]
@@ -58,7 +57,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex gap-8">
+          <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -68,6 +67,14 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <a
+              href="https://campus.hellorubric.com/?s=10733"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg bg-isr-turquoise px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
+            >
+              Become a Member
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -93,6 +100,16 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <div className="px-4 pt-3">
+              <a
+                href="https://campus.hellorubric.com/?s=10733"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-lg bg-isr-turquoise px-4 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
+              >
+                Become a Member
+              </a>
+            </div>
           </div>
         )}
       </div>

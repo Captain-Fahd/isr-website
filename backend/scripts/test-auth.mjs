@@ -1,6 +1,8 @@
 import 'dotenv/config'
 
-const res = await fetch('http://localhost:4000/api/auth/signin', {
+const baseUrl = process.env.BASE_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+const res = await fetch(`${baseUrl}/api/auth/signin`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({

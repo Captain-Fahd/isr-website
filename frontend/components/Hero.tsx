@@ -50,16 +50,22 @@ export default function Hero() {
             </h1>
 
             <p className="mb-3 text-lg font-semibold text-isr-turquoise sm:text-xl">
-              United in Faith, Community, and Purpose
+              The Home of Muslim Students at RMIT
             </p>
 
             <p className="mb-8 text-base leading-relaxed text-gray-700 sm:text-lg">
-              ISR is an inclusive community for Muslim students at RMIT University.
-              We celebrate our faith through weekly Jumuah prayers, meaningful events,
-              and fostering a supportive network for all members.
+              Representing and supporting the Muslim community at RMIT University.
             </p>
 
-            <div className="flex justify-center lg:justify-start">
+            <div className="flex flex-wrap justify-center gap-4 lg:justify-start">
+              <a
+                href="https://campus.hellorubric.com/?s=10733"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg bg-isr-turquoise px-8 py-3 font-semibold text-white transition-colors hover:bg-isr-dark-red"
+              >
+                Become a Member
+              </a>
               <Link
                 href="/events"
                 className="rounded-lg border-2 border-isr-bright-red px-8 py-3 font-semibold text-isr-bright-red transition-colors hover:bg-isr-bright-red hover:text-white"
