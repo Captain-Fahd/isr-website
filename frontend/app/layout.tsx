@@ -4,6 +4,9 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Islamic Society of RMIT',
   description: 'ISR - Supporting Muslim students at RMIT University. Weekly Jumuah, events, and community.',
+  icons: {
+    icon: '/images/isr_logo_dark.JPG',
+  },
 }
 
 export default function RootLayout({

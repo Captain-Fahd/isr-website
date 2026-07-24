@@ -1,4 +1,5 @@
 import { InstagramIcon, WhatsappIcon, MailIcon } from '@/components/Icons'
+import NewsletterSignup from '@/components/NewsletterSignup'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -6,7 +7,7 @@ export default function Footer() {
   return (
     <footer className="bg-isr-dark-red text-white py-12 px-4">
       <div className="container-isr max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           {/* About */}
           <div>
             <h4 className="font-bold text-lg mb-4">ISR</h4>
@@ -34,6 +35,11 @@ export default function Footer() {
               <li><a href="/membership" className="hover:text-white transition-colors">Membership</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Faqs</a></li>
             </ul>
+          </div>
+
+          {/* Newsletter */}
+          <div className="md:col-span-2 lg:col-span-1">
+            <NewsletterSignup variant="footer" />
           </div>
 
           {/* Social */}

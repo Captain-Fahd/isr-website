@@ -69,11 +69,14 @@ export async function sendContactEmail(req: Request, res: Response) {
       }),
     ]);
 
-    if (inbound.error || confirmation.error) {
-      const err = inbound.error ?? confirmation.error;
-      console.error('Resend error:', err);
+    if (inbound.error) {
+      console.error('Resend inbound error:', inbound.error);
       res.status(502).json({ error: 'Failed to send email' });
       return;
+    }
+
+    if (confirmation.error) {
+      console.warn('Resend confirmation error (non-fatal):', confirmation.error);
     }
 
     res.status(200).json({ success: true });

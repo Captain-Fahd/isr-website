@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import EventsTimeline from '@/components/EventsTimeline'
+import NewsletterSignup from '@/components/NewsletterSignup'
 
 export const metadata: Metadata = {
   title: 'Events | Islamic Society of RMIT',
@@ -28,6 +29,13 @@ export default function EventsPage() {
           </header>
 
           <EventsTimeline />
+
+          <div className="mt-16 max-w-xl mx-auto">
+            <NewsletterSignup
+              title="Never miss an event"
+              description="Get ISR event announcements and community updates delivered to your inbox."
+            />
+          </div>
         </div>
       </main>
 
