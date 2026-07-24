@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { CommunityIcon, FaithIcon, BookIcon, GlobeIcon } from '@/components/Icons'
+import MissionContent from '@/components/MissionContent'
 
 export const metadata: Metadata = {
   title: 'About | Islamic Society of RMIT',
@@ -120,6 +121,24 @@ export default function AboutPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Mission & Vision */}
+        <section className="bg-white px-4 py-16 sm:py-20">
+          <div className="container-isr">
+            <div className="mb-12 text-center">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
+                Who We Are
+              </p>
+              <h2 className="mb-4 text-3xl font-bold text-isr-dark-red">Mission & Vision</h2>
+              <div className="mx-auto mb-6 h-1 w-16 bg-isr-bright-red" />
+              <p className="mx-auto max-w-2xl text-gray-600">
+                ISR exists to represent, support, and uplift Muslim students at RMIT — building a
+                campus community rooted in faith, brotherhood, and leadership.
+              </p>
+            </div>
+            <MissionContent showCoreValues />
           </div>
         </section>
 
