@@ -208,6 +208,56 @@ Return the authenticated admin user.
 
 ---
 
+## Weather
+
+Current weather for Melbourne via [WeatherAPI](https://www.weatherapi.com/).
+
+---
+
+### `GET /api/weather`
+
+Returns current weather conditions for Melbourne, Australia.
+
+**Response** `200 OK`
+```json
+{
+  "data": {
+    "location": {
+      "name": "Melbourne",
+      "region": "Victoria",
+      "country": "Australia",
+      "localtime": "2026-07-24 14:30"
+    },
+    "current": {
+      "temp_c": 12.1,
+      "feelslike_c": 9.8,
+      "humidity": 72,
+      "wind_kph": 20.5,
+      "wind_dir": "SW",
+      "condition": {
+        "text": "Partly cloudy",
+        "icon": "//cdn.weatherapi.com/weather/64x64/day/116.png",
+        "code": 1003
+      },
+      "uv": 2.0,
+      "vis_km": 10.0,
+      "precip_mm": 0.0
+    }
+  }
+}
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `500` | `{ "error": "Weather API key not configured" }` — `WEATHER_API_KEY` missing from environment |
+| `502` | `{ "error": "Invalid Weather API key" }` — key rejected by WeatherAPI |
+| `502` | `{ "error": "Weather API responded with <status>" }` — other upstream error |
+| `502` | `{ "error": "Failed to fetch weather data" }` — network failure |
+
+---
+
 ## Events
 
 Event data is stored in Postgres (via Prisma) and event poster images are stored in Supabase
