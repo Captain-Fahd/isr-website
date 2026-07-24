@@ -1,10 +1,10 @@
 'use client'
 
-import type { Metadata } from 'next'
 import { useState } from 'react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { MailIcon, WhatsappIcon, InstagramIcon, LocationIcon } from '@/components/Icons'
+import NewsletterSignup from '@/components/NewsletterSignup'
 
 type FormState = 'idle' | 'submitting' | 'success' | 'error'
 
@@ -233,6 +233,10 @@ export default function ContactPage() {
                   </form>
                 )}
               </div>
+            </div>
+
+            <div className="mt-12 max-w-xl mx-auto">
+              <NewsletterSignup />
             </div>
           </div>
         </section>

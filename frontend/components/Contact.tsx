@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { MailIcon, WhatsappIcon, InstagramIcon, LocationIcon } from '@/components/Icons'
+import NewsletterSignup from '@/components/NewsletterSignup'
 
 export default function Contact() {
   return (
@@ -73,10 +74,10 @@ export default function Contact() {
               <Link href="/about" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
                 → Learn About ISR
               </Link>
-              <Link href="/mission" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
+              <Link href="/about#mission-and-values" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
                 → Our Mission & Values
               </Link>
-              <Link href="/prayer-times" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
+              <Link href="/#hero" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
                 → Prayer Times
               </Link>
               <Link href="/events" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
@@ -89,21 +90,7 @@ export default function Contact() {
           </div>
         </div>
 
-        {/* Newsletter Signup */}
-        <div className="bg-white rounded-lg p-5 shadow-md text-center">
-          <h3 className="text-base font-bold text-isr-dark-red mb-2">Stay Updated</h3>
-          <p className="text-sm text-gray-700 mb-4">Subscribe to get news about events and community updates.</p>
-          <div className="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
-            <input
-              type="email"
-              placeholder="Your email"
-              className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-isr-turquoise"
-            />
-            <button className="px-4 py-1.5 text-sm bg-isr-bright-red text-white font-semibold rounded-lg hover:bg-isr-dark-red transition-colors">
-              Subscribe
-            </button>
-          </div>
-        </div>
+        <NewsletterSignup />
       </div>
     </section>
   )

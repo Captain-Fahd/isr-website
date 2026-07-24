@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { CommunityIcon, FaithIcon, BookIcon, GlobeIcon } from '@/components/Icons'
 import MissionContent from '@/components/MissionContent'
+import NewsletterSignup from '@/components/NewsletterSignup'
 
 export const metadata: Metadata = {
   title: 'About | Islamic Society of RMIT',
@@ -125,7 +126,7 @@ export default function AboutPage() {
         </section>
 
         {/* Mission & Vision */}
-        <section className="bg-white px-4 py-16 sm:py-20">
+        <section id="mission-and-values" className="bg-white px-4 py-16 sm:py-20">
           <div className="container-isr">
             <div className="mb-12 text-center">
               <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
@@ -163,6 +164,10 @@ export default function AboutPage() {
               >
                 See Upcoming Events
               </Link>
+            </div>
+
+            <div className="mx-auto mt-12 max-w-xl">
+              <NewsletterSignup />
             </div>
           </div>
         </section>
