@@ -19,8 +19,20 @@ export const getEvents = async (req: Request, res: Response) => {
       where,
       orderBy: { date: filter === "past" ? "desc" : "asc" },
     });
+
+    // For the unfiltered list: upcoming events first (soonest at the top),
+    // then past events counting back to the oldest.
+    if (!where) {
+      const upcoming = events.filter((e) => e.date >= now);
+      const past = events
+        .filter((e) => e.date < now)
+        .sort((a, b) => b.date.getTime() - a.date.getTime());
+      return res.status(200).json({ data: [...upcoming, ...past] });
+    }
+
     return res.status(200).json({ data: events });
-  } catch {
+  } catch (err) {
+    console.error("getEvents failed:", err);
     return res.status(500).json({ error: "Failed to fetch events" });
   }
 };
@@ -38,7 +50,8 @@ export const getEventById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Event not found" });
     }
     return res.status(200).json({ data: event });
-  } catch {
+  } catch (err) {
+    console.error("getEventById failed:", err);
     return res.status(500).json({ error: "Failed to fetch event" });
   }
 };
@@ -65,7 +78,8 @@ export const createEvent = async (req: Request, res: Response) => {
       data: { name, date: new Date(date), description, ticketUrl, imageUrl },
     });
     return res.status(201).json({ data: event });
-  } catch {
+  } catch (err) {
+    console.error("createEvent failed:", err);
     return res.status(500).json({ error: "Failed to create event" });
   }
 };
@@ -105,7 +119,8 @@ export const updateEvent = async (req: Request, res: Response) => {
       },
     });
     return res.status(200).json({ data: event });
-  } catch {
+  } catch (err) {
+    console.error("updateEvent failed:", err);
     return res.status(500).json({ error: "Failed to update event" });
   }
 };
@@ -126,7 +141,8 @@ export const deleteEvent = async (req: Request, res: Response) => {
     await prisma.event.delete({ where: { id } });
     await deleteEventImage(existing.imageUrl);
     return res.status(200).json({ data: { id } });
-  } catch {
+  } catch (err) {
+    console.error("deleteEvent failed:", err);
     return res.status(500).json({ error: "Failed to delete event" });
   }
 };

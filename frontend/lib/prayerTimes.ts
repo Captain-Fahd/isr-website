@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '@/lib/api'
+
 export const DAILY_PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const
 
 export type DailyPrayer = (typeof DAILY_PRAYERS)[number]
@@ -41,6 +43,17 @@ function currentMinutesInMelbourne(): number {
   const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? 0)
 
   return hour * 60 + minute
+}
+
+export async function fetchPrayerTimes(): Promise<PrayerTimesData> {
+  const response = await fetch(`${API_BASE_URL}/api/prayer-times`)
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch prayer times')
+  }
+
+  const json = (await response.json()) as PrayerTimesResponse
+  return json.data
 }
 
 export function getNextPrayer(timings: Record<string, string>): DailyPrayer {

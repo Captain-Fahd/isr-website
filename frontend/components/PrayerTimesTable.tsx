@@ -1,13 +1,14 @@
 "use client"
 
 import { useCallback, useEffect, useState } from 'react'
-import { API_BASE_URL } from '@/lib/api'
 import {
   DAILY_PRAYERS,
+  fetchPrayerTimes,
   getNextPrayer,
   type DailyPrayer,
   type PrayerTimesData,
 } from '@/lib/prayerTimes'
+import { fetchWeather, getWeatherIconUrl, type WeatherData } from '@/lib/weather'
 
 function formatHijriDate(date: PrayerTimesData['date']): string | null {
   if (!date.hijri) return null
@@ -16,6 +17,7 @@ function formatHijriDate(date: PrayerTimesData['date']): string | null {
 
 export default function PrayerTimesTable() {
   const [data, setData] = useState<PrayerTimesData | null>(null)
+  const [weather, setWeather] = useState<WeatherData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [nextPrayer, setNextPrayer] = useState<DailyPrayer>('Fajr')
@@ -25,12 +27,9 @@ export default function PrayerTimesTable() {
     setError(null)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/prayer-times`)
-      if (!response.ok) throw new Error('Failed to fetch prayer times')
-
-      const json = (await response.json()) as { data: PrayerTimesData }
-      setData(json.data)
-      setNextPrayer(getNextPrayer(json.data.timings))
+      const prayerData = await fetchPrayerTimes()
+      setData(prayerData)
+      setNextPrayer(getNextPrayer(prayerData.timings))
     } catch {
       setData(null)
       setError('Unable to load prayer times right now.')
@@ -42,6 +41,12 @@ export default function PrayerTimesTable() {
   useEffect(() => {
     void loadPrayerTimes()
   }, [loadPrayerTimes])
+
+  useEffect(() => {
+    fetchWeather()
+      .then(setWeather)
+      .catch(() => setWeather(null))
+  }, [])
 
   useEffect(() => {
     if (!data) return
@@ -67,7 +72,25 @@ export default function PrayerTimesTable() {
         {data && (
           <>
             <h2 className="mt-2 text-2xl font-bold text-isr-dark-red">{data.date.readable}</h2>
-            {hijriDate && <p className="mt-1 text-sm text-gray-600">{hijriDate}</p>}
+            {(hijriDate || weather) && (
+              <div className="mt-1 flex items-center justify-between gap-4 text-sm text-gray-600">
+                {hijriDate ? <p>{hijriDate}</p> : <span />}
+                {weather && (
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <img
+                      src={getWeatherIconUrl(weather.current.condition.icon)}
+                      alt={weather.current.condition.text}
+                      width={24}
+                      height={24}
+                      className="h-6 w-6"
+                    />
+                    <p className="font-medium text-isr-turquoise">
+                      {Math.round(weather.current.temp_c)}°C
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
             <p className="mt-1 text-xs text-gray-500">Melbourne · {data.meta.timezone}</p>
           </>
         )}
