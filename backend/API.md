@@ -362,3 +362,149 @@ Delete an event and its stored image. **Admin only.**
 | `403` | `{ "error": "Forbidden" }` |
 | `404` | `{ "error": "Event not found" }` |
 | `500` | `{ "error": "Failed to delete event" }` |
+
+---
+
+## Announcements
+
+Announcement data is stored in Postgres (via Prisma). Optional poster images are stored in Supabase Storage (`announcement-images` bucket). Read endpoints are **public**; create/update/delete are **admin-only** (require `Authorization: Bearer <access_token>` with `app_metadata.role === "admin"`).
+
+An announcement has the shape:
+
+```json
+{
+  "id": 1,
+  "title": "Ramadan Reminder",
+  "body": "The moon has been sighted. Ramadan starts tomorrow.",
+  "pinned": true,
+  "imageUrl": "https://<project>.supabase.co/storage/v1/object/public/announcement-images/...",
+  "createdAt": "2026-07-25T00:00:00.000Z"
+}
+```
+
+`imageUrl` is `null` when no image was uploaded.
+
+Create/update requests use **`multipart/form-data`**. Text fields (`title`, `body`, `pinned`) are sent as form fields; `image` is the optional file field.
+
+---
+
+### `GET /api/announcements`
+
+List all announcements. Pinned announcements appear first, then newest-first.
+
+**Response** `200 OK`
+```json
+{ "data": [ { "id": 1, "title": "...", "body": "...", "pinned": true, "imageUrl": null, "createdAt": "..." } ] }
+```
+
+**Error** `500` — `{ "error": "Failed to fetch announcements" }`
+
+---
+
+### `GET /api/announcements/:id`
+
+Fetch a single announcement by id.
+
+**Response** `200 OK`
+```json
+{ "data": { "id": 1, "title": "...", "body": "...", "pinned": false, "imageUrl": "...", "createdAt": "..." } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "Invalid announcement id" }` |
+| `404` | `{ "error": "Announcement not found" }` |
+| `500` | `{ "error": "Failed to fetch announcement" }` |
+
+---
+
+### `POST /api/announcements`
+
+Create an announcement. **Admin only.** `multipart/form-data`.
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Form fields**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `title` | string | yes | Short heading |
+| `body` | string | yes | Full announcement text |
+| `pinned` | boolean | no | `"true"` or `"false"` (string); defaults to `false` |
+| `image` | file | no | Image mimetype only, max 5 MB. Uploaded to Supabase Storage. |
+
+**Response** `201 Created`
+```json
+{ "data": { "id": 1, "title": "...", "body": "...", "pinned": false, "imageUrl": null, "createdAt": "..." } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "title and body are required" }` |
+| `401` | `{ "error": "Unauthorized" }` |
+| `403` | `{ "error": "Forbidden" }` |
+| `500` | `{ "error": "Failed to create announcement" }` |
+
+---
+
+### `PUT /api/announcements/:id`
+
+Update an announcement. **Admin only.** `multipart/form-data`. All fields are optional — only the provided fields are changed. If an `image` file is included, the new image is uploaded and the old one is removed from storage; otherwise the existing `imageUrl` is kept.
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Form fields** — same as `POST`, but all optional (including `image`).
+
+**Response** `200 OK`
+```json
+{ "data": { "id": 1, "title": "...", "body": "...", "pinned": true, "imageUrl": "...", "createdAt": "..." } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "Invalid announcement id" }` |
+| `401` | `{ "error": "Unauthorized" }` |
+| `403` | `{ "error": "Forbidden" }` |
+| `404` | `{ "error": "Announcement not found" }` |
+| `500` | `{ "error": "Failed to update announcement" }` |
+
+---
+
+### `DELETE /api/announcements/:id`
+
+Delete an announcement and its stored image (if any). **Admin only.**
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Response** `200 OK`
+```json
+{ "data": { "id": 1 } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "Invalid announcement id" }` |
+| `401` | `{ "error": "Unauthorized" }` |
+| `403` | `{ "error": "Forbidden" }` |
+| `404` | `{ "error": "Announcement not found" }` |
+| `500` | `{ "error": "Failed to delete announcement" }` |

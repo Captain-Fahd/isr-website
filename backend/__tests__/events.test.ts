@@ -44,7 +44,7 @@ function mockRes() {
 }
 
 test('getEvents returns the list of events', async () => {
-    const events = [{ id: 1, name: 'Eid Dinner' }];
+    const events = [{ id: 1, name: 'Eid Dinner', date: new Date('2099-01-01') }];
     mockFindMany.mockResolvedValue(events);
 
     const req = { query: {} } as unknown as Request;
