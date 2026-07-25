@@ -44,8 +44,8 @@ export default function EventsPreview() {
         {loading && (
           <div className="grid md:grid-cols-3 gap-8 mb-12" aria-live="polite" aria-busy="true">
             {[0, 1, 2].map((index) => (
-              <div key={index} className="mx-auto w-full max-w-xs bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
-                <div className="aspect-[3/4] w-full bg-isr-cream" />
+              <div key={index} className="mx-auto w-full max-w-xs bg-white rounded-lg shadow-[0_8px_24px_rgba(91,11,5,0.2)] overflow-hidden animate-pulse">
+                <div className="aspect-[3/4] w-full bg-isr-cream px-px" />
                 <div className="p-6 space-y-3">
                   <div className="h-5 w-3/4 rounded bg-isr-light-blue/30" />
                   <div className="h-4 w-1/2 rounded bg-isr-light-blue/20" />
@@ -84,16 +84,18 @@ export default function EventsPreview() {
                 <Link
                   key={event.id}
                   href={`/events/${event.id}`}
-                  className="group mx-auto flex h-full w-full max-w-xs flex-col bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                  className="group mx-auto flex h-full w-full max-w-xs flex-col bg-white rounded-lg shadow-[0_8px_24px_rgba(91,11,5,0.2)] overflow-hidden hover:shadow-[0_14px_36px_rgba(91,11,5,0.28)] transition-shadow"
                 >
                   {event.imageUrl ? (
-                    <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden bg-isr-cream">
+                    <div className="w-full shrink-0 bg-isr-cream px-px">
                       <Image
                         src={event.imageUrl}
                         alt={`${event.name} poster`}
-                        fill
-                        className="h-full w-full object-cover object-center"
+                        width={0}
+                        height={0}
                         sizes="(max-width: 768px) 100vw, 33vw"
+                        className="h-auto w-full"
+                        style={{ width: '100%', height: 'auto' }}
                       />
                     </div>
                   ) : (
