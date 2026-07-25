@@ -44,8 +44,8 @@ export default function EventsPreview() {
         {loading && (
           <div className="grid md:grid-cols-3 gap-8 mb-12" aria-live="polite" aria-busy="true">
             {[0, 1, 2].map((index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
-                <div className="aspect-[16/9] w-full bg-isr-cream" />
+              <div key={index} className="mx-auto w-full max-w-xs bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
+                <div className="aspect-[3/4] w-full bg-isr-cream" />
                 <div className="p-6 space-y-3">
                   <div className="h-5 w-3/4 rounded bg-isr-light-blue/30" />
                   <div className="h-4 w-1/2 rounded bg-isr-light-blue/20" />
@@ -84,15 +84,15 @@ export default function EventsPreview() {
                 <Link
                   key={event.id}
                   href={`/events/${event.id}`}
-                  className="group bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                  className="group mx-auto flex h-full w-full max-w-xs flex-col bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
                 >
                   {event.imageUrl ? (
-                    <div className="relative aspect-[16/9] w-full overflow-hidden bg-isr-cream">
+                    <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden bg-isr-cream">
                       <Image
                         src={event.imageUrl}
                         alt={`${event.name} poster`}
                         fill
-                        className="object-contain object-center"
+                        className="h-full w-full object-cover object-center"
                         sizes="(max-width: 768px) 100vw, 33vw"
                       />
                     </div>
@@ -100,15 +100,15 @@ export default function EventsPreview() {
                     <div className={`h-2 ${ACCENT_BARS[index % ACCENT_BARS.length]}`} />
                   )}
 
-                  <div className="p-6">
+                  <div className="flex flex-1 flex-col p-6">
                     <h3 className="text-xl font-bold text-isr-dark-red mb-2 group-hover:text-isr-turquoise transition-colors">
                       {event.name}
                     </h3>
                     <p className="text-sm text-gray-600 mb-4">
                       <strong>{date}</strong> · {time}
                     </p>
-                    <p className="text-gray-700 mb-6 line-clamp-3">{event.description}</p>
-                    <span className="text-isr-turquoise font-semibold group-hover:text-isr-bright-red transition-colors text-sm inline-flex items-center">
+                    <p className="text-gray-700 mb-6 line-clamp-3 flex-1">{event.description}</p>
+                    <span className="mt-auto text-isr-turquoise font-semibold group-hover:text-isr-bright-red transition-colors text-sm inline-flex items-center">
                       Learn More
                       <ArrowRight />
                     </span>

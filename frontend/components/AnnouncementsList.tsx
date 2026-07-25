@@ -17,12 +17,12 @@ function AnnouncementCard({ announcement }: { announcement: Announcement }) {
       }`}
     >
       {imageUrl && (
-        <div className="relative aspect-[16/9] w-full bg-isr-cream">
+        <div className="relative mx-auto aspect-[3/4] w-full max-w-sm bg-isr-cream">
           <Image
             src={imageUrl}
             alt={`${title} image`}
             fill
-            className="object-cover"
+            className="h-full w-full object-cover object-center"
             sizes="(max-width: 768px) 100vw, 720px"
           />
         </div>
