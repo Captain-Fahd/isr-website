@@ -101,7 +101,7 @@ export default async function EventDetailPage({ params }: PageProps) {
 
               <h1 className="mb-6 text-3xl font-bold text-isr-dark-red sm:text-4xl">{event.name}</h1>
 
-              <p className="mb-8 text-lg leading-relaxed text-gray-700">{event.description}</p>
+              <p className="mb-8 text-lg leading-relaxed text-gray-700 whitespace-pre-wrap">{event.description}</p>
 
               <a
                 href={event.ticketUrl}
