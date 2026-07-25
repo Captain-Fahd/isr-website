@@ -71,13 +71,15 @@ export default async function EventDetailPage({ params }: PageProps) {
 
           <article className="overflow-hidden rounded-2xl bg-white shadow-[0_16px_40px_rgba(91,11,5,0.1)] ring-1 ring-black/5">
             {event.imageUrl && (
-              <div className="relative aspect-[16/9] w-full bg-isr-cream">
+              <div className="w-full bg-isr-cream">
                 <Image
                   src={event.imageUrl}
                   alt={`${event.name} poster`}
-                  fill
-                  className="object-cover"
+                  width={0}
+                  height={0}
                   sizes="(max-width: 768px) 100vw, 768px"
+                  className="h-auto w-full"
+                  style={{ width: '100%', height: 'auto' }}
                   priority
                 />
               </div>
