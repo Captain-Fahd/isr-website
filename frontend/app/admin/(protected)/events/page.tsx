@@ -34,9 +34,13 @@ export default function AdminEventsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [eventToDelete, setEventToDelete] = useState<Event | null>(null)
 
+  function sortDesc(list: Event[]): Event[] {
+    return [...list].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }
+
   useEffect(() => {
     fetchAllEvents()
-      .then(setEvents)
+      .then((data) => setEvents(sortDesc(data)))
       .catch(() => setLoadError('Failed to load events'))
       .finally(() => setLoading(false))
   }, [])
@@ -69,10 +73,10 @@ export default function AdminEventsPage() {
     const token = getToken()!
     if (selectedEvent) {
       const updated = await updateEvent(token, selectedEvent.id, formData)
-      setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)))
+      setEvents((prev) => sortDesc(prev.map((e) => (e.id === updated.id ? updated : e))))
     } else {
       const created = await createEvent(token, formData)
-      setEvents((prev) => [...prev, created])
+      setEvents((prev) => sortDesc([...prev, created]))
     }
   }
 

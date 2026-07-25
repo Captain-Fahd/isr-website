@@ -12,7 +12,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import type { Event } from '@/lib/events'
+import {
+  fromDatetimeLocalValue,
+  toDatetimeLocalValue,
+  type Event,
+} from '@/lib/events'
 
 interface Props {
   open: boolean
@@ -25,7 +29,7 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
   const isEdit = event !== null
 
   const [name, setName] = useState(event?.name ?? '')
-  const [date, setDate] = useState(event ? event.date.slice(0, 16) : '')
+  const [date, setDate] = useState(event ? toDatetimeLocalValue(event.date) : '')
   const [description, setDescription] = useState(event?.description ?? '')
   const [ticketUrl, setTicketUrl] = useState(event?.ticketUrl ?? '')
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -34,7 +38,7 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
 
   useEffect(() => {
     setName(event?.name ?? '')
-    setDate(event ? event.date.slice(0, 16) : '')
+    setDate(event ? toDatetimeLocalValue(event.date) : '')
     setDescription(event?.description ?? '')
     setTicketUrl(event?.ticketUrl ?? '')
     setImageFile(null)
@@ -56,7 +60,7 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
 
     const formData = new FormData()
     formData.set('name', name)
-    formData.set('date', date)
+    formData.set('date', fromDatetimeLocalValue(date))
     formData.set('description', description)
     formData.set('ticketUrl', ticketUrl)
     if (imageFile) formData.set('image', imageFile)

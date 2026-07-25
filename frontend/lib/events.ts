@@ -21,6 +21,55 @@ export type EventResponse = {
 
 const TIMEZONE = 'Australia/Melbourne'
 
+function formatDatetimeLocalInTimeZone(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date)
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? ''
+
+  let hour = get('hour')
+  if (hour === '24') hour = '00'
+
+  return `${get('year')}-${get('month')}-${get('day')}T${hour}:${get('minute')}`
+}
+
+/** ISO UTC → `datetime-local` value in Australia/Melbourne. */
+export function toDatetimeLocalValue(isoDate: string): string {
+  return formatDatetimeLocalInTimeZone(new Date(isoDate), TIMEZONE)
+}
+
+/** `datetime-local` value (Melbourne local time) → ISO UTC. */
+export function fromDatetimeLocalValue(localValue: string): string {
+  const [datePart, timePart] = localValue.split('T')
+  const [year, month, day] = datePart.split('-').map(Number)
+  const [hour, minute] = timePart.split(':').map(Number)
+
+  let utcMs = Date.UTC(year, month - 1, day, hour, minute)
+
+  for (let i = 0; i < 4; i++) {
+    const formatted = formatDatetimeLocalInTimeZone(new Date(utcMs), TIMEZONE)
+    if (formatted === localValue) {
+      return new Date(utcMs).toISOString()
+    }
+
+    const [fDate, fTime] = formatted.split('T')
+    const [fy, fm, fd] = fDate.split('-').map(Number)
+    const [fh, fmin] = fTime.split(':').map(Number)
+
+    utcMs += Date.UTC(year, month - 1, day, hour, minute) - Date.UTC(fy, fm - 1, fd, fh, fmin)
+  }
+
+  return new Date(utcMs).toISOString()
+}
+
 export function formatEventDate(isoDate: string): { date: string; time: string } {
   const parsed = new Date(isoDate)
 
