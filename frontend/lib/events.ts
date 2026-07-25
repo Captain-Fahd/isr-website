@@ -96,8 +96,8 @@ export function isEventPast(isoDate: string): boolean {
 }
 
 /**
- * Orders events for display: upcoming first (soonest at the top), then past
- * events from most recent down to the oldest.
+ * Orders events for display: upcoming first (furthest in the future at the top),
+ * then past events from most recent down to the oldest.
  */
 export function sortEventsForDisplay(events: Event[]): Event[] {
   const now = Date.now()
@@ -109,7 +109,7 @@ export function sortEventsForDisplay(events: Event[]): Event[] {
     const bUpcoming = bTime >= now
 
     if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1
-    return aUpcoming ? aTime - bTime : bTime - aTime
+    return bTime - aTime
   })
 }
 
