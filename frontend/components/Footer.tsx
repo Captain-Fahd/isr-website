@@ -21,7 +21,7 @@ export default function Footer() {
             <h4 className="font-bold text-lg mb-4">Quick Links</h4>
             <ul className="text-sm text-gray-300 space-y-2">
               <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
-              <li><a href="/prayer-times" className="hover:text-white transition-colors">Prayer Times</a></li>
+              <li><a href="/#hero" className="hover:text-white transition-colors">Prayer Times</a></li>
               <li><a href="/events" className="hover:text-white transition-colors">Events</a></li>
               <li><a href="/about" className="hover:text-white transition-colors">About</a></li>
             </ul>
@@ -32,8 +32,7 @@ export default function Footer() {
             <h4 className="font-bold text-lg mb-4">Resources</h4>
             <ul className="text-sm text-gray-300 space-y-2">
               <li><a href="/contact" className="hover:text-white transition-colors">Contact</a></li>
-              <li><a href="/membership" className="hover:text-white transition-colors">Membership</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Faqs</a></li>
+              <li><a href="https://campus.hellorubric.com/?s=10733" className="hover:text-white transition-colors">Membership</a></li>
             </ul>
           </div>
 
