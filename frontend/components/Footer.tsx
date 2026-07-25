@@ -50,7 +50,7 @@ export default function Footer() {
                 <InstagramIcon className="w-4 h-4 text-white" />
                 <span className="hidden sm:inline">Instagram</span>
               </a>
-              <a href="https://wa.me/61" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/15 transition-colors" aria-label="WhatsApp">
+              <a href="https://api.whatsapp.com/send?phone=61418835013" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/15 transition-colors" aria-label="WhatsApp">
                 <WhatsappIcon className="w-4 h-4 text-white" />
                 <span className="hidden sm:inline">WhatsApp</span>
               </a>
