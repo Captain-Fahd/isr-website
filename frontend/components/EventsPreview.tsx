@@ -45,7 +45,7 @@ export default function EventsPreview() {
           <div className="grid md:grid-cols-3 gap-8 mb-12" aria-live="polite" aria-busy="true">
             {[0, 1, 2].map((index) => (
               <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
-                <div className="h-40 bg-isr-cream" />
+                <div className="aspect-[16/9] w-full bg-isr-cream" />
                 <div className="p-6 space-y-3">
                   <div className="h-5 w-3/4 rounded bg-isr-light-blue/30" />
                   <div className="h-4 w-1/2 rounded bg-isr-light-blue/20" />
@@ -87,12 +87,12 @@ export default function EventsPreview() {
                   className="group bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
                 >
                   {event.imageUrl ? (
-                    <div className="relative h-40 bg-isr-cream">
+                    <div className="relative aspect-[16/9] w-full overflow-hidden bg-isr-cream">
                       <Image
                         src={event.imageUrl}
                         alt={`${event.name} poster`}
                         fill
-                        className="object-cover transition-transform group-hover:scale-[1.02]"
+                        className="object-contain object-center"
                         sizes="(max-width: 768px) 100vw, 33vw"
                       />
                     </div>
