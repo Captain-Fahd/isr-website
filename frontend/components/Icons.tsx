@@ -96,3 +96,12 @@ export function GlobeIcon({ className = 'w-7 h-7' }: { className?: string }) {
     </svg>
   )
 }
+
+export function PinIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 2.5l2.5 5 5.5.8-4 3.9.9 5.5L12 15.3l-4.9 2.4.9-5.5-4-3.9 5.5-.8z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.15" />
+      <path d="M12 15.5v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  )
+}
