@@ -2,6 +2,12 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { uploadEventImage, deleteEventImage } from "../lib/storage";
 
+function normalizeTicketUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
 // GET /api/events  (public)  — optional ?filter=upcoming|past
 export const getEvents = async (req: Request, res: Response) => {
   const filter = req.query.filter;
@@ -60,10 +66,10 @@ export const getEventById = async (req: Request, res: Response) => {
 export const createEvent = async (req: Request, res: Response) => {
   const { name, date, description, ticketUrl } = req.body;
 
-  if (!name || !date || !description || !ticketUrl) {
+  if (!name || !date || !description) {
     return res
       .status(400)
-      .json({ error: "name, date, description and ticketUrl are required" });
+      .json({ error: "name, date and description are required" });
   }
   if (isNaN(Date.parse(date))) {
     return res.status(400).json({ error: "date must be a valid date" });
@@ -75,7 +81,13 @@ export const createEvent = async (req: Request, res: Response) => {
   try {
     const imageUrl = await uploadEventImage(req.file);
     const event = await prisma.event.create({
-      data: { name, date: new Date(date), description, ticketUrl, imageUrl },
+      data: {
+        name,
+        date: new Date(date),
+        description,
+        ticketUrl: normalizeTicketUrl(ticketUrl),
+        imageUrl,
+      },
     });
     return res.status(201).json({ data: event });
   } catch (err) {
@@ -114,7 +126,9 @@ export const updateEvent = async (req: Request, res: Response) => {
         ...(name !== undefined && { name }),
         ...(date !== undefined && { date: new Date(date) }),
         ...(description !== undefined && { description }),
-        ...(ticketUrl !== undefined && { ticketUrl }),
+        ...(ticketUrl !== undefined && {
+          ticketUrl: normalizeTicketUrl(ticketUrl),
+        }),
         imageUrl,
       },
     });

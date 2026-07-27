@@ -17,7 +17,7 @@ model Event {
   date        DateTime
   imageUrl    String
   description String
-  ticketUrl   String
+  ticketUrl   String?
 }
 
 model Announcement {

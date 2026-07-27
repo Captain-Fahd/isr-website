@@ -105,15 +105,17 @@ export default async function EventDetailPage({ params }: PageProps) {
 
               <p className="mb-8 text-lg leading-relaxed text-gray-700 whitespace-pre-wrap">{event.description}</p>
 
-              <a
-                href={event.ticketUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center rounded-lg bg-isr-turquoise px-8 py-3 font-semibold text-white transition-colors hover:bg-isr-dark-red"
-              >
-                Get Tickets
-                <ArrowRight />
-              </a>
+              {event.ticketUrl && (
+                <a
+                  href={event.ticketUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center rounded-lg bg-isr-turquoise px-8 py-3 font-semibold text-white transition-colors hover:bg-isr-dark-red"
+                >
+                  Get Tickets
+                  <ArrowRight />
+                </a>
+              )}
             </div>
           </article>
         </div>

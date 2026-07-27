@@ -143,14 +143,18 @@ export default function AdminEventsPage() {
                         {time}
                       </TableCell>
                       <TableCell>
-                        <a
-                          href={event.ticketUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs text-isr-turquoise underline underline-offset-2 hover:text-isr-turquoise/80"
-                        >
-                          Link ↗
-                        </a>
+                        {event.ticketUrl ? (
+                          <a
+                            href={event.ticketUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-isr-turquoise underline underline-offset-2 hover:text-isr-turquoise/80"
+                          >
+                            Link ↗
+                          </a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 justify-end">

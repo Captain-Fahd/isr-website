@@ -338,7 +338,7 @@ Create an event. **Admin only.** `multipart/form-data`.
 | `name` | string | yes | |
 | `date` | string | yes | Any value parseable by `Date` (e.g. ISO 8601 `2026-08-01T18:00:00Z`) |
 | `description` | string | yes | |
-| `ticketUrl` | string | yes | |
+| `ticketUrl` | string | no | Omit or leave blank if no ticket link |
 | `image` | file | yes | Image mimetype only, max 5 MB. Uploaded to Supabase Storage. |
 
 **Response** `201 Created`
@@ -350,7 +350,7 @@ Create an event. **Admin only.** `multipart/form-data`.
 
 | Status | Body |
 |---|---|
-| `400` | `{ "error": "name, date, description and ticketUrl are required" }` / `{ "error": "date must be a valid date" }` / `{ "error": "An image file is required" }` |
+| `400` | `{ "error": "name, date and description are required" }` / `{ "error": "date must be a valid date" }` / `{ "error": "An image file is required" }` |
 | `401` | `{ "error": "Unauthorized" }` |
 | `403` | `{ "error": "Forbidden" }` |
 | `500` | `{ "error": "Failed to create event" }` |

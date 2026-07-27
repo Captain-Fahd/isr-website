@@ -70,7 +70,7 @@ test('getEventById returns 404 when the event does not exist', async () => {
 
 test('createEvent returns 400 when a required field is missing', async () => {
     const req = {
-        body: { name: 'Eid Dinner', description: 'x', ticketUrl: 'https://t' },
+        body: { name: 'Eid Dinner', description: 'x' },
         file: { buffer: Buffer.from('x') },
     } as unknown as Request;
     const { res, status } = mockRes();
@@ -119,8 +119,61 @@ test('createEvent uploads the image and creates the event', async () => {
     await createEvent(req, res);
 
     expect(mockUploadEventImage).toHaveBeenCalledWith(file);
+    expect(mockCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({ ticketUrl: 'https://t' }),
+    });
     expect(status).toHaveBeenCalledWith(201);
     expect(json).toHaveBeenCalledWith({ data: created });
+});
+
+test('createEvent succeeds without ticketUrl and stores null', async () => {
+    mockUploadEventImage.mockResolvedValue('https://cdn/img.jpg');
+    const created = { id: 1, name: 'Eid Dinner', imageUrl: 'https://cdn/img.jpg', ticketUrl: null };
+    mockCreate.mockResolvedValue(created);
+
+    const file = { buffer: Buffer.from('x'), mimetype: 'image/jpeg', originalname: 'p.jpg' };
+    const req = {
+        body: {
+            name: 'Eid Dinner',
+            date: '2026-08-01T18:00:00Z',
+            description: 'x',
+        },
+        file,
+    } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await createEvent(req, res);
+
+    expect(mockCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({ ticketUrl: null }),
+    });
+    expect(status).toHaveBeenCalledWith(201);
+    expect(json).toHaveBeenCalledWith({ data: created });
+});
+
+test('createEvent normalizes blank ticketUrl to null', async () => {
+    mockUploadEventImage.mockResolvedValue('https://cdn/img.jpg');
+    const created = { id: 1, name: 'Eid Dinner', imageUrl: 'https://cdn/img.jpg', ticketUrl: null };
+    mockCreate.mockResolvedValue(created);
+
+    const file = { buffer: Buffer.from('x'), mimetype: 'image/jpeg', originalname: 'p.jpg' };
+    const req = {
+        body: {
+            name: 'Eid Dinner',
+            date: '2026-08-01T18:00:00Z',
+            description: 'x',
+            ticketUrl: '   ',
+        },
+        file,
+    } as unknown as Request;
+    const { res, status } = mockRes();
+
+    await createEvent(req, res);
+
+    expect(mockCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({ ticketUrl: null }),
+    });
+    expect(status).toHaveBeenCalledWith(201);
 });
 
 test('deleteEvent returns 404 when the event does not exist', async () => {

@@ -46,8 +46,8 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
   }, [event, open])
 
   async function handleSave() {
-    if (!name || !date || !description || !ticketUrl) {
-      setError('All fields are required')
+    if (!name || !date || !description) {
+      setError('Name, date, and description are required')
       return
     }
     if (!isEdit && !imageFile) {
@@ -115,7 +115,7 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ev-ticket">Ticket URL</Label>
+            <Label htmlFor="ev-ticket">Ticket URL (optional)</Label>
             <Input
               id="ev-ticket"
               type="url"

@@ -93,15 +93,17 @@ function EventCard({ event, isLast }: { event: Event; isLast: boolean }) {
               View Details
               <ArrowRight />
             </Link>
-            <a
-              href={event.ticketUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center rounded-lg bg-isr-turquoise px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
-            >
-              Get Tickets
-              <ArrowRight />
-            </a>
+            {event.ticketUrl && (
+              <a
+                href={event.ticketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-lg bg-isr-turquoise px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
+              >
+                Get Tickets
+                <ArrowRight />
+              </a>
+            )}
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ export type Event = {
   date: string
   imageUrl: string
   description: string
-  ticketUrl: string
+  ticketUrl: string | null
 }
 
 export type EventsFilter = 'all' | 'upcoming' | 'past'
