@@ -31,6 +31,7 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
   const [name, setName] = useState(event?.name ?? '')
   const [date, setDate] = useState(event ? toDatetimeLocalValue(event.date) : '')
   const [description, setDescription] = useState(event?.description ?? '')
+  const [ticketUrl, setTicketUrl] = useState(event?.ticketUrl ?? '')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -39,6 +40,7 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
     setName(event?.name ?? '')
     setDate(event ? toDatetimeLocalValue(event.date) : '')
     setDescription(event?.description ?? '')
+    setTicketUrl(event?.ticketUrl ?? '')
     setImageFile(null)
     setError('')
   }, [event, open])
@@ -60,6 +62,7 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
     formData.set('name', name)
     formData.set('date', fromDatetimeLocalValue(date))
     formData.set('description', description)
+    formData.set('ticketUrl', ticketUrl)
     if (imageFile) formData.set('image', imageFile)
 
     try {
@@ -108,6 +111,17 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="What's this event about?"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="ev-ticket">Ticket URL (optional)</Label>
+            <Input
+              id="ev-ticket"
+              type="url"
+              value={ticketUrl}
+              onChange={(e) => setTicketUrl(e.target.value)}
+              placeholder="https://tickets.example.com/event"
             />
           </div>
 
