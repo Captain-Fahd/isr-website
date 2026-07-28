@@ -19,7 +19,7 @@ export default function EventsPreview() {
 
     try {
       const data = await fetchEvents('upcoming')
-      setEvents(data.slice(0, 3))
+      setEvents(data.slice(0, 5))
     } catch {
       setEvents([])
       setError('Unable to load upcoming events.')
@@ -42,8 +42,8 @@ export default function EventsPreview() {
         <div className="w-16 h-1 bg-isr-bright-red mx-auto mb-12" />
 
         {loading && (
-          <div className="grid md:grid-cols-3 gap-8 mb-12" aria-live="polite" aria-busy="true">
-            {[0, 1, 2].map((index) => (
+          <div className="flex flex-wrap justify-center gap-8 mb-12" aria-live="polite" aria-busy="true">
+            {[0, 1, 2, 3, 4].map((index) => (
               <div key={index} className="mx-auto w-full max-w-xs overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] animate-pulse">
                 <div className="p-[1em]">
                   <div className="aspect-[3/4] overflow-hidden rounded-xl bg-isr-yellow" />
@@ -78,7 +78,7 @@ export default function EventsPreview() {
         )}
 
         {!loading && !error && events.length > 0 && (
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
+          <div className="flex flex-wrap justify-center gap-8 mb-12">
             {events.map((event, index) => {
               const { date, time } = formatEventDate(event.date)
 
