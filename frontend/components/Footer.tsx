@@ -33,6 +33,7 @@ export default function Footer() {
             <ul className="text-sm text-gray-300 space-y-2">
               <li><a href="/contact" className="hover:text-white transition-colors">Contact</a></li>
               <li><a href="https://campus.hellorubric.com/?s=10733" className="hover:text-white transition-colors">Membership</a></li>
+              <li><a href="/sitemap.xml" className="hover:text-white transition-colors">Sitemap</a></li>
             </ul>
           </div>
 
