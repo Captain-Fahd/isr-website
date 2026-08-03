@@ -7,6 +7,73 @@ import { fetchEvents, formatEventDate, type Event } from '@/lib/events'
 import { ArrowRight } from '@/components/Icons'
 
 const ACCENT_BARS = ['bg-isr-turquoise', 'bg-isr-bright-red', 'bg-isr-dark-red'] as const
+const EVENT_CARD_WIDTH = 273
+
+function EventPreviewCard({
+  event,
+  index,
+}: {
+  event: Event
+  index: number
+}) {
+  const { date, time } = formatEventDate(event.date)
+
+  return (
+    <Link
+      href={`/events/${event.id}`}
+      className="group flex w-[273px] max-w-full shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] transition-shadow hover:shadow-[0_2px_7px_rgba(91,11,5,0.14)]"
+    >
+      <div className="p-2">
+        {event.imageUrl ? (
+          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-isr-cream">
+            <Image
+              src={event.imageUrl}
+              alt={`${event.name} poster`}
+              fill
+              className="object-cover object-center"
+              sizes={`${EVENT_CARD_WIDTH}px`}
+            />
+          </div>
+        ) : (
+          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-isr-yellow">
+            <div className={`absolute inset-x-0 top-0 h-1.5 ${ACCENT_BARS[index % ACCENT_BARS.length]}`} />
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="mb-1.5 line-clamp-2 min-h-[2.75rem] text-base font-bold leading-snug text-isr-dark-red transition-colors group-hover:text-isr-bright-red">
+          {event.name}
+        </h3>
+        <p className="mb-2 text-xs text-gray-600">
+          <strong>{date}</strong> · {time}
+        </p>
+        <p className="mb-4 line-clamp-2 min-h-[2.5rem] flex-1 text-sm leading-snug text-gray-700">
+          {event.description}
+        </p>
+        <span className="mt-auto inline-flex items-center text-xs font-semibold text-isr-dark-red underline decoration-isr-dark-red/30 underline-offset-2 transition-colors group-hover:text-isr-bright-red group-hover:decoration-isr-bright-red/50">
+          Learn More
+          <ArrowRight />
+        </span>
+      </div>
+    </Link>
+  )
+}
+
+function EventPreviewCardSkeleton() {
+  return (
+    <div className="w-[273px] max-w-full shrink-0 overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] animate-pulse">
+      <div className="p-2">
+        <div className="aspect-[3/4] overflow-hidden rounded-lg bg-isr-yellow" />
+      </div>
+      <div className="space-y-2 p-4">
+        <div className="h-4 w-3/4 rounded bg-isr-light-blue/30" />
+        <div className="h-3 w-1/2 rounded bg-isr-light-blue/20" />
+        <div className="h-3 w-full rounded bg-isr-light-blue/20" />
+      </div>
+    </div>
+  )
+}
 
 export default function EventsPreview() {
   const [events, setEvents] = useState<Event[]>([])
@@ -42,18 +109,9 @@ export default function EventsPreview() {
         <div className="w-16 h-1 bg-isr-bright-red mx-auto mb-12" />
 
         {loading && (
-          <div className="flex flex-wrap justify-center gap-8 mb-12" aria-live="polite" aria-busy="true">
+          <div className="mb-12 flex flex-wrap justify-center gap-6" aria-live="polite" aria-busy="true">
             {[0, 1, 2, 3, 4].map((index) => (
-              <div key={index} className="mx-auto w-full max-w-xs overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] animate-pulse">
-                <div className="p-[1em]">
-                  <div className="aspect-[3/4] overflow-hidden rounded-xl bg-isr-yellow" />
-                </div>
-                <div className="p-6 space-y-3">
-                  <div className="h-5 w-3/4 rounded bg-isr-light-blue/30" />
-                  <div className="h-4 w-1/2 rounded bg-isr-light-blue/20" />
-                  <div className="h-4 w-full rounded bg-isr-light-blue/20" />
-                </div>
-              </div>
+              <EventPreviewCardSkeleton key={index} />
             ))}
           </div>
         )}
@@ -78,50 +136,10 @@ export default function EventsPreview() {
         )}
 
         {!loading && !error && events.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-8 mb-12">
-            {events.map((event, index) => {
-              const { date, time } = formatEventDate(event.date)
-
-              return (
-                <Link
-                  key={event.id}
-                  href={`/events/${event.id}`}
-                  className="group mx-auto flex h-full w-full max-w-xs flex-col bg-isr-cream rounded-xl shadow-[0_1px_5px_rgba(91,11,5,0.1)] overflow-hidden hover:shadow-[0_2px_7px_rgba(91,11,5,0.14)] transition-shadow"
-                >
-                  {event.imageUrl ? (
-                    <div className="p-[1em]">
-                      <div className="overflow-hidden rounded-xl bg-isr-cream">
-                        <Image
-                          src={event.imageUrl}
-                          alt={`${event.name} poster`}
-                          width={0}
-                          height={0}
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                          className="block h-auto w-full"
-                          style={{ width: '100%', height: 'auto' }}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className={`h-2 ${ACCENT_BARS[index % ACCENT_BARS.length]}`} />
-                  )}
-
-                  <div className="flex flex-1 flex-col p-6">
-                    <h3 className="text-xl font-bold text-isr-dark-red mb-2 group-hover:text-isr-bright-red transition-colors">
-                      {event.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                      <strong>{date}</strong> · {time}
-                    </p>
-                    <p className="text-gray-700 mb-6 line-clamp-3 flex-1">{event.description}</p>
-                    <span className="mt-auto text-isr-dark-red font-semibold underline decoration-isr-dark-red/30 underline-offset-2 group-hover:text-isr-bright-red group-hover:decoration-isr-bright-red/50 transition-colors text-sm inline-flex items-center">
-                      Learn More
-                      <ArrowRight />
-                    </span>
-                  </div>
-                </Link>
-              )
-            })}
+          <div className="mb-12 flex flex-wrap items-stretch justify-center gap-6">
+            {events.map((event, index) => (
+              <EventPreviewCard key={event.id} event={event} index={index} />
+            ))}
           </div>
         )}
 

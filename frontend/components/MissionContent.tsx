@@ -10,13 +10,13 @@ type MissionContentProps = {
 export default function MissionContent({ showCoreValues = false }: MissionContentProps) {
   return (
     <>
-      <div className="grid gap-8 md:grid-cols-2 md:gap-12">
-        <div className="rounded-lg bg-isr-yellow p-8 shadow-md">
+      <div className="flex flex-wrap justify-center gap-8">
+        <div className="mx-auto w-full max-w-md rounded-lg bg-isr-yellow p-8 shadow-md">
           <h2 className="mb-4 text-2xl font-bold text-isr-dark-red">Vision</h2>
           <p className="leading-relaxed text-gray-700">{visionText}</p>
         </div>
 
-        <div className="rounded-lg bg-isr-cream p-8 shadow-md">
+        <div className="mx-auto w-full max-w-md rounded-lg bg-isr-cream p-8 shadow-md">
           <h2 className="mb-4 text-2xl font-bold text-isr-turquoise">Mission</h2>
           <p className="leading-relaxed text-gray-700">{missionText}</p>
         </div>
