@@ -21,37 +21,39 @@ function EventPreviewCard({
   return (
     <Link
       href={`/events/${event.id}`}
-      className="group flex w-[273px] max-w-full shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] transition-shadow hover:shadow-[0_2px_7px_rgba(91,11,5,0.14)]"
+      className="group flex h-[540px] w-[273px] max-w-full shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] transition-shadow hover:shadow-[0_2px_7px_rgba(91,11,5,0.14)]"
     >
-      <div className="p-2">
+      <div className="shrink-0 p-2">
         {event.imageUrl ? (
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-isr-cream">
+          <div className="overflow-hidden rounded-lg bg-isr-cream">
             <Image
               src={event.imageUrl}
               alt={`${event.name} poster`}
-              fill
-              className="object-cover object-center"
+              width={0}
+              height={0}
               sizes={`${EVENT_CARD_WIDTH}px`}
+              className="block h-auto max-h-[320px] w-full"
+              style={{ width: '100%', height: 'auto' }}
             />
           </div>
         ) : (
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-isr-yellow">
+          <div className="relative h-20 overflow-hidden rounded-lg bg-isr-yellow">
             <div className={`absolute inset-x-0 top-0 h-1.5 ${ACCENT_BARS[index % ACCENT_BARS.length]}`} />
           </div>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="mb-1.5 line-clamp-2 min-h-[2.75rem] text-base font-bold leading-snug text-isr-dark-red transition-colors group-hover:text-isr-bright-red">
+      <div className="flex min-h-0 flex-1 flex-col p-4 pt-2">
+        <h3 className="mb-1.5 line-clamp-2 shrink-0 text-base font-bold leading-snug text-isr-dark-red transition-colors group-hover:text-isr-bright-red">
           {event.name}
         </h3>
-        <p className="mb-2 text-xs text-gray-600">
+        <p className="mb-2 shrink-0 text-xs text-gray-600">
           <strong>{date}</strong> · {time}
         </p>
-        <p className="mb-4 line-clamp-2 min-h-[2.5rem] flex-1 text-sm leading-snug text-gray-700">
+        <p className="min-h-0 flex-1 overflow-hidden text-sm leading-relaxed text-gray-700">
           {event.description}
         </p>
-        <span className="mt-auto inline-flex items-center text-xs font-semibold text-isr-dark-red underline decoration-isr-dark-red/30 underline-offset-2 transition-colors group-hover:text-isr-bright-red group-hover:decoration-isr-bright-red/50">
+        <span className="mt-3 inline-flex shrink-0 items-center text-xs font-semibold text-isr-dark-red underline decoration-isr-dark-red/30 underline-offset-2 transition-colors group-hover:text-isr-bright-red group-hover:decoration-isr-bright-red/50">
           Learn More
           <ArrowRight />
         </span>
@@ -62,14 +64,18 @@ function EventPreviewCard({
 
 function EventPreviewCardSkeleton() {
   return (
-    <div className="w-[273px] max-w-full shrink-0 overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] animate-pulse">
-      <div className="p-2">
-        <div className="aspect-[3/4] overflow-hidden rounded-lg bg-isr-yellow" />
+    <div className="flex h-[540px] w-[273px] max-w-full shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] animate-pulse">
+      <div className="shrink-0 p-2">
+        <div className="h-48 rounded-lg bg-isr-yellow" />
       </div>
-      <div className="space-y-2 p-4">
-        <div className="h-4 w-3/4 rounded bg-isr-light-blue/30" />
-        <div className="h-3 w-1/2 rounded bg-isr-light-blue/20" />
-        <div className="h-3 w-full rounded bg-isr-light-blue/20" />
+      <div className="flex min-h-0 flex-1 flex-col space-y-2 p-4 pt-2">
+        <div className="h-4 w-3/4 shrink-0 rounded bg-isr-light-blue/30" />
+        <div className="h-3 w-1/2 shrink-0 rounded bg-isr-light-blue/20" />
+        <div className="min-h-0 flex-1 space-y-2">
+          <div className="h-3 w-full rounded bg-isr-light-blue/20" />
+          <div className="h-3 w-full rounded bg-isr-light-blue/20" />
+          <div className="h-3 w-5/6 rounded bg-isr-light-blue/20" />
+        </div>
       </div>
     </div>
   )

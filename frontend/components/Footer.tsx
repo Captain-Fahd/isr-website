@@ -45,7 +45,7 @@ export default function Footer() {
           {/* Social */}
           <div>
             <h4 className="font-bold text-lg mb-4">Follow Us</h4>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <a href="https://www.instagram.com/islamicsocietyofrmit/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/15 transition-colors" aria-label="Instagram">
                 <InstagramIcon className="w-4 h-4 text-white" />
                 <span className="hidden sm:inline">Instagram</span>
