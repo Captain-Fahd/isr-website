@@ -2,7 +2,7 @@
 
 The official website for the **Islamic Society of RMIT (ISR)** — a hub for RMIT Muslim students and the broader RMIT community to find prayer times, stay up to date with events, and connect with ISR.
 
-https://www.islamicsocietyofrmit.com.au
+https://theisr.com.au
 
 ---
 

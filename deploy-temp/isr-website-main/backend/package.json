@@ -1,0 +1,46 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon --exec tsx index.ts",
+    "build": "prisma generate && esbuild index.ts --bundle --platform=node --format=esm --outdir=dist --packages=external",
+    "start": "node server.js",
+    "test": "jest",
+    "seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.9.1",
+    "@supabase/supabase-js": "^2.108.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "multer": "^2.2.0",
+    "nodemon": "^3.1.14",
+    "dotenv": "^17.4.2",
+    "pg": "^8.22.0",
+    "resend": "^6.18.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.4.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^25.9.3",
+    "@types/pg": "^8.20.0",
+    "jest": "^30.4.2",
+    "prisma": "^7.9.1",
+    "ts-jest": "^29.4.11",
+    "esbuild": "^0.27.3",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}
