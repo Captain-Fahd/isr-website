@@ -8,6 +8,8 @@ import { ArrowRight } from '@/components/Icons'
 
 const ACCENT_BARS = ['bg-isr-turquoise', 'bg-isr-bright-red', 'bg-isr-dark-red'] as const
 const EVENT_CARD_WIDTH = 273
+const EVENT_CARD_HEIGHT = 540
+const EVENT_IMAGE_MAX_HEIGHT = 320
 
 function EventPreviewCard({
   event,
@@ -21,9 +23,10 @@ function EventPreviewCard({
   return (
     <Link
       href={`/events/${event.id}`}
-      className="group flex h-[540px] w-[273px] max-w-full shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] transition-shadow hover:shadow-[0_2px_7px_rgba(91,11,5,0.14)]"
+      className="group flex shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] transition-shadow hover:shadow-[0_2px_7px_rgba(91,11,5,0.14)]"
+      style={{ width: EVENT_CARD_WIDTH, height: EVENT_CARD_HEIGHT }}
     >
-      <div className="shrink-0 p-2">
+      <div className="shrink-0 px-2 pt-2">
         {event.imageUrl ? (
           <div className="overflow-hidden rounded-lg bg-isr-cream">
             <Image
@@ -32,8 +35,8 @@ function EventPreviewCard({
               width={0}
               height={0}
               sizes={`${EVENT_CARD_WIDTH}px`}
-              className="block h-auto max-h-[320px] w-full"
-              style={{ width: '100%', height: 'auto' }}
+              className="block h-auto w-full"
+              style={{ width: '100%', height: 'auto', maxHeight: EVENT_IMAGE_MAX_HEIGHT }}
             />
           </div>
         ) : (
@@ -43,16 +46,16 @@ function EventPreviewCard({
         )}
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col p-4 pt-2">
+      <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2">
         <h3 className="mb-1.5 line-clamp-2 shrink-0 text-base font-bold leading-snug text-isr-dark-red transition-colors group-hover:text-isr-bright-red">
           {event.name}
         </h3>
         <p className="mb-2 shrink-0 text-xs text-gray-600">
           <strong>{date}</strong> · {time}
         </p>
-        <p className="min-h-0 flex-1 overflow-hidden text-sm leading-relaxed text-gray-700">
-          {event.description}
-        </p>
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <p className="text-sm leading-relaxed text-gray-700">{event.description}</p>
+        </div>
         <span className="mt-3 inline-flex shrink-0 items-center text-xs font-semibold text-isr-dark-red underline decoration-isr-dark-red/30 underline-offset-2 transition-colors group-hover:text-isr-bright-red group-hover:decoration-isr-bright-red/50">
           Learn More
           <ArrowRight />
@@ -64,14 +67,18 @@ function EventPreviewCard({
 
 function EventPreviewCardSkeleton() {
   return (
-    <div className="flex h-[540px] w-[273px] max-w-full shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] animate-pulse">
-      <div className="shrink-0 p-2">
+    <div
+      className="flex shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] animate-pulse"
+      style={{ width: EVENT_CARD_WIDTH, height: EVENT_CARD_HEIGHT }}
+    >
+      <div className="shrink-0 px-2 pt-2">
         <div className="h-48 rounded-lg bg-isr-yellow" />
       </div>
-      <div className="flex min-h-0 flex-1 flex-col space-y-2 p-4 pt-2">
+      <div className="flex min-h-0 flex-1 flex-col space-y-2 px-4 pb-4 pt-2">
         <div className="h-4 w-3/4 shrink-0 rounded bg-isr-light-blue/30" />
         <div className="h-3 w-1/2 shrink-0 rounded bg-isr-light-blue/20" />
         <div className="min-h-0 flex-1 space-y-2">
+          <div className="h-3 w-full rounded bg-isr-light-blue/20" />
           <div className="h-3 w-full rounded bg-isr-light-blue/20" />
           <div className="h-3 w-full rounded bg-isr-light-blue/20" />
           <div className="h-3 w-5/6 rounded bg-isr-light-blue/20" />
