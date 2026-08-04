@@ -20,7 +20,6 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 px-4 pt-4 pb-2">
-      <div className="container-isr">
         {/* Fixed-height track: the pill overlays it so opening the drawer
             never changes the navbar's layout height. */}
         <div className="relative h-14">
@@ -122,7 +121,6 @@ export default function Navbar() {
         </div>
         </div>
         </div>
-      </div>
     </nav>
   )
 }

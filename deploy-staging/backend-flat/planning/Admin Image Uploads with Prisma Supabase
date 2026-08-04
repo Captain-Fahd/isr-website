@@ -1,0 +1,209 @@
+## User
+
+Using PrismaORM and Supabase, suggest a plan to use them to allow admins to upload images for events.
+
+## Assistant
+
+<thinking>
+
+The user wants a plan to allow admins to upload images for events using PrismaORM and Supabase.
+
+I need to understand the current project structure first to see how events are currently handled and how Supabase is integrated.
+
+The `CLAUDE.md` mentions:
+- Frontend: Next.js (App Router)
+- Backend: Express.js
+- Database / Auth: Supabase
+- Admin panel requires Supabase Auth; protect all `/admin` routes server-side.
+
+I should look for:
+1. The `events` table schema in Prisma.
+2. How images are currently handled (if at all).
+3. How Supabase is initialized in the backend.
+4. How the admin panel is structured.
+
+Plan:
+1. Explore the codebase to understand the current event model and Supabase integration.
+2. Identify where the event image field should be added.
+3. Propose a plan involving:
+    a. Supabase Storage bucket for images.
+    b. Prisma schema update to store the image URL.
+    c. Backend API endpoint to handle image upload (or frontend direct upload to Supabase Storage with backend verification/storage).
+    d. Frontend admin UI for image selection and upload.
+    e. Security considerations (RLS, signed URLs, etc.).
+
+Let's start by exploring the project.
+</thinking>
+
+I will start by exploring the codebase to understand the current structure of the events model and how Supabase is integrated. Then, I will propose a plan for implementing image uploads for events.
+
+First, I'll list the contents of the `backend` and `frontend` directories to get an overview of the project structure.
+
+<thinking>
+
+
+</thinking>
+
+**Tool Call: List the `backend` directory's contents**
+Status: Completed
+
+# Folders:
+isr-website\backend\__tests__
+isr-website\backend\controllers
+isr-website\backend\node_modules
+isr-website\backend\routes
+
+# Files:
+isr-website\backend\API.md
+isr-website\backend\index.ts
+isr-website\backend\jest.config.js
+isr-website\backend\package-lock.json
+isr-website\backend\package.json
+isr-website\backend\tsconfig.json
+
+
+## Assistant
+
+<thinking>
+
+Okay, I've explored the `backend` directory and see that it's an Express.js application. Now I need to understand the current database schema and how events are handled to provide a good plan for image uploads.
+
+First, I'll check the `frontend` directory to see how events are currently rendered and if there's any existing image handling.
+
+</thinking>
+
+**Tool Call: List the `frontend` directory's contents**
+Status: Completed
+
+frontend is empty.
+
+
+## Assistant
+
+<thinking>
+
+The user wants a plan to allow admins to upload images for events using PrismaORM and Supabase.
+I need to understand the current state of the project to provide a good plan.
+The project has a `backend` folder with some files and a `frontend` folder that is empty (or at least what `list_directory` showed).
+Wait, `frontend` is empty? That's unexpected if there's a Next.js app. Maybe I should check if there are subdirectories. `list_directory` on `frontend` might not show everything if it's just a shell or if it's really empty.
+
+Let's check `backend/package.json` to see what's already installed.
+</thinking>
+
+**Tool Call: Read file `backend\package.json`**
+Status: Completed
+
+```backend/package.json
+     1	{
+     2	  "name": "backend",
+     3	  "version": "1.0.0",
+     4	  "description": "",
+     5	  "license": "ISC",
+     6	  "author": "",
+     7	  "type": "commonjs",
+     8	  "main": "index.js",
+     9	  "scripts": {
+    10	    "dev": "nodemon --exec tsx index.ts",
+    11	    "build": "tsc",
+    12	    "start": "node dist/index.js",
+    13	    "test": "jest"
+    14	  },
+    15	  "dependencies": {
+    16	    "@supabase/supabase-js": "^2.108.2",
+    17	    "cors": "^2.8.6",
+    18	    "dotenv": "^17.4.2",
+    19	    "express": "^5.2.1",
+    20	    "nodemon": "^3.1.14"
+    21	  },
+    22	  "devDependencies": {
+    23	    "@jest/globals": "^30.4.1",
+    24	    "@types/cors": "^2.8.19",
+    25	    "@types/express": "^5.0.6",
+    26	    "@types/jest": "^30.0.0",
+    27	    "@types/node": "^25.9.3",
+    28	    "jest": "^30.4.2",
+    29	    "ts-jest": "^29.4.11",
+    30	    "tsx": "^4.22.4",
+    31	    "typescript": "^6.0.3"
+    32	  }
+    33	}
+
+```
+
+
+## Assistant
+
+<thinking>
+
+
+The user wants a plan to allow admins to upload images for events using PrismaORM and Supabase.
+
+I see that `backend` has `@supabase/supabase-js` but `prisma` is not listed in `backend/package.json`. I should check if it's in `frontend` or if it's missing. Wait, the user mentioned using PrismaORM, so I should assume it's part of the intended stack or I should check if it's already there and I just missed it in `package.json`. Actually, looking at `backend/package.json`, I don't see `prisma`.
+
+Wait, I see `frontend` is empty. This is strange. Maybe I should check `frontend` again or see if there's a root directory for `prisma` or something.
+
+Actually, I should check if `prisma` is installed in `backend`. It's not in `package.json`.
+
+The user wants a plan. I should first verify the current state of the project regarding Supabase and Prisma.
+I see `backend/index.ts` and `backend/package.json`.
+I don't see a `prisma` folder or a `schema.prisma` file in `backend` or at the root.
+
+Wait, if the user says "Using PrismaORM", they might expect me to set it up or assume it's there.
+
+Let's look for `schema.prisma` to see if it exists anywhere.
+</thinking>
+
+To allow admins to upload images for events using PrismaORM and Supabase, I have outlined a plan below. 
+
+Since `prisma` is not currently listed in your `backend/package.json`, I have included the initialization steps as part of the plan.
+
+### High-Level Architecture
+1.  **Storage:** Use **Supabase Storage** buckets to host the actual image files.
+2.  **Database:** Use **PrismaORM** to store the metadata (e.g., the public URL of the uploaded image) in the `Event` table.
+3.  **Authentication:** Leverage **Supabase Auth** to ensure only users with an `admin` role can access the upload endpoint.
+4.  **Flow:** 
+    *   Admin selects an image in the frontend.
+    *   Frontend sends the image to the backend (or directly to Supabase Storage with a signed URL).
+    *   Backend (or Frontend) receives the public URL.
+    *   Backend saves the URL to the database using Prisma.
+
+---
+
+### Implementation Plan
+
+#### Phase 1: Setup & Infrastructure
+1.  **Install Prisma:**
+    *   Install `@prisma/client` and `prisma` in the `backend` directory.
+    *   Initialize Prisma (`npx prisma init`) and configure the `DATABASE_URL` to point to your Supabase PostgreSQL instance.
+2.  **Database Schema:**
+    *   Update the `Event` model in `schema.prisma` to include an optional `imageUrl` field.
+    *   Run migrations to update the database schema.
+3.  **Supabase Storage Configuration:**
+    *   Create a new bucket (e.g., `event-images`) in the Supabase dashboard.
+    *   Set up **RLS (Row Level Security)** policies to allow authenticated admins to upload and everyone to read.
+
+#### Phase 2: Backend Development
+1.  **Auth Middleware:**
+    *   Create a middleware to verify the Supabase JWT and check if the user has the `admin` role.
+2.  **Image Upload Endpoint:**
+    *   Create a POST route (e.g., `/api/events/upload`) that:
+        *   Accepts a multipart form (using `multer` or `busboy`).
+        *   Uploads the buffer to Supabase Storage.
+        *   Retrieves the public URL.
+        *   Creates/Updates an `Event` record in the database using `prisma.event.create()` or `update()`.
+3.  **Event Retrieval:**
+    *   Ensure existing GET routes for events include the `imageUrl` in the response.
+
+#### Phase 3: Frontend Development
+1.  **Admin UI:**
+    *   Build an upload component in the admin dashboard.
+    *   Implement a preview for the selected image.
+2.  **API Integration:**
+    *   Connect the frontend component to the new backend upload endpoint.
+    *   Handle loading states and success/error notifications.
+
+#### Phase 4: Validation & Testing
+1.  **Security Check:** Verify that non-admin users cannot access the upload endpoint or the storage bucket directly.
+2.  **Load Testing:** Ensure images are served correctly from the Supabase CDN.
+
+Would you like me to start by initializing Prisma in the `backend` directory?
