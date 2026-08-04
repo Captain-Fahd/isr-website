@@ -12,8 +12,8 @@ export default function Home() {
       <div className="-mt-20 bg-gradient-to-br from-isr-cream via-white to-isr-yellow pt-20">
         <Hero />
       </div>
-      <Mission />
       <EventsPreview />
+      <Mission />
       <Contact />
       <Footer />
     </div>

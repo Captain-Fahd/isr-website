@@ -5,10 +5,19 @@ import { notFound } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { ArrowRight } from '@/components/Icons'
-import { fetchEventById, formatEventDate, isEventPast } from '@/lib/events'
+import { fetchEventById, fetchEvents, formatEventDate, isEventPast } from '@/lib/events'
 
 type PageProps = {
   params: Promise<{ id: string }>
+}
+
+export async function generateStaticParams() {
+  try {
+    const events = await fetchEvents()
+    return events.map((event) => ({ id: String(event.id) }))
+  } catch {
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
