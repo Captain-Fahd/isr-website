@@ -117,6 +117,18 @@ test('getAnnouncementById returns 400 for non-integer id', async () => {
     expect(mockFindUnique).not.toHaveBeenCalled();
 });
 
+test('getAnnouncementById returns 500 on db error', async () => {
+    mockFindUnique.mockRejectedValue(new Error('db down'));
+
+    const req = { params: { id: '1' } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await getAnnouncementById(req, res);
+
+    expect(status).toHaveBeenCalledWith(500);
+    expect(json).toHaveBeenCalledWith({ error: 'Failed to fetch announcement' });
+});
+
 // --- createAnnouncement ---
 
 test('createAnnouncement returns 400 when title is missing', async () => {
@@ -180,7 +192,32 @@ test('createAnnouncement uploads image and creates', async () => {
     expect(json).toHaveBeenCalledWith({ data: created });
 });
 
+test('createAnnouncement returns 500 on failure', async () => {
+    mockCreate.mockRejectedValue(new Error('db'));
+
+    const req = {
+        body: { title: 'Hello', body: 'World' },
+    } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await createAnnouncement(req, res);
+
+    expect(status).toHaveBeenCalledWith(500);
+    expect(json).toHaveBeenCalledWith({ error: 'Failed to create announcement' });
+});
+
 // --- updateAnnouncement ---
+
+test('updateAnnouncement returns 400 for non-integer id', async () => {
+    const req = { params: { id: 'abc' }, body: { title: 'New' } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await updateAnnouncement(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'Invalid announcement id' });
+    expect(mockFindUnique).not.toHaveBeenCalled();
+});
 
 test('updateAnnouncement returns 404 when not found', async () => {
     mockFindUnique.mockResolvedValue(null);
@@ -237,7 +274,31 @@ test('updateAnnouncement replaces image and deletes old one', async () => {
     expect(json).toHaveBeenCalledWith({ data: updated });
 });
 
+test('updateAnnouncement returns 500 on failure', async () => {
+    mockFindUnique.mockResolvedValue({ id: 1, title: 'Old', imageUrl: null });
+    mockUpdate.mockRejectedValue(new Error('db'));
+
+    const req = { params: { id: '1' }, body: { title: 'New' } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await updateAnnouncement(req, res);
+
+    expect(status).toHaveBeenCalledWith(500);
+    expect(json).toHaveBeenCalledWith({ error: 'Failed to update announcement' });
+});
+
 // --- deleteAnnouncement ---
+
+test('deleteAnnouncement returns 400 for non-integer id', async () => {
+    const req = { params: { id: 'abc' } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await deleteAnnouncement(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'Invalid announcement id' });
+    expect(mockFindUnique).not.toHaveBeenCalled();
+});
 
 test('deleteAnnouncement returns 404 when not found', async () => {
     mockFindUnique.mockResolvedValue(null);
@@ -280,4 +341,17 @@ test('deleteAnnouncement skips image deletion when no imageUrl', async () => {
     expect(mockDeleteAnnouncementImage).not.toHaveBeenCalled();
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({ data: { id: 2 } });
+});
+
+test('deleteAnnouncement returns 500 on failure', async () => {
+    mockFindUnique.mockResolvedValue({ id: 1, imageUrl: null });
+    mockDelete.mockRejectedValue(new Error('db'));
+
+    const req = { params: { id: '1' } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await deleteAnnouncement(req, res);
+
+    expect(status).toHaveBeenCalledWith(500);
+    expect(json).toHaveBeenCalledWith({ error: 'Failed to delete announcement' });
 });

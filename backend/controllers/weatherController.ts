@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { mockWeather, shouldMockExternals } from '../lib/mockPayloads';
 
 const WEATHER_BASE = 'https://api.weatherapi.com/v1';
 const LOCATION = 'Melbourne';
@@ -21,6 +22,32 @@ type WeatherApiResponse = {
 };
 
 export async function getMelbourneWeather(_req: Request, res: Response) {
+  if (shouldMockExternals()) {
+    const { location, current } = mockWeather;
+    res.json({
+      data: {
+        location: {
+          name: location.name,
+          region: location.region,
+          country: location.country,
+          localtime: location.localtime,
+        },
+        current: {
+          temp_c: current.temp_c,
+          feelslike_c: current.feelslike_c,
+          humidity: current.humidity,
+          wind_kph: current.wind_kph,
+          wind_dir: current.wind_dir,
+          condition: current.condition,
+          uv: current.uv,
+          vis_km: current.vis_km,
+          precip_mm: current.precip_mm,
+        },
+      },
+    });
+    return;
+  }
+
   const apiKey = process.env.WEATHER_API_KEY;
   if (!apiKey) {
     res.status(500).json({ error: 'Weather API key not configured' });

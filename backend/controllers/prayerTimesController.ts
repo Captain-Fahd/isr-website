@@ -1,10 +1,13 @@
 import { Request, Response } from 'express';
+import { mockAladhanTimings, shouldMockExternals } from '../lib/mockPayloads';
 
 const ALADHAN_BASE = 'https://api.aladhan.com/v1';
 // Coordinates for Melbourne — timingsByCity geocoding fails from Node fetch.
 const LATITUDE = -37.8136;
 const LONGITUDE = 144.9631;
 const METHOD = 3; // Muslim World League
+// Melbourne observes AEST (UTC+10) / AEDT (UTC+11); never use server-local time.
+const MELBOURNE_TZ = 'Australia/Melbourne';
 
 const OMIT_TIMINGS = new Set(['Imsak', 'Midnight', 'Firstthird', 'Lastthird']);
 
@@ -23,15 +26,30 @@ function filterTimings(data: ApiData): ApiData {
   return { ...data, timings };
 }
 
+/** Calendar parts for "now" in Melbourne (AEST/AEDT), independent of server TZ. */
+function melbourneToday(): { day: string; month: string; year: string } {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: MELBOURNE_TZ,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).formatToParts(new Date());
+
+  const day = parts.find((p) => p.type === 'day')?.value ?? '01';
+  const month = parts.find((p) => p.type === 'month')?.value ?? '01';
+  const year = parts.find((p) => p.type === 'year')?.value ?? '1970';
+  return { day, month, year };
+}
+
 function todayDDMMYYYY(): string {
-  const now = new Date();
-  const dd = String(now.getDate()).padStart(2, '0');
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const yyyy = now.getFullYear();
-  return `${dd}-${mm}-${yyyy}`;
+  const { day, month, year } = melbourneToday();
+  return `${day}-${month}-${year}`;
 }
 
 async function fetchTimings(date: string) {
+  if (shouldMockExternals()) {
+    return filterTimings(mockAladhanTimings as ApiData);
+  }
   const url = `${ALADHAN_BASE}/timings/${date}?latitude=${LATITUDE}&longitude=${LONGITUDE}&method=${METHOD}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`AlAdhan API responded with ${res.status}`);
@@ -65,11 +83,15 @@ export async function getPrayerTimesByDate(req: Request, res: Response) {
 }
 
 export async function getMonthlyCalendar(req: Request, res: Response) {
-  const now = new Date();
-  const year = Number(req.query.year) || now.getFullYear();
-  const month = Number(req.query.month) || now.getMonth() + 1;
+  const melbourne = melbourneToday();
+  const year = Number(req.query.year) || Number(melbourne.year);
+  const month = Number(req.query.month) || Number(melbourne.month);
 
   try {
+    if (shouldMockExternals()) {
+      res.json({ data: [filterTimings(mockAladhanTimings as ApiData)] });
+      return;
+    }
     const url = `${ALADHAN_BASE}/calendar/${year}/${month}?latitude=${LATITUDE}&longitude=${LONGITUDE}&method=${METHOD}`;
     const apiRes = await fetch(url);
     if (!apiRes.ok) throw new Error(`AlAdhan API responded with ${apiRes.status}`);

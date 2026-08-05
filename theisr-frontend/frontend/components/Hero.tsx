@@ -52,11 +52,7 @@ export default function Hero() {
             <p className="mb-3 text-lg font-semibold text-isr-turquoise sm:text-xl">
               The Home of Muslim Students at RMIT
             </p>
-
-            <p className="mb-8 text-base leading-relaxed text-gray-700 sm:text-lg">
-              Representing and supporting the Muslim community at RMIT University.
-            </p>
-
+            
             <div className="flex flex-wrap justify-center gap-4 lg:justify-start">
               <a
                 href="https://campus.hellorubric.com/?s=10733"
