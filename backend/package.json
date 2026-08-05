@@ -10,8 +10,13 @@
     "dev": "nodemon --exec tsx index.ts",
     "build": "prisma generate && esbuild index.ts --bundle --platform=node --format=esm --outdir=dist --packages=external",
     "start": "node server.js",
-    "test": "jest",
-    "seed": "tsx prisma/seed.ts"
+    "start:e2e": "tsx test/start-e2e-server.ts",
+    "seed": "tsx prisma/seed.ts",
+    "seed:e2e": "tsx test/e2e-seed.ts",
+    "test": "jest --selectProjects unit",
+    "test:unit": "jest --selectProjects unit",
+    "test:integration": "jest --selectProjects integration",
+    "test:all": "jest"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -21,10 +26,10 @@
     "@prisma/client": "^7.9.1",
     "@supabase/supabase-js": "^2.108.2",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "multer": "^2.2.0",
     "nodemon": "^3.1.14",
-    "dotenv": "^17.4.2",
     "pg": "^8.22.0",
     "resend": "^6.18.0"
   },
@@ -36,11 +41,14 @@
     "@types/multer": "^2.2.0",
     "@types/node": "^25.9.3",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^6.0.3",
+    "esbuild": "^0.27.3",
     "jest": "^30.4.2",
     "prisma": "^7.9.1",
+    "supertest": "^7.2.2",
     "ts-jest": "^29.4.11",
-    "esbuild": "^0.27.3",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "undici": "^8.10.0"
   }
 }

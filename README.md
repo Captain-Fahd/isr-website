@@ -131,6 +131,25 @@ npm run dev
 
 The frontend will be available at `http://localhost:3000` and the backend at `http://localhost:4000` (or as configured in your `.env`).
 
+### Testing
+
+```bash
+# Backend unit tests (mocked Prisma / externals)
+cd backend && npm run test:unit
+
+# Backend API integration tests (real Postgres; Aladhan / Weather / Resend mocked)
+# Requires DATABASE_URL pointing at an empty/test database, then:
+npx prisma migrate deploy
+npm run test:integration
+
+# Frontend Playwright e2e (public flows against a local API + mocked externals)
+# Start Postgres, migrate + seed, then:
+cd backend && npx prisma migrate deploy && npm run seed:e2e
+cd ../frontend && npm run test:e2e
+```
+
+CI runs unit + integration tests on backend changes, and Playwright on frontend/backend changes.
+
 ---
 
 ## Environment Variables
