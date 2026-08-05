@@ -12,8 +12,12 @@ test.describe('Home', () => {
 
     await expect(page.getByText("Today's Prayer Times")).toBeVisible()
     await expect(page.getByText('Fajr')).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByText('06:02')).toBeVisible()
     await expect(page.getByText('Dhuhr')).toBeVisible()
+    await expect(page.getByText('Asr')).toBeVisible()
+    await expect(page.getByText('Maghrib')).toBeVisible()
+    await expect(page.getByText('Isha')).toBeVisible()
+    // Fixture times from the e2e API mock (backend/test/fixtures.ts)
+    await expect(page.locator('table')).toContainText('06:02')
   })
 
   test('desktop nav links reach public pages', async ({ page }) => {

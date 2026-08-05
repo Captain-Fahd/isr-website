@@ -1,9 +1,6 @@
 import 'dotenv/config';
-import { installFetchMocks } from './mockExternals';
 
-// Must run before the app imports controllers that call fetch/Resend.
-installFetchMocks();
-
+process.env.MOCK_EXTERNALS = '1';
 process.env.PORT ??= '4000';
 process.env.RESEND_API_KEY ??= 're_e2e_test';
 process.env.RESEND_FROM_ADDRESS ??= 'noreply@example.com';

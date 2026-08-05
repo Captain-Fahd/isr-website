@@ -41,7 +41,10 @@ jobs:
       RESEND_API_KEY: re_e2e_test
       RESEND_FROM_ADDRESS: noreply@example.com
       WEATHER_API_KEY: weather-e2e-test
-      NEXT_PUBLIC_API_URL: http://127.0.0.1:4000
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:4001
+      PLAYWRIGHT_API_URL: http://127.0.0.1:4001
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1:3005
+      MOCK_EXTERNALS: "1"
       CI: true
 
     steps:

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Resend } from 'resend';
+import { shouldMockExternals } from '../lib/mockPayloads';
 
 const ISR_EMAIL = 'isr@rmit.edu.au';
 
@@ -27,6 +28,11 @@ export async function sendContactEmail(req: Request, res: Response) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     res.status(400).json({ error: 'Invalid email address' });
+    return;
+  }
+
+  if (shouldMockExternals()) {
+    res.status(200).json({ success: true });
     return;
   }
 

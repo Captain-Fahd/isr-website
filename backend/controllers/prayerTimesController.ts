@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { mockAladhanTimings, shouldMockExternals } from '../lib/mockPayloads';
 
 const ALADHAN_BASE = 'https://api.aladhan.com/v1';
 // Coordinates for Melbourne — timingsByCity geocoding fails from Node fetch.
@@ -46,6 +47,9 @@ function todayDDMMYYYY(): string {
 }
 
 async function fetchTimings(date: string) {
+  if (shouldMockExternals()) {
+    return filterTimings(mockAladhanTimings as ApiData);
+  }
   const url = `${ALADHAN_BASE}/timings/${date}?latitude=${LATITUDE}&longitude=${LONGITUDE}&method=${METHOD}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`AlAdhan API responded with ${res.status}`);
@@ -84,6 +88,10 @@ export async function getMonthlyCalendar(req: Request, res: Response) {
   const month = Number(req.query.month) || Number(melbourne.month);
 
   try {
+    if (shouldMockExternals()) {
+      res.json({ data: [filterTimings(mockAladhanTimings as ApiData)] });
+      return;
+    }
     const url = `${ALADHAN_BASE}/calendar/${year}/${month}?latitude=${LATITUDE}&longitude=${LONGITUDE}&method=${METHOD}`;
     const apiRes = await fetch(url);
     if (!apiRes.ok) throw new Error(`AlAdhan API responded with ${apiRes.status}`);

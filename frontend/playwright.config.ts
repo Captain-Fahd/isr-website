@@ -3,8 +3,10 @@ import path from 'node:path'
 
 const frontendDir = __dirname
 const backendDir = path.resolve(frontendDir, '../backend')
-const apiUrl = process.env.PLAYWRIGHT_API_URL ?? 'http://127.0.0.1:4000'
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000'
+
+// Dedicated ports so local `next dev` / API on 3000/4000 can keep running.
+const apiUrl = process.env.PLAYWRIGHT_API_URL ?? 'http://127.0.0.1:4001'
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3005'
 
 const databaseUrl =
   process.env.DATABASE_URL ??
@@ -35,11 +37,12 @@ export default defineConfig({
       command: 'npm run start:e2e',
       cwd: backendDir,
       url: `${apiUrl}/health`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 120_000,
       env: {
         ...process.env,
-        PORT: '4000',
+        PORT: '4001',
+        MOCK_EXTERNALS: '1',
         DATABASE_URL: databaseUrl,
         SUPABASE_URL: process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321',
         SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ?? 'e2e-anon-key',
@@ -49,13 +52,14 @@ export default defineConfig({
       },
     },
     {
-      command: 'npm run dev -- --port 3000',
+      command: 'npx next dev -p 3005',
       cwd: frontendDir,
       url: baseURL,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 120_000,
       env: {
         ...process.env,
+        PORT: '3005',
         NEXT_PUBLIC_API_URL: apiUrl,
       },
     },

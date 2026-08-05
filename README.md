@@ -14,6 +14,7 @@ https://theisr.com.au
 - [Pages & Features](#pages--features)
 - [Colour Palette](#colour-palette)
 - [Getting Started](#getting-started)
+- [Testing](#testing)
 - [Environment Variables](#environment-variables)
 - [Roadmap](#roadmap)
 
@@ -133,17 +134,19 @@ The frontend will be available at `http://localhost:3000` and the backend at `ht
 
 ### Testing
 
+Postgres is required for API integration and Playwright e2e. Point `DATABASE_URL` at a disposable database (not production).
+
 ```bash
 # Backend unit tests (mocked Prisma / externals)
 cd backend && npm run test:unit
 
 # Backend API integration tests (real Postgres; Aladhan / Weather / Resend mocked)
-# Requires DATABASE_URL pointing at an empty/test database, then:
+export DATABASE_URL=postgresql://USER@localhost:5432/isr_integration
 npx prisma migrate deploy
 npm run test:integration
 
-# Frontend Playwright e2e (public flows against a local API + mocked externals)
-# Start Postgres, migrate + seed, then:
+# Frontend Playwright e2e (public flows; real DB + MOCK_EXTERNALS for Aladhan/Weather/Resend)
+export DATABASE_URL=postgresql://USER@localhost:5432/isr_e2e
 cd backend && npx prisma migrate deploy && npm run seed:e2e
 cd ../frontend && npm run test:e2e
 ```

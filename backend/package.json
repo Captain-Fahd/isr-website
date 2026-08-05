@@ -15,7 +15,7 @@
     "seed:e2e": "tsx test/e2e-seed.ts",
     "test": "jest --selectProjects unit",
     "test:unit": "jest --selectProjects unit",
-    "test:integration": "jest --selectProjects integration",
+    "test:integration": "jest --selectProjects integration --runInBand --forceExit",
     "test:all": "jest"
   },
   "prisma": {
@@ -48,7 +48,6 @@
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.11",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3",
-    "undici": "^8.10.0"
+    "typescript": "^6.0.3"
   }
 }

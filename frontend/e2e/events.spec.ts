@@ -40,13 +40,16 @@ test.describe('Events', () => {
   })
 
   test('shows an empty state when the filtered list has no events', async ({ page }) => {
-    await page.route('**/api/events?filter=upcoming', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ data: [] }),
-      })
-    })
+    await page.route(
+      (url) => url.pathname.endsWith('/api/events') && url.searchParams.get('filter') === 'upcoming',
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: [] }),
+        })
+      },
+    )
 
     await page.goto('/events/')
     await page.getByRole('button', { name: 'Upcoming' }).click()

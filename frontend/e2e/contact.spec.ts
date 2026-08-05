@@ -1,15 +1,27 @@
 import { expect, test } from '@playwright/test'
 
+async function fillContactForm(
+  page: import('@playwright/test').Page,
+  values: { name: string; email: string; subject: string; message: string },
+) {
+  await page.locator('#name').fill(values.name)
+  await page.locator('#email').fill(values.email)
+  await page.locator('#subject').fill(values.subject)
+  await page.locator('#message').fill(values.message)
+}
+
 test.describe('Contact', () => {
   test('submits the contact form successfully against the API', async ({ page }) => {
     await page.goto('/contact/')
 
     await expect(page.getByRole('heading', { level: 1, name: 'Get In Touch' })).toBeVisible()
 
-    await page.getByLabel(/^Name/).fill('Omar')
-    await page.getByLabel(/^Email/).fill('omar@example.com')
-    await page.getByLabel(/^Subject/).fill('E2E hello')
-    await page.getByLabel(/^Message/).fill('Assalamu alaikum from Playwright.')
+    await fillContactForm(page, {
+      name: 'Omar',
+      email: 'omar@example.com',
+      subject: 'E2E hello',
+      message: 'Assalamu alaikum from Playwright.',
+    })
     await page.getByRole('button', { name: 'Send Message' }).click()
 
     await expect(page.getByRole('heading', { name: 'Message Sent!' })).toBeVisible({
@@ -30,10 +42,12 @@ test.describe('Contact', () => {
     })
 
     await page.goto('/contact/')
-    await page.getByLabel(/^Name/).fill('Omar')
-    await page.getByLabel(/^Email/).fill('omar@example.com')
-    await page.getByLabel(/^Subject/).fill('E2E fail')
-    await page.getByLabel(/^Message/).fill('This should surface the API error.')
+    await fillContactForm(page, {
+      name: 'Omar',
+      email: 'omar@example.com',
+      subject: 'E2E fail',
+      message: 'This should surface the API error.',
+    })
     await page.getByRole('button', { name: 'Send Message' }).click()
 
     await expect(page.getByText('Failed to send email')).toBeVisible()

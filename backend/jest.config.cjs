@@ -16,6 +16,8 @@ module.exports = {
       testEnvironment: 'node',
       testMatch: ['**/__tests__/integration/**/*.integration.test.ts'],
       testTimeout: 30000,
+      // Shared Postgres — must stay serial.
+      maxWorkers: 1,
     },
   ],
 };
