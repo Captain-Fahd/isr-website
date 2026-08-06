@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   fetchEvents,
   formatEventDate,
@@ -117,18 +117,27 @@ export default function EventsTimeline() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Only the most recent request may update state, so a slow response for a
+  // previous filter can't overwrite the results of the one now selected.
+  const requestIdRef = useRef(0)
+
   const loadEvents = useCallback(async (selectedFilter: EventsFilter) => {
+    const requestId = ++requestIdRef.current
     setLoading(true)
     setError(null)
 
     try {
       const data = await fetchEvents(selectedFilter)
+      if (requestId !== requestIdRef.current) return
       setEvents(sortEventsForDisplay(data))
     } catch {
+      if (requestId !== requestIdRef.current) return
       setEvents([])
       setError('Unable to load events right now.')
     } finally {
-      setLoading(false)
+      if (requestId === requestIdRef.current) {
+        setLoading(false)
+      }
     }
   }, [])
 

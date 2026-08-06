@@ -72,4 +72,58 @@ test.describe('Events', () => {
     await expect(page.getByText('Unable to load events right now.')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible()
   })
+
+  test('a slow response for the previous filter does not overwrite the selected one', async ({
+    page,
+  }) => {
+    // The initial `all` request resolves slowly and returns an event...
+    await page.route(
+      (url) => url.pathname.endsWith('/api/events') && !url.searchParams.get('filter'),
+      async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            data: [
+              {
+                id: 99,
+                name: 'Stale All Event',
+                description: 'Belongs to the previously selected filter.',
+                date: '2099-03-15T06:00:00.000Z',
+                location: 'Nowhere',
+                imageUrl: null,
+                ticketUrl: null,
+              },
+            ],
+          }),
+        })
+      },
+    )
+
+    // ...while `upcoming` resolves immediately and is empty.
+    await page.route(
+      (url) => url.pathname.endsWith('/api/events') && url.searchParams.get('filter') === 'upcoming',
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: [] }),
+        })
+      },
+    )
+
+    await page.goto('/events/')
+    await page.getByRole('button', { name: 'Upcoming' }).click()
+    await expect(
+      page.getByText('Check back soon for upcoming ISR events and activities.'),
+    ).toBeVisible()
+
+    // Wait past the slow response's arrival; it must not clobber the empty state.
+    await page.waitForTimeout(2000)
+    await expect(page.getByText('Stale All Event')).toHaveCount(0)
+    await expect(
+      page.getByText('Check back soon for upcoming ISR events and activities.'),
+    ).toBeVisible()
+  })
 })
