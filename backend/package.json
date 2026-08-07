@@ -6,6 +6,9 @@
   "author": "",
   "type": "module",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "nodemon --exec tsx index.ts",
     "build": "prisma generate && esbuild index.ts --bundle --platform=node --format=esm --outdir=dist --packages=external",
@@ -29,7 +32,6 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "multer": "^2.2.0",
-    "nodemon": "^3.1.14",
     "pg": "^8.22.0",
     "resend": "^6.18.0"
   },
@@ -44,6 +46,7 @@
     "@types/supertest": "^6.0.3",
     "esbuild": "^0.27.3",
     "jest": "^30.4.2",
+    "nodemon": "^3.1.14",
     "prisma": "^7.9.1",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.11",
