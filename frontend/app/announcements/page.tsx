@@ -2,13 +2,29 @@ import type { Metadata } from 'next'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import AnnouncementsList from '@/components/AnnouncementsList'
+import { fetchAnnouncements } from '@/lib/announcements'
 
 export const metadata: Metadata = {
-  title: 'Announcements | Islamic Society of RMIT',
-  description: 'Latest news and updates from the Islamic Society of RMIT.',
+  title: 'Announcements',
+  description:
+    'Latest news and updates from the Islamic Society of RMIT, including prayer location notices and campus community updates.',
+  alternates: { canonical: '/announcements/' },
+  openGraph: {
+    title: 'Announcements | Islamic Society of RMIT',
+    description:
+      'Latest news and updates from the Islamic Society of RMIT, including prayer location notices and campus community updates.',
+    url: '/announcements/',
+  },
 }
 
-export default function AnnouncementsPage() {
+export default async function AnnouncementsPage() {
+  let initialAnnouncements: Awaited<ReturnType<typeof fetchAnnouncements>> = []
+  try {
+    initialAnnouncements = await fetchAnnouncements()
+  } catch {
+    initialAnnouncements = []
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-isr-cream via-white to-isr-yellow/30">
       <Navbar />
@@ -16,7 +32,7 @@ export default function AnnouncementsPage() {
       <main className="py-16 px-4 sm:py-20">
         <div className="container-isr max-w-5xl mx-auto">
           <header className="mb-12 text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
               News & Updates
             </p>
             <h1 className="mb-4 text-4xl font-bold text-isr-dark-red md:text-5xl">
@@ -28,7 +44,7 @@ export default function AnnouncementsPage() {
             </p>
           </header>
 
-          <AnnouncementsList />
+          <AnnouncementsList initialAnnouncements={initialAnnouncements} />
         </div>
       </main>
 

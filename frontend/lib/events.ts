@@ -117,9 +117,15 @@ function fetchOptions(): RequestInit | undefined {
   return typeof window === 'undefined' ? { next: { revalidate: 60 } } : undefined
 }
 
-export async function fetchEvents(filter: EventsFilter = 'all'): Promise<Event[]> {
+export async function fetchEvents(
+  filter: EventsFilter = 'all',
+  init?: RequestInit,
+): Promise<Event[]> {
   const query = filter === 'all' ? '' : `?filter=${filter}`
-  const response = await fetch(`${API_BASE_URL}/api/events${query}`, fetchOptions())
+  const response = await fetch(`${API_BASE_URL}/api/events${query}`, {
+    ...fetchOptions(),
+    ...init,
+  })
 
   if (!response.ok) {
     throw new Error('Failed to fetch events')

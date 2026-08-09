@@ -15,7 +15,7 @@ export default function Contact() {
         <div className="grid md:grid-cols-2 gap-8 mb-8">
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-bold text-isr-turquoise mb-3">Contact ISR</h3>
+            <h3 className="text-lg font-bold text-isr-dark-red mb-3">Contact ISR</h3>
 
             <div className="space-y-3">
               <div className="flex gap-3 items-start">
@@ -24,7 +24,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">Email</p>
-                  <a href="mailto:isr@rmit.edu.au" className="text-sm text-isr-turquoise hover:text-isr-bright-red transition-colors">
+                  <a href="mailto:isr@rmit.edu.au" className="text-sm text-isr-dark-red hover:text-isr-bright-red transition-colors">
                     isr@rmit.edu.au
                   </a>
                 </div>
@@ -36,7 +36,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">WhatsApp</p>
-                  <a href="https://api.whatsapp.com/send?phone=61418835013" className="text-sm text-isr-turquoise hover:text-isr-bright-red transition-colors">
+                  <a href="https://api.whatsapp.com/send?phone=61418835013" className="text-sm text-isr-dark-red hover:text-isr-bright-red transition-colors">
                     Message us
                   </a>
                 </div>
@@ -48,7 +48,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">Instagram</p>
-                  <a href="https://www.instagram.com/islamicsocietyofrmit?igsh=enZoZnM0ZnVydHY=" target="_blank" rel="noreferrer" className="text-sm text-isr-turquoise hover:text-isr-bright-red transition-colors">
+                  <a href="https://www.instagram.com/islamicsocietyofrmit/" target="_blank" rel="noreferrer" className="text-sm text-isr-dark-red hover:text-isr-bright-red transition-colors">
                     @islamicsocietyofrmit
                   </a>
                 </div>
@@ -60,7 +60,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">Location</p>
-                  <p className="text-sm text-gray-700">RMIT University, Melbourne</p>
+                  <p className="text-sm text-gray-700">RMIT University City Campus, Melbourne</p>
                 </div>
               </div>
             </div>
@@ -68,19 +68,22 @@ export default function Contact() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-bold text-isr-turquoise mb-3">Quick Links</h3>
+            <h3 className="text-lg font-bold text-isr-dark-red mb-3">Quick Links</h3>
 
             <div className="space-y-2">
-              <Link href="/about" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
+              <Link href="/about/" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
                 → Learn About ISR
               </Link>
-              <Link href="/about#mission-and-values" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
+              <Link href="/about/#mission-and-values" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
                 → Our Mission & Values
               </Link>
-              <Link href="/#hero" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
+              <Link href="/prayer-times/" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
                 → Prayer Times
               </Link>
-              <Link href="/events" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
+              <Link href="/jumah/" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
+                → Jumu&apos;ah at RMIT
+              </Link>
+              <Link href="/events/" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
                 → Upcoming Events
               </Link>
               <a href="https://campus.hellorubric.com/?s=10733" target="_blank" rel="noopener noreferrer" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">

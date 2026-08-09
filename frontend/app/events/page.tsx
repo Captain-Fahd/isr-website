@@ -3,13 +3,29 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import EventsTimeline from '@/components/EventsTimeline'
 import NewsletterSignup from '@/components/NewsletterSignup'
+import { fetchEvents } from '@/lib/events'
 
 export const metadata: Metadata = {
-  title: 'Events | Islamic Society of RMIT',
-  description: 'Upcoming and past events from the Islamic Society of RMIT.',
+  title: 'Events',
+  description:
+    'Upcoming and past events from the Islamic Society of RMIT — dinners, socials, and campus community gatherings.',
+  alternates: { canonical: '/events/' },
+  openGraph: {
+    title: 'Events | Islamic Society of RMIT',
+    description:
+      'Upcoming and past events from the Islamic Society of RMIT — dinners, socials, and campus community gatherings.',
+    url: '/events/',
+  },
 }
 
-export default function EventsPage() {
+export default async function EventsPage() {
+  let initialEvents: Awaited<ReturnType<typeof fetchEvents>> = []
+  try {
+    initialEvents = await fetchEvents('all')
+  } catch {
+    initialEvents = []
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-isr-cream via-white to-isr-yellow/30">
       <Navbar />
@@ -17,7 +33,7 @@ export default function EventsPage() {
       <main className="py-16 px-4 sm:py-20">
         <div className="container-isr max-w-5xl mx-auto">
           <header className="mb-12 text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
               Community & Activities
             </p>
             <h1 className="mb-4 text-4xl font-bold text-isr-dark-red md:text-5xl">Events</h1>
@@ -28,7 +44,7 @@ export default function EventsPage() {
             </p>
           </header>
 
-          <EventsTimeline />
+          <EventsTimeline initialEvents={initialEvents} />
 
           <div className="mt-16 max-w-xl mx-auto">
             <NewsletterSignup

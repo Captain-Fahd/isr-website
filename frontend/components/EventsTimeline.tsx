@@ -19,13 +19,22 @@ const FILTERS: { value: EventsFilter; label: string }[] = [
   { value: 'past', label: 'Past' },
 ]
 
-function EventCard({ event, isLast }: { event: Event; isLast: boolean }) {
+const FETCH_TIMEOUT_MS = 15_000
+
+function EventCard({
+  event,
+  isLast,
+  priorityImage = false,
+}: {
+  event: Event
+  isLast: boolean
+  priorityImage?: boolean
+}) {
   const { date, time } = formatEventDate(event.date)
   const past = isEventPast(event.date)
 
   return (
     <article className="relative flex gap-6 md:gap-10">
-      {/* Chain node + connector line */}
       <div className="relative flex shrink-0 flex-col items-center">
         <div
           className={`relative z-10 flex h-5 w-5 items-center justify-center rounded-full ring-4 ring-isr-cream ${
@@ -43,7 +52,6 @@ function EventCard({ event, isLast }: { event: Event; isLast: boolean }) {
         )}
       </div>
 
-      {/* Event content */}
       <div
         className={`mb-12 flex-1 overflow-hidden rounded-2xl bg-white shadow-[0_12px_32px_rgba(91,11,5,0.08)] ring-1 ring-black/5 transition-shadow hover:shadow-[0_16px_40px_rgba(91,11,5,0.12)] ${
           past ? 'opacity-85' : ''
@@ -57,6 +65,8 @@ function EventCard({ event, isLast }: { event: Event; isLast: boolean }) {
               fill
               className="h-full w-full object-cover object-center"
               sizes="(max-width: 768px) 100vw, 720px"
+              priority={priorityImage}
+              loading={priorityImage ? 'eager' : 'lazy'}
             />
           </div>
         )}
@@ -65,7 +75,7 @@ function EventCard({ event, isLast }: { event: Event; isLast: boolean }) {
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <time
               dateTime={event.date}
-              className="text-sm font-semibold uppercase tracking-[0.14em] text-isr-turquoise"
+              className="text-sm font-semibold uppercase tracking-[0.14em] text-isr-dark-red"
             >
               {date}
             </time>
@@ -78,7 +88,10 @@ function EventCard({ event, isLast }: { event: Event; isLast: boolean }) {
           </div>
 
           <h3 className="mb-3 text-2xl font-bold text-isr-dark-red sm:text-3xl">
-            <Link href={`/events/${event.id}`} className="hover:text-isr-turquoise transition-colors">
+            <Link
+              href={`/events/${event.id}/`}
+              className="hover:text-isr-turquoise transition-colors"
+            >
               {event.name}
             </Link>
           </h3>
@@ -87,8 +100,8 @@ function EventCard({ event, isLast }: { event: Event; isLast: boolean }) {
 
           <div className="flex flex-wrap gap-3">
             <Link
-              href={`/events/${event.id}`}
-              className="inline-flex items-center rounded-lg border-2 border-isr-turquoise px-6 py-3 text-sm font-semibold text-isr-turquoise transition-colors hover:bg-isr-turquoise hover:text-white"
+              href={`/events/${event.id}/`}
+              className="inline-flex min-h-11 items-center rounded-lg border-2 border-isr-turquoise px-6 py-3 text-sm font-semibold text-isr-dark-red transition-colors hover:bg-isr-turquoise hover:text-white"
             >
               View Details
               <ArrowRight />
@@ -98,7 +111,7 @@ function EventCard({ event, isLast }: { event: Event; isLast: boolean }) {
                 href={event.ticketUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center rounded-lg bg-isr-turquoise px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
+                className="inline-flex min-h-11 items-center rounded-lg bg-isr-turquoise px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
               >
                 Get Tickets
                 <ArrowRight />
@@ -111,23 +124,28 @@ function EventCard({ event, isLast }: { event: Event; isLast: boolean }) {
   )
 }
 
-export default function EventsTimeline() {
-  const [filter, setFilter] = useState<EventsFilter>('all')
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+type EventsTimelineProps = {
+  initialEvents: Event[]
+}
 
-  // Only the most recent request may update state, so a slow response for a
-  // previous filter can't overwrite the results of the one now selected.
+export default function EventsTimeline({ initialEvents }: EventsTimelineProps) {
+  const [filter, setFilter] = useState<EventsFilter>('all')
+  const [events, setEvents] = useState<Event[]>(() => sortEventsForDisplay(initialEvents))
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const requestIdRef = useRef(0)
+  const hasMountedRef = useRef(false)
 
   const loadEvents = useCallback(async (selectedFilter: EventsFilter) => {
     const requestId = ++requestIdRef.current
     setLoading(true)
     setError(null)
 
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
     try {
-      const data = await fetchEvents(selectedFilter)
+      const data = await fetchEvents(selectedFilter, { signal: controller.signal })
       if (requestId !== requestIdRef.current) return
       setEvents(sortEventsForDisplay(data))
     } catch {
@@ -135,6 +153,7 @@ export default function EventsTimeline() {
       setEvents([])
       setError('Unable to load events right now.')
     } finally {
+      window.clearTimeout(timeoutId)
       if (requestId === requestIdRef.current) {
         setLoading(false)
       }
@@ -142,6 +161,11 @@ export default function EventsTimeline() {
   }, [])
 
   useEffect(() => {
+    // First paint uses server-rendered events so crawlers see real titles/dates.
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true
+      return
+    }
     void loadEvents(filter)
   }, [filter, loadEvents])
 
@@ -155,10 +179,10 @@ export default function EventsTimeline() {
               key={value}
               type="button"
               onClick={() => setFilter(value)}
-              className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+              className={`min-h-11 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors ${
                 active
                   ? 'bg-isr-turquoise text-white'
-                  : 'bg-white text-gray-700 ring-1 ring-isr-light-blue/40 hover:text-isr-turquoise'
+                  : 'bg-white text-gray-700 ring-1 ring-isr-light-blue/40 hover:text-isr-dark-red'
               }`}
               aria-pressed={active}
             >
@@ -190,7 +214,7 @@ export default function EventsTimeline() {
           <button
             type="button"
             onClick={() => void loadEvents(filter)}
-            className="mt-4 text-sm font-semibold text-isr-turquoise underline-offset-2 hover:underline"
+            className="mt-4 min-h-11 text-sm font-semibold text-isr-dark-red underline-offset-2 hover:underline"
           >
             Try again
           </button>
@@ -213,7 +237,12 @@ export default function EventsTimeline() {
       {!loading && !error && events.length > 0 && (
         <div className="mx-auto max-w-3xl">
           {events.map((event, index) => (
-            <EventCard key={event.id} event={event} isLast={index === events.length - 1} />
+            <EventCard
+              key={event.id}
+              event={event}
+              isLast={index === events.length - 1}
+              priorityImage={index === 0}
+            />
           ))}
         </div>
       )}

@@ -18,30 +18,11 @@ test.describe('Announcements', () => {
     await expect(titles.nth(1)).toHaveText('Friday Prayer Location Update')
   })
 
-  test('shows an empty state when there are no announcements', async ({ page }) => {
-    await page.route('**/api/announcements**', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ data: [] }),
-      })
-    })
-
-    await page.goto('/announcements/')
-    await expect(page.getByText('No announcements yet')).toBeVisible()
-  })
-
-  test('shows an error state when the announcements API fails', async ({ page }) => {
-    await page.route('**/api/announcements**', async (route) => {
-      await route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: 'Failed to fetch announcements' }),
-      })
-    })
-
-    await page.goto('/announcements/')
-    await expect(page.getByText('Unable to load announcements right now.')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible()
+  test('server-renders announcement titles in the initial HTML', async ({ page }) => {
+    const response = await page.goto('/announcements/')
+    expect(response?.ok()).toBeTruthy()
+    const html = await page.content()
+    expect(html).toContain('Welcome to ISR!')
+    expect(html).not.toContain('animate-pulse')
   })
 })

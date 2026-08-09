@@ -32,6 +32,12 @@ test.describe('Home', () => {
     await expect(page).toHaveURL(/\/announcements\/?$/)
     await expect(page.getByRole('heading', { level: 1, name: 'Announcements' })).toBeVisible()
 
+    await nav.getByRole('link', { name: 'Prayer Times' }).click()
+    await expect(page).toHaveURL(/\/prayer-times\/?$/)
+    await expect(
+      page.getByRole('heading', { level: 1, name: /Prayer Times/ }),
+    ).toBeVisible()
+
     await nav.getByRole('link', { name: 'About' }).click()
     await expect(page).toHaveURL(/\/about\/?$/)
     await expect(

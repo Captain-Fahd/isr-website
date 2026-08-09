@@ -26,8 +26,11 @@ function fetchOptions(): RequestInit | undefined {
   return typeof window === 'undefined' ? { next: { revalidate: 60 } } : undefined
 }
 
-export async function fetchAnnouncements(): Promise<Announcement[]> {
-  const response = await fetch(`${API_BASE_URL}/api/announcements`, fetchOptions())
+export async function fetchAnnouncements(init?: RequestInit): Promise<Announcement[]> {
+  const response = await fetch(`${API_BASE_URL}/api/announcements`, {
+    ...fetchOptions(),
+    ...init,
+  })
   if (!response.ok) throw new Error('Failed to fetch announcements')
   const json = (await response.json()) as AnnouncementsResponse
   return json.data

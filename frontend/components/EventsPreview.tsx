@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { fetchEvents, formatEventDate, type Event } from '@/lib/events'
 import { ArrowRight } from '@/components/Icons'
 
@@ -14,15 +14,17 @@ const EVENT_IMAGE_MAX_HEIGHT = 320
 function EventPreviewCard({
   event,
   index,
+  priorityImage = false,
 }: {
   event: Event
   index: number
+  priorityImage?: boolean
 }) {
   const { date, time } = formatEventDate(event.date)
 
   return (
     <Link
-      href={`/events/${event.id}`}
+      href={`/events/${event.id}/`}
       className="group flex shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] transition-shadow hover:shadow-[0_2px_7px_rgba(91,11,5,0.14)]"
       style={{ width: EVENT_CARD_WIDTH, height: EVENT_CARD_HEIGHT }}
     >
@@ -37,6 +39,8 @@ function EventPreviewCard({
               sizes={`${EVENT_CARD_WIDTH}px`}
               className="block h-auto w-full"
               style={{ width: '100%', height: 'auto', maxHeight: EVENT_IMAGE_MAX_HEIGHT }}
+              priority={priorityImage}
+              loading={priorityImage ? 'eager' : 'lazy'}
             />
           </div>
         ) : (
@@ -65,32 +69,13 @@ function EventPreviewCard({
   )
 }
 
-function EventPreviewCardSkeleton() {
-  return (
-    <div
-      className="flex shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] animate-pulse"
-      style={{ width: EVENT_CARD_WIDTH, height: EVENT_CARD_HEIGHT }}
-    >
-      <div className="shrink-0 px-2 pt-2">
-        <div className="h-48 rounded-lg bg-isr-yellow" />
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col space-y-2 px-4 pb-4 pt-2">
-        <div className="h-4 w-3/4 shrink-0 rounded bg-isr-light-blue/30" />
-        <div className="h-3 w-1/2 shrink-0 rounded bg-isr-light-blue/20" />
-        <div className="min-h-0 flex-1 space-y-2">
-          <div className="h-3 w-full rounded bg-isr-light-blue/20" />
-          <div className="h-3 w-full rounded bg-isr-light-blue/20" />
-          <div className="h-3 w-full rounded bg-isr-light-blue/20" />
-          <div className="h-3 w-5/6 rounded bg-isr-light-blue/20" />
-        </div>
-      </div>
-    </div>
-  )
+type EventsPreviewProps = {
+  initialEvents: Event[]
 }
 
-export default function EventsPreview() {
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
+export default function EventsPreview({ initialEvents }: EventsPreviewProps) {
+  const [events, setEvents] = useState<Event[]>(initialEvents.slice(0, 5))
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const loadEvents = useCallback(async () => {
@@ -108,10 +93,6 @@ export default function EventsPreview() {
     }
   }, [])
 
-  useEffect(() => {
-    void loadEvents()
-  }, [loadEvents])
-
   return (
     <section className="py-20 px-4 bg-isr-light-blue bg-opacity-10">
       <div className="container-isr max-w-6xl mx-auto">
@@ -122,11 +103,9 @@ export default function EventsPreview() {
         <div className="w-16 h-1 bg-isr-bright-red mx-auto mb-12" />
 
         {loading && (
-          <div className="mb-12 flex flex-wrap justify-center gap-6" aria-live="polite" aria-busy="true">
-            {[0, 1, 2, 3, 4].map((index) => (
-              <EventPreviewCardSkeleton key={index} />
-            ))}
-          </div>
+          <p className="mb-12 text-center text-sm text-gray-600" aria-live="polite" aria-busy="true">
+            Refreshing events…
+          </p>
         )}
 
         {!loading && error && (
@@ -135,7 +114,7 @@ export default function EventsPreview() {
             <button
               type="button"
               onClick={() => void loadEvents()}
-              className="mt-4 text-sm font-semibold text-isr-turquoise underline-offset-2 hover:underline"
+              className="mt-4 min-h-11 text-sm font-semibold text-isr-dark-red underline-offset-2 hover:underline"
             >
               Try again
             </button>
@@ -151,15 +130,20 @@ export default function EventsPreview() {
         {!loading && !error && events.length > 0 && (
           <div className="mb-12 flex flex-wrap items-stretch justify-center gap-6">
             {events.map((event, index) => (
-              <EventPreviewCard key={event.id} event={event} index={index} />
+              <EventPreviewCard
+                key={event.id}
+                event={event}
+                index={index}
+                priorityImage={index === 0}
+              />
             ))}
           </div>
         )}
 
         <div className="text-center">
           <Link
-            href="/events"
-            className="inline-block px-8 py-3 bg-isr-turquoise text-white font-semibold rounded-lg hover:bg-isr-dark-red transition-colors"
+            href="/events/"
+            className="inline-block min-h-11 px-8 py-3 bg-isr-turquoise text-white font-semibold rounded-lg hover:bg-isr-dark-red transition-colors"
           >
             View All Events
           </Link>

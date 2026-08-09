@@ -5,11 +5,19 @@ import Footer from '@/components/Footer'
 import { CommunityIcon, FaithIcon, BookIcon, GlobeIcon } from '@/components/Icons'
 import MissionContent from '@/components/MissionContent'
 import NewsletterSignup from '@/components/NewsletterSignup'
+import { CAMPUS } from '@/lib/campus'
 
 export const metadata: Metadata = {
-  title: 'About | Islamic Society of RMIT',
+  title: 'About',
   description:
-    'The Islamic Society of RMIT has been serving Muslim students on campus since 1993 — providing prayer, community, education, and advocacy.',
+    'The Islamic Society of RMIT has been serving Muslim students on campus since 1993 — providing prayer, community, education, and advocacy at RMIT City Campus, Melbourne.',
+  alternates: { canonical: '/about/' },
+  openGraph: {
+    title: 'About | Islamic Society of RMIT',
+    description:
+      'The Islamic Society of RMIT has been serving Muslim students on campus since 1993 — providing prayer, community, education, and advocacy.',
+    url: '/about/',
+  },
 }
 
 const pillars = [
@@ -48,7 +56,7 @@ export default function AboutPage() {
         {/* Page Header */}
         <section className="px-4 pb-16 pt-24 sm:pt-28">
           <div className="container-isr text-center">
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
+            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
               About ISR
             </p>
             <h1 className="mb-5 text-4xl font-bold text-isr-dark-red md:text-5xl" style={{ textWrap: 'balance' } as React.CSSProperties}>
@@ -66,16 +74,27 @@ export default function AboutPage() {
         <section className="bg-white px-4 py-16 sm:py-20">
           <div className="container-isr">
             <div className="mx-auto max-w-3xl">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
                 Our Story
               </p>
               <h2 className="mb-6 text-3xl font-bold text-isr-dark-red">Who We Are</h2>
               <div className="space-y-5 leading-relaxed text-gray-600">
                 <p>
-                  Founded in 1993, the Islamic Society of RMIT (ISR) is one of Melbourne's
-                  longest-standing Muslim student associations. What began as a small group of
-                  students seeking a place to pray and connect has grown into a vibrant community
-                  that welcomes students across RMIT's campuses each year.
+                  Founded in 1993, the Islamic Society of RMIT (ISR) is one of Melbourne&apos;s
+                  longest-standing Muslim student associations. Based at {CAMPUS.localityLabel},
+                  what began as a small group of students seeking a place to pray and connect has
+                  grown into a vibrant community that welcomes students across RMIT&apos;s campuses
+                  each year.
+                </p>
+                <p>
+                  {CAMPUS.prayerSpaceSummary} {CAMPUS.jumuah.summary}{' '}
+                  <Link
+                    href="/jumah/"
+                    className="font-semibold text-isr-dark-red underline underline-offset-2 hover:text-isr-turquoise"
+                  >
+                    See Jumu&apos;ah times and locations
+                  </Link>
+                  .
                 </p>
                 <p>
                   Muslim student associations exist to bridge the gap between faith and campus life.
@@ -99,7 +118,7 @@ export default function AboutPage() {
         <section className="bg-isr-light-blue/10 px-4 py-16 sm:py-20">
           <div className="container-isr">
             <div className="mb-12 text-center">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
                 What We Do
               </p>
               <h2 className="mb-4 text-3xl font-bold text-isr-dark-red">
@@ -129,7 +148,7 @@ export default function AboutPage() {
         <section id="mission-and-values" className="bg-white px-4 py-16 sm:py-20">
           <div className="container-isr">
             <div className="mb-12 text-center">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
                 Who We Are
               </p>
               <h2 className="mb-4 text-3xl font-bold text-isr-dark-red">Mission & Vision</h2>
@@ -153,13 +172,13 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
-                href="/contact"
+                href="/contact/"
                 className="rounded-lg bg-isr-turquoise px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
               >
                 Get in Touch
               </Link>
               <Link
-                href="/events"
+                href="/events/"
                 className="rounded-lg border-2 border-isr-bright-red px-6 py-3 text-sm font-semibold text-isr-bright-red transition-colors hover:bg-isr-bright-red hover:text-white"
               >
                 See Upcoming Events

@@ -1,9 +1,11 @@
 'use client'
 
 import Image from 'next/image'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { fetchAnnouncements, formatAnnouncementDate, type Announcement } from '@/lib/announcements'
 import { PinIcon } from '@/components/Icons'
+
+const FETCH_TIMEOUT_MS = 15_000
 
 function AnnouncementCard({ announcement }: { announcement: Announcement }) {
   const { pinned, imageUrl, title, body, createdAt } = announcement
@@ -32,13 +34,13 @@ function AnnouncementCard({ announcement }: { announcement: Announcement }) {
         <div className="mb-3 flex flex-wrap items-center gap-3">
           <time
             dateTime={createdAt}
-            className="text-sm font-semibold uppercase tracking-[0.14em] text-isr-turquoise"
+            className="text-sm font-semibold uppercase tracking-[0.14em] text-isr-dark-red"
           >
             {formatAnnouncementDate(createdAt)}
           </time>
 
           {pinned && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-isr-turquoise/15 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-isr-turquoise">
+            <span className="inline-flex items-center gap-1 rounded-full bg-isr-turquoise/15 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-isr-dark-red">
               <PinIcon className="w-3 h-3" />
               Pinned
             </span>
@@ -53,28 +55,35 @@ function AnnouncementCard({ announcement }: { announcement: Announcement }) {
   )
 }
 
-export default function AnnouncementsList() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([])
-  const [loading, setLoading] = useState(true)
+type AnnouncementsListProps = {
+  initialAnnouncements: Announcement[]
+}
+
+export default function AnnouncementsList({
+  initialAnnouncements,
+}: AnnouncementsListProps) {
+  const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncements)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
+
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
     try {
-      const data = await fetchAnnouncements()
+      const data = await fetchAnnouncements({ signal: controller.signal })
       setAnnouncements(data)
     } catch {
       setAnnouncements([])
       setError('Unable to load announcements right now.')
     } finally {
+      window.clearTimeout(timeoutId)
       setLoading(false)
     }
   }, [])
-
-  useEffect(() => {
-    void load()
-  }, [load])
 
   if (loading) {
     return (
@@ -98,7 +107,7 @@ export default function AnnouncementsList() {
         <button
           type="button"
           onClick={() => void load()}
-          className="mt-4 text-sm font-semibold text-isr-turquoise underline-offset-2 hover:underline"
+          className="mt-4 min-h-11 text-sm font-semibold text-isr-dark-red underline-offset-2 hover:underline"
         >
           Try again
         </button>
@@ -111,6 +120,13 @@ export default function AnnouncementsList() {
       <div className="mx-auto max-w-xl rounded-2xl border border-isr-light-blue/30 bg-white px-6 py-12 text-center">
         <p className="text-lg font-semibold text-isr-dark-red">No announcements yet</p>
         <p className="mt-2 text-sm text-gray-600">Check back soon for updates from ISR.</p>
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="mt-4 min-h-11 text-sm font-semibold text-isr-dark-red underline-offset-2 hover:underline"
+        >
+          Refresh
+        </button>
       </div>
     )
   }

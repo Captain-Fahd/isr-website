@@ -59,16 +59,23 @@ test.describe('Events', () => {
     ).toBeVisible()
   })
 
-  test('shows an error state when the events API fails', async ({ page }) => {
-    await page.route('**/api/events**', async (route) => {
-      await route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: 'Failed to fetch events' }),
-      })
-    })
+  test('shows an error state when a filtered events request fails', async ({ page }) => {
+    await page.route(
+      (url) => url.pathname.endsWith('/api/events') && url.searchParams.get('filter') === 'upcoming',
+      async (route) => {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'Failed to fetch events' }),
+        })
+      },
+    )
 
     await page.goto('/events/')
+    await expect(page.getByRole('heading', { name: 'Welcome BBQ' })).toBeVisible({
+      timeout: 15_000,
+    })
+    await page.getByRole('button', { name: 'Upcoming' }).click()
     await expect(page.getByText('Unable to load events right now.')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible()
   })
@@ -76,9 +83,8 @@ test.describe('Events', () => {
   test('a slow response for the previous filter does not overwrite the selected one', async ({
     page,
   }) => {
-    // The initial `all` request resolves slowly and returns an event...
     await page.route(
-      (url) => url.pathname.endsWith('/api/events') && !url.searchParams.get('filter'),
+      (url) => url.pathname.endsWith('/api/events') && url.searchParams.get('filter') === 'past',
       async (route) => {
         await new Promise((resolve) => setTimeout(resolve, 1000))
         await route.fulfill({
@@ -88,9 +94,9 @@ test.describe('Events', () => {
             data: [
               {
                 id: 99,
-                name: 'Stale All Event',
+                name: 'Stale Past Event',
                 description: 'Belongs to the previously selected filter.',
-                date: '2099-03-15T06:00:00.000Z',
+                date: '2020-03-15T06:00:00.000Z',
                 location: 'Nowhere',
                 imageUrl: null,
                 ticketUrl: null,
@@ -101,9 +107,9 @@ test.describe('Events', () => {
       },
     )
 
-    // ...while `upcoming` resolves immediately and is empty.
     await page.route(
-      (url) => url.pathname.endsWith('/api/events') && url.searchParams.get('filter') === 'upcoming',
+      (url) =>
+        url.pathname.endsWith('/api/events') && url.searchParams.get('filter') === 'upcoming',
       async (route) => {
         await route.fulfill({
           status: 200,
@@ -114,14 +120,14 @@ test.describe('Events', () => {
     )
 
     await page.goto('/events/')
+    await page.getByRole('button', { name: 'Past' }).click()
     await page.getByRole('button', { name: 'Upcoming' }).click()
     await expect(
       page.getByText('Check back soon for upcoming ISR events and activities.'),
     ).toBeVisible()
 
-    // Wait past the slow response's arrival; it must not clobber the empty state.
     await page.waitForTimeout(2000)
-    await expect(page.getByText('Stale All Event')).toHaveCount(0)
+    await expect(page.getByText('Stale Past Event')).toHaveCount(0)
     await expect(
       page.getByText('Check back soon for upcoming ISR events and activities.'),
     ).toBeVisible()

@@ -49,7 +49,7 @@ export default function Hero() {
               Islamic Society of RMIT
             </h1>
 
-            <p className="mb-3 text-lg font-semibold text-isr-turquoise sm:text-xl">
+            <p className="mb-3 text-lg font-semibold text-isr-dark-red sm:text-xl">
               The Home of Muslim Students at RMIT
             </p>
 
@@ -63,7 +63,7 @@ export default function Hero() {
                 Become a Member
               </a>
               <Link
-                href="/events"
+                href="/events/"
                 className="rounded-lg border-2 border-isr-bright-red px-8 py-3 font-semibold text-isr-bright-red transition-colors hover:bg-isr-bright-red hover:text-white"
               >
                 Explore Events

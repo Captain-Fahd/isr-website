@@ -6,6 +6,12 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { ArrowRight } from '@/components/Icons'
 import { fetchEventById, fetchEvents, formatEventDate, isEventPast } from '@/lib/events'
+import {
+  DEFAULT_OG_IMAGE,
+  absoluteUrl,
+  eventJsonLd,
+  truncateMetaDescription,
+} from '@/lib/seo'
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -25,21 +31,39 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const eventId = Number(id)
 
   if (!Number.isInteger(eventId)) {
-    return { title: 'Event Not Found | Islamic Society of RMIT' }
+    return { title: 'Event Not Found' }
   }
 
   try {
     const event = await fetchEventById(eventId)
     if (!event) {
-      return { title: 'Event Not Found | Islamic Society of RMIT' }
+      return { title: 'Event Not Found' }
     }
 
+    const description = truncateMetaDescription(event.description)
+    const canonical = `/events/${event.id}/`
+    const image = event.imageUrl || DEFAULT_OG_IMAGE
+
     return {
-      title: `${event.name} | Islamic Society of RMIT`,
-      description: event.description,
+      title: event.name,
+      description,
+      alternates: { canonical },
+      openGraph: {
+        title: `${event.name} | Islamic Society of RMIT`,
+        description,
+        url: canonical,
+        type: 'website',
+        images: [{ url: image, alt: `${event.name} poster` }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${event.name} | Islamic Society of RMIT`,
+        description,
+        images: [image],
+      },
     }
   } catch {
-    return { title: 'Events | Islamic Society of RMIT' }
+    return { title: 'Events' }
   }
 }
 
@@ -64,16 +88,28 @@ export default async function EventDetailPage({ params }: PageProps) {
 
   const { date, time } = formatEventDate(event.date)
   const past = isEventPast(event.date)
+  const jsonLd = eventJsonLd({
+    name: event.name,
+    description: event.description,
+    startDate: event.date,
+    imageUrl: event.imageUrl,
+    url: absoluteUrl(`/events/${event.id}/`),
+    ticketUrl: event.ticketUrl,
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-isr-cream via-white to-isr-yellow/30">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
 
       <main className="py-16 px-4 sm:py-20">
         <div className="container-isr max-w-3xl mx-auto">
           <Link
-            href="/events"
-            className="mb-8 inline-flex items-center text-sm font-semibold text-isr-turquoise hover:text-isr-dark-red transition-colors"
+            href="/events/"
+            className="mb-8 inline-flex min-h-11 items-center text-sm font-semibold text-isr-dark-red hover:text-isr-turquoise transition-colors"
           >
             ← Back to Events
           </Link>
@@ -98,7 +134,7 @@ export default async function EventDetailPage({ params }: PageProps) {
               <div className="mb-4 flex flex-wrap items-center gap-3">
                 <time
                   dateTime={event.date}
-                  className="text-sm font-semibold uppercase tracking-[0.14em] text-isr-turquoise"
+                  className="text-sm font-semibold uppercase tracking-[0.14em] text-isr-dark-red"
                 >
                   {date}
                 </time>
@@ -119,7 +155,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                   href={event.ticketUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center rounded-lg bg-isr-turquoise px-8 py-3 font-semibold text-white transition-colors hover:bg-isr-dark-red"
+                  className="inline-flex min-h-11 items-center rounded-lg bg-isr-turquoise px-8 py-3 font-semibold text-white transition-colors hover:bg-isr-dark-red"
                 >
                   Get Tickets
                   <ArrowRight />

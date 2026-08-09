@@ -28,3 +28,5 @@ Thumbs.db
 # Supabase
 supabase/.temp/
 .cursor/settings.json
+./screenshots/
+

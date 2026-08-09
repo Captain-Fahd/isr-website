@@ -12,10 +12,12 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/', label: 'Home' },
-    { href: '/events', label: 'Events' },
-    { href: '/announcements', label: 'Announcements' },
-    { href: '/about', label: 'About' },
-    { href: '/contact', label: 'Contact' },
+    { href: '/events/', label: 'Events' },
+    { href: '/announcements/', label: 'Announcements' },
+    { href: '/prayer-times/', label: 'Prayer Times' },
+    { href: '/jumah/', label: "Jumu'ah" },
+    { href: '/about/', label: 'About' },
+    { href: '/contact/', label: 'Contact' },
   ]
 
   return (
@@ -56,7 +58,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-gray-700 hover:text-isr-turquoise transition-colors"
+                className="text-sm font-medium text-gray-700 hover:text-isr-dark-red transition-colors min-h-11 inline-flex items-center"
               >
                 {link.label}
               </Link>
@@ -73,7 +75,7 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 text-isr-turquoise"
+            className="md:hidden flex h-11 w-11 items-center justify-center text-isr-turquoise"
             onClick={() => setIsOpen(!isOpen)}
             aria-expanded={isOpen}
             aria-label={isOpen ? 'Close menu' : 'Open menu'}
@@ -101,7 +103,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsOpen(false)}
-                className="block px-4 py-2 text-sm font-medium text-gray-700 hover:text-isr-turquoise transition-colors"
+                className="block min-h-11 px-4 py-3 text-sm font-medium text-gray-700 hover:text-isr-dark-red transition-colors"
               >
                 {link.label}
               </Link>

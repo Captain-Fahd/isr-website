@@ -4,9 +4,10 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Islamic Society of RMIT',
+  title: 'Privacy Policy',
   description:
     'How the Islamic Society of RMIT collects, uses, stores, and protects the personal information you share with us through theisr.com.au.',
+  alternates: { canonical: '/privacy/' },
 }
 
 const LAST_UPDATED = '7 August 2026'
@@ -21,7 +22,7 @@ export default function PrivacyPolicyPage() {
         {/* Page Header */}
         <section className="px-4 pb-16 pt-24 sm:pt-28">
           <div className="container-isr text-center">
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
+            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
               Legal
             </p>
             <h1
@@ -300,7 +301,7 @@ export default function PrivacyPolicyPage() {
                 Email {PRIVACY_EMAIL}
               </a>
               <Link
-                href="/contact"
+                href="/contact/"
                 className="rounded-lg border-2 border-isr-bright-red px-6 py-3 text-sm font-semibold text-isr-bright-red transition-colors hover:bg-isr-bright-red hover:text-white"
               >
                 Other ways to reach us
