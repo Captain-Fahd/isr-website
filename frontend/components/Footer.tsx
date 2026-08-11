@@ -20,7 +20,6 @@ export default function Footer() {
             <ul className="text-sm text-gray-300 space-y-2">
               <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
               <li><a href="/prayer-times/" className="hover:text-white transition-colors">Prayer Times</a></li>
-              <li><a href="/jumah/" className="hover:text-white transition-colors">Jumu&apos;ah</a></li>
               <li><a href="/events/" className="hover:text-white transition-colors">Events</a></li>
               <li><a href="/about/" className="hover:text-white transition-colors">About</a></li>
             </ul>

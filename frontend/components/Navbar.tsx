@@ -15,7 +15,6 @@ export default function Navbar() {
     { href: '/events/', label: 'Events' },
     { href: '/announcements/', label: 'Announcements' },
     { href: '/prayer-times/', label: 'Prayer Times' },
-    { href: '/jumah/', label: "Jumu'ah" },
     { href: '/about/', label: 'About' },
     { href: '/contact/', label: 'Contact' },
   ]

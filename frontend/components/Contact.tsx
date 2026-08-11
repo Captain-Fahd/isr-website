@@ -78,10 +78,7 @@ export default function Contact() {
                 → Our Mission & Values
               </Link>
               <Link href="/prayer-times/" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
-                → Prayer Times
-              </Link>
-              <Link href="/jumah/" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
-                → Jumu&apos;ah at RMIT
+                → Prayer Times &amp; Jumu&apos;ah
               </Link>
               <Link href="/events/" className="block text-sm text-gray-700 hover:text-isr-bright-red font-medium transition-colors">
                 → Upcoming Events
