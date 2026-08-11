@@ -97,6 +97,22 @@ export function GlobeIcon({ className = 'w-7 h-7' }: { className?: string }) {
   )
 }
 
+export function CoinIcon({ className = 'w-7 h-7' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="8.8" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="5.8" stroke="currentColor" strokeWidth="1.2" />
+      <path
+        d="M12 8.6v6.8M13.9 9.9h-2.7a1.5 1.5 0 000 3h1.6a1.5 1.5 0 010 3h-2.7"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function PinIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>

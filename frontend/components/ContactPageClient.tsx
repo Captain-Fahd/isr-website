@@ -131,20 +131,12 @@ export default function ContactPageClient() {
                         <p className="text-sm text-gray-700">{CAMPUS.localityLabel}</p>
                         <p className="mt-1 text-sm text-gray-600">{CAMPUS.prayerSpaceSummary}</p>
                         <p className="mt-2 text-sm text-gray-600">
-                          For Jumu&apos;ah times and rooms at City and Bundoora, see{' '}
-                          <Link
-                            href="/jumah/"
-                            className="font-semibold text-isr-dark-red underline underline-offset-2 hover:text-isr-turquoise"
-                          >
-                            Jumu&apos;ah
-                          </Link>
-                          {' '}
-                          or{' '}
+                          For daily prayer times and Jumu&apos;ah rooms at City and Bundoora, see{' '}
                           <Link
                             href="/prayer-times/"
                             className="font-semibold text-isr-dark-red underline underline-offset-2 hover:text-isr-turquoise"
                           >
-                            Prayer Times
+                            Prayer Times &amp; Jumu&apos;ah
                           </Link>
                           .
                         </p>

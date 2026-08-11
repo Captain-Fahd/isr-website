@@ -89,7 +89,7 @@ export default function AboutPage() {
                 <p>
                   {CAMPUS.prayerSpaceSummary} {CAMPUS.jumuah.summary}{' '}
                   <Link
-                    href="/jumah/"
+                    href="/prayer-times/#jumah"
                     className="font-semibold text-isr-dark-red underline underline-offset-2 hover:text-isr-turquoise"
                   >
                     See Jumu&apos;ah times and locations
