@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import PrayerTimesTable from '@/components/PrayerTimesTable'
+import { PinIcon } from '@/components/Icons'
 import { CAMPUS } from '@/lib/campus'
 import { SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo'
 
@@ -131,8 +132,8 @@ export default function PrayerTimesPage() {
             </p>
             <h2 className="mb-4 text-3xl font-bold text-isr-dark-red">Jumu&apos;ah at RMIT</h2>
             <p className="mb-10 leading-relaxed text-gray-700">
-              {CAMPUS.jumuah.summary} Find times, buildings, and musallah access for City and
-              Bundoora below.
+              {CAMPUS.jumuah.summary} Times, buildings, and rooms for City and Bundoora are on the
+              flyer below.
             </p>
 
             <figure className="mx-auto mb-12 max-w-lg">
@@ -149,64 +150,7 @@ export default function PrayerTimesPage() {
               </figcaption>
             </figure>
 
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
-              Locations &amp; Times
-            </p>
-            <h3 className="mb-8 text-2xl font-bold text-isr-dark-red">
-              Where to pray Jumu&apos;ah
-            </h3>
-
-            <div className="space-y-10">
-              {CAMPUS.jumuah.locations.map((location) => (
-                <article
-                  key={location.id}
-                  className="rounded-2xl bg-isr-cream/50 p-6 ring-1 ring-black/5 sm:p-8"
-                >
-                  <h4 className="mb-4 text-2xl font-bold text-isr-dark-red">{location.name}</h4>
-                  <dl className="space-y-3 text-gray-700">
-                    <div>
-                      <dt className="text-sm font-semibold uppercase tracking-wide text-isr-dark-red">
-                        Venue
-                      </dt>
-                      <dd className="mt-1">
-                        RMIT {location.building}, {location.address}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-semibold uppercase tracking-wide text-isr-dark-red">
-                        Time ({CAMPUS.jumuah.day})
-                      </dt>
-                      <dd className="mt-1">
-                        <strong>{location.timing}</strong>
-                        {location.timingNote ? ` — ${location.timingNote}` : null}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-semibold uppercase tracking-wide text-isr-dark-red">
-                        Brothers
-                      </dt>
-                      <dd className="mt-1">{location.brothers}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-semibold uppercase tracking-wide text-isr-dark-red">
-                        Sisters
-                      </dt>
-                      <dd className="mt-1">{location.sisters}</dd>
-                    </div>
-                    {location.accessNote && (
-                      <div>
-                        <dt className="text-sm font-semibold uppercase tracking-wide text-isr-dark-red">
-                          Access
-                        </dt>
-                        <dd className="mt-1">{location.accessNote}</dd>
-                      </div>
-                    )}
-                  </dl>
-                </article>
-              ))}
-            </div>
-
-            <p className="mt-10 leading-relaxed text-gray-700">{CAMPUS.jumuah.hedge}</p>
+            <p className="leading-relaxed text-gray-700">{CAMPUS.jumuah.hedge}</p>
             <p className="mt-4 leading-relaxed text-gray-700">
               Questions?{' '}
               <a
@@ -230,12 +174,12 @@ export default function PrayerTimesPage() {
         </section>
 
         <section className="bg-isr-light-blue/10 px-4 py-16 sm:py-20">
-          <div className="container-isr mx-auto max-w-3xl">
+          <div className="container-isr mx-auto max-w-5xl">
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
               Location
             </p>
             <h2 className="mb-4 text-3xl font-bold text-isr-dark-red">Campus prayer spaces</h2>
-            <div className="space-y-4 leading-relaxed text-gray-700">
+            <div className="max-w-3xl space-y-4 leading-relaxed text-gray-700">
               <p>
                 <strong>Campus:</strong> {CAMPUS.localityLabel}
               </p>
@@ -244,6 +188,74 @@ export default function PrayerTimesPage() {
                 ISR helps Muslim students access on-campus prayer facilities and will point you to
                 the current standing room when you reach out.
               </p>
+            </div>
+
+            <div className="mt-10 grid gap-6 lg:grid-cols-2">
+              {CAMPUS.prayerSpaces.map((space) => (
+                <article
+                  key={space.id}
+                  className="flex flex-col rounded-2xl bg-white p-6 shadow-[0_16px_40px_rgba(91,11,5,0.06)] ring-1 ring-black/5 sm:p-8"
+                >
+                  <div className="mb-5 flex items-start justify-between gap-4">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-isr-light-blue/25 text-isr-turquoise">
+                      <PinIcon className="h-5 w-5" />
+                    </span>
+                    <span className="rounded-full bg-isr-light-blue/25 px-3 py-1 text-xs font-semibold text-isr-turquoise">
+                      {space.status}
+                    </span>
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-isr-dark-red">{space.name}</h3>
+                  <p className="mt-2 text-gray-600">{space.description}</p>
+
+                  <dl className="mt-6 divide-y divide-black/10 border-t border-black/10 text-gray-700">
+                    <div className="py-4">
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Building
+                      </dt>
+                      <dd className="mt-1 font-semibold text-isr-dark-red">{space.building}</dd>
+                    </div>
+                    <div className="py-4">
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Prayer rooms
+                      </dt>
+                      <dd className="mt-1 font-semibold text-isr-dark-red">{space.rooms}</dd>
+                    </div>
+                    <div className="py-4">
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Published hours
+                      </dt>
+                      <dd className="mt-1">{space.hours}</dd>
+                    </div>
+                    <div className="grid gap-4 py-4 sm:grid-cols-2">
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          Brothers
+                        </dt>
+                        <dd className="mt-1">{space.brothers}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          Sisters
+                        </dt>
+                        <dd className="mt-1">{space.sisters}</dd>
+                      </div>
+                    </div>
+                    <div className="py-4">
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Wudu
+                      </dt>
+                      <dd className="mt-1">{space.wudu}</dd>
+                    </div>
+                    <div className="pt-4">
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Accessibility
+                      </dt>
+                      <dd className="mt-1">{space.accessibility}</dd>
+                    </div>
+                  </dl>
+                </article>
+              ))}
             </div>
           </div>
         </section>
