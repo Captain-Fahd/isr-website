@@ -4,17 +4,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 
-// Logo: isr_logo_transparent.png in `public/images/`
-
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
-  const [logoFailed, setLogoFailed] = useState(false)
 
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/events/', label: 'Events' },
     { href: '/announcements/', label: 'Announcements' },
-    { href: '/prayer-times/', label: 'Prayer Times' },
+    { href: '/prayer-times/', label: 'Prayer' },
     { href: '/about/', label: 'About' },
     { href: '/contact/', label: 'Contact' },
   ]
@@ -31,21 +28,36 @@ export default function Navbar() {
             <div className="relative z-10 flex h-14 shrink-0 items-center justify-between px-4 sm:px-6">
               {/* Logo */}
               <Link href="/" className="flex items-center gap-3">
-                {/** Load logo with a fallback sequence: dark -> gold -> common extensions -> badge */}
-                {!logoFailed ? (
-                  <Image
-                    src="/images/isr_logo_transparent.png"
-                    alt="ISR logo"
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                    onError={() => setLogoFailed(true)}
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-isr-turquoise rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">ISR</span>
-                  </div>
-                )}
+                {/* Mobile logos (swapped) */}
+                <Image
+                  src="/images/isr_logo_lightmode.png"
+                  alt="ISR logo"
+                  width={40}
+                  height={40}
+                  className="object-contain block dark:hidden md:hidden"
+                />
+                <Image
+                  src="/images/isr_logo_darkmode.png"
+                  alt="ISR logo"
+                  width={40}
+                  height={40}
+                  className="object-contain hidden dark:block md:dark:hidden"
+                />
+                {/* Desktop logos */}
+                <Image
+                  src="/images/isr_logo_darkmode.png"
+                  alt="ISR logo"
+                  width={40}
+                  height={40}
+                  className="object-contain hidden md:block dark:md:hidden"
+                />
+                <Image
+                  src="/images/isr_logo_lightmode.png"
+                  alt="ISR logo"
+                  width={40}
+                  height={40}
+                  className="object-contain hidden md:dark:block"
+                />
 
                 <span className="font-bold text-isr-dark-red text-lg hidden sm:inline">
                   Islamic Society of RMIT
