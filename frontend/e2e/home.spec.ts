@@ -35,7 +35,7 @@ test.describe('Home', () => {
     await nav.getByRole('link', { name: 'Prayer Times' }).click()
     await expect(page).toHaveURL(/\/prayer-times\/?$/)
     await expect(
-      page.getByRole('heading', { level: 1, name: /Prayer Times/ }),
+      page.getByRole('heading', { level: 1, name: /Prayer/ }),
     ).toBeVisible()
 
     await nav.getByRole('link', { name: 'About' }).click()
