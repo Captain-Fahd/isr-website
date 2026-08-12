@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { CommunityIcon, FaithIcon, BookIcon, GlobeIcon } from '@/components/Icons'
+import { CommunityIcon, FaithIcon, BookIcon, GlobeIcon, CoinIcon } from '@/components/Icons'
 import MissionContent from '@/components/MissionContent'
 import NewsletterSignup from '@/components/NewsletterSignup'
 import { CAMPUS } from '@/lib/campus'
@@ -110,6 +110,13 @@ export default function AboutPage() {
                   conversation we have today.
                 </p>
               </div>
+
+              <Link
+                href="/history/"
+                className="mt-8 inline-block rounded-lg bg-isr-turquoise px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
+              >
+                Explore our history
+              </Link>
             </div>
           </div>
         </section>
@@ -141,6 +148,28 @@ export default function AboutPage() {
                 </div>
               ))}
             </div>
+
+            {/* How We Do Things */}
+            <Link
+              href="/operations/"
+              className="group mt-6 block rounded-2xl bg-white p-8 shadow-[0_12px_32px_rgba(91,11,5,0.08)] ring-1 ring-black/5 transition-shadow hover:shadow-[0_16px_40px_rgba(91,11,5,0.14)]"
+            >
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-isr-cream text-isr-turquoise">
+                <CoinIcon className="h-6 w-6" />
+              </div>
+              <h3 className="mb-3 text-xl font-semibold text-isr-dark-red">
+                How We Do Things
+              </h3>
+              <p className="mb-4 leading-relaxed text-gray-600">
+                Behind every event and prayer space is a committee that answers to its members.
+                See the principles that guide how ISR is run — responsible leadership, financial
+                transparency, accountability, and the records that keep the society going year
+                after year.
+              </p>
+              <span className="text-sm font-semibold text-isr-bright-red group-hover:underline">
+                Read how we operate &rarr;
+              </span>
+            </Link>
           </div>
         </section>
 
