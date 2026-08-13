@@ -1,7 +1,10 @@
 import { prisma } from '../../lib/prisma';
 import { sampleAnnouncements, sampleEvents } from '../../test/fixtures';
+import { assertDisposableDatabase } from '../../test/guard';
 
 export async function resetDatabase() {
+  // Deletes every row — never let it run against a real deployment.
+  assertDisposableDatabase('integration resetDatabase()');
   await prisma.event.deleteMany();
   await prisma.announcement.deleteMany();
 }

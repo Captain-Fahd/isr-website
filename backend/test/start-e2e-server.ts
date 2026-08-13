@@ -1,4 +1,10 @@
 import 'dotenv/config';
+import { assertDisposableDatabase } from './guard';
+
+// The e2e run exercises admin write routes, so this server must never be
+// pointed at a real database — `dotenv` above would otherwise fall back to the
+// production DATABASE_URL in backend/.env.
+assertDisposableDatabase('e2e API server');
 
 process.env.MOCK_EXTERNALS = '1';
 process.env.PORT ??= '4000';

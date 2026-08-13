@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchEvents, formatEventDate, type Event } from '@/lib/events'
 import { ArrowRight } from '@/components/Icons'
 
@@ -10,6 +10,8 @@ const ACCENT_BARS = ['bg-isr-turquoise', 'bg-isr-bright-red', 'bg-isr-dark-red']
 const EVENT_CARD_WIDTH = 273
 const EVENT_CARD_HEIGHT = 540
 const EVENT_IMAGE_MAX_HEIGHT = 320
+const MAX_PREVIEW_EVENTS = 5
+const FETCH_TIMEOUT_MS = 15_000
 
 function EventPreviewCard({
   event,
@@ -74,24 +76,49 @@ type EventsPreviewProps = {
 }
 
 export default function EventsPreview({ initialEvents }: EventsPreviewProps) {
-  const [events, setEvents] = useState<Event[]>(initialEvents.slice(0, 5))
+  const [events, setEvents] = useState<Event[]>(() => initialEvents.slice(0, MAX_PREVIEW_EVENTS))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const requestIdRef = useRef(0)
+  const eventsRef = useRef(events)
+
+  useEffect(() => {
+    eventsRef.current = events
+  }, [events])
 
   const loadEvents = useCallback(async () => {
+    const requestId = ++requestIdRef.current
     setLoading(true)
     setError(null)
 
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
     try {
-      const data = await fetchEvents('upcoming')
-      setEvents(data.slice(0, 5))
+      const data = await fetchEvents('upcoming', { signal: controller.signal })
+      if (requestId !== requestIdRef.current) return
+      setEvents(data.slice(0, MAX_PREVIEW_EVENTS))
     } catch {
-      setEvents([])
-      setError('Unable to load upcoming events.')
+      if (requestId !== requestIdRef.current) return
+      // Keep the build-time events on screen if the refresh fails; only
+      // surface an error when there is nothing to show.
+      if (eventsRef.current.length === 0) {
+        setError('Unable to load upcoming events.')
+      }
     } finally {
-      setLoading(false)
+      window.clearTimeout(timeoutId)
+      if (requestId === requestIdRef.current) {
+        setLoading(false)
+      }
     }
   }, [])
+
+  // The page is statically exported, so `initialEvents` is frozen at build
+  // time. Refresh from the API on mount so events added after the last deploy
+  // still appear (and so a failed build-time fetch heals in the browser).
+  useEffect(() => {
+    void loadEvents()
+  }, [loadEvents])
 
   return (
     <section className="py-20 px-4 bg-isr-light-blue bg-opacity-10">
@@ -102,13 +129,13 @@ export default function EventsPreview({ initialEvents }: EventsPreviewProps) {
 
         <div className="w-16 h-1 bg-isr-bright-red mx-auto mb-12" />
 
-        {loading && (
+        {loading && events.length === 0 && (
           <p className="mb-12 text-center text-sm text-gray-600" aria-live="polite" aria-busy="true">
             Refreshing events…
           </p>
         )}
 
-        {!loading && error && (
+        {!loading && error && events.length === 0 && (
           <div className="mb-12 rounded-lg border border-isr-bright-red/20 bg-isr-yellow/60 px-6 py-8 text-center">
             <p className="text-sm text-isr-dark-red">{error}</p>
             <button
@@ -127,7 +154,7 @@ export default function EventsPreview({ initialEvents }: EventsPreviewProps) {
           </p>
         )}
 
-        {!loading && !error && events.length > 0 && (
+        {events.length > 0 && (
           <div className="mb-12 flex flex-wrap items-stretch justify-center gap-6">
             {events.map((event, index) => (
               <EventPreviewCard

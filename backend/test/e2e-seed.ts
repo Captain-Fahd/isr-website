@@ -1,6 +1,12 @@
-import 'dotenv/config';
-import { prisma } from '../lib/prisma';
-import { sampleAnnouncements, sampleEvents } from './fixtures';
+// NOTE: deliberately does NOT load `backend/.env`. This script deletes every
+// row, and reading the production DATABASE_URL out of .env is how the live
+// database got wiped once already. DATABASE_URL must be passed in explicitly.
+import { assertDisposableDatabase } from './guard';
+
+assertDisposableDatabase('e2e seed');
+
+const { prisma } = await import('../lib/prisma');
+const { sampleAnnouncements, sampleEvents } = await import('./fixtures');
 
 async function main() {
   await prisma.event.deleteMany();
