@@ -16,7 +16,7 @@
     "test": "jest --selectProjects unit",
     "test:unit": "jest --selectProjects unit",
     "test:integration": "jest --selectProjects integration --runInBand --forceExit",
-    "test:all": "jest"
+    "test:all": "jest --runInBand"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
