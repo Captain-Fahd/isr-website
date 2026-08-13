@@ -95,4 +95,88 @@ describe('POST /api/events (auth)', () => {
     expect(res.status).toBe(401);
     expect(res.body).toEqual({ error: 'Unauthorized' });
   });
+
+  test('does not write to the database when unauthenticated', async () => {
+    await request(app)
+      .post('/api/events')
+      .field('name', 'Unauthorized Event')
+      .field('date', '2099-01-01T00:00:00.000Z')
+      .field('description', 'Should not be created');
+
+    const res = await request(app).get('/api/events');
+    expect(res.body.data).toEqual([]);
+  });
+
+  test('rejects a malformed Authorization header', async () => {
+    const res = await request(app)
+      .post('/api/events')
+      .set('Authorization', 'token-without-bearer-prefix')
+      .field('name', 'Unauthorized Event')
+      .field('date', '2099-01-01T00:00:00.000Z')
+      .field('description', 'Should not be created');
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
+});
+
+describe('PUT /api/events/:id (auth)', () => {
+  test('rejects unauthenticated update requests', async () => {
+    const { events } = await seedPublicData();
+
+    const res = await request(app)
+      .put(`/api/events/${events[0].id}`)
+      .field('name', 'Hijacked Event');
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
+
+  test('leaves the event unchanged when unauthenticated', async () => {
+    const { events } = await seedPublicData();
+    const target = events[0];
+
+    await request(app).put(`/api/events/${target.id}`).field('name', 'Hijacked Event');
+
+    const res = await request(app).get(`/api/events/${target.id}`);
+    expect(res.body.data.name).toBe(target.name);
+  });
+
+  test('rejects before validating the id, so a bad id still returns 401', async () => {
+    // checkAuth runs ahead of the controller; an unauthenticated caller must not
+    // be able to probe which ids are valid.
+    const res = await request(app).put('/api/events/abc').field('name', 'Hijacked Event');
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
+});
+
+describe('DELETE /api/events/:id (auth)', () => {
+  test('rejects unauthenticated delete requests', async () => {
+    const { events } = await seedPublicData();
+
+    const res = await request(app).delete(`/api/events/${events[0].id}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
+
+  test('leaves the event in place when unauthenticated', async () => {
+    const { events } = await seedPublicData();
+    const target = events[0];
+
+    await request(app).delete(`/api/events/${target.id}`);
+
+    const res = await request(app).get(`/api/events/${target.id}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.id).toBe(target.id);
+  });
+
+  test('rejects before checking existence, so a missing id still returns 401', async () => {
+    const res = await request(app).delete('/api/events/99999');
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
 });
