@@ -29,6 +29,7 @@ export default function Footer() {
             <h4 className="font-bold text-lg mb-4">Resources</h4>
             <ul className="text-sm text-gray-300 space-y-2">
               <li><a href="/contact/" className="hover:text-white transition-colors">Contact</a></li>
+              <li><a href="/volunteer/" className="hover:text-white transition-colors">Volunteer</a></li>
               <li><a href="https://campus.hellorubric.com/?s=10733" className="hover:text-white transition-colors">Membership</a></li>
               <li><a href="/privacy/" className="hover:text-white transition-colors">Privacy Policy</a></li>
               <li><a href="/sitemap.xml" className="hover:text-white transition-colors">Sitemap</a></li>

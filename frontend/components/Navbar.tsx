@@ -75,14 +75,22 @@ export default function Navbar() {
                     {link.label}
                   </Link>
                 ))}
-                <a
-                  href="https://campus.hellorubric.com/?s=10733"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full bg-isr-turquoise px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
-                >
-                  Become a Member
-                </a>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/volunteer/"
+                    className="rounded-full bg-isr-dark-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-isr-bright-red"
+                  >
+                    Volunteer
+                  </Link>
+                  <a
+                    href="https://campus.hellorubric.com/?s=10733"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-isr-turquoise px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
+                  >
+                    Become a Member
+                  </a>
+                </div>
               </div>
 
               {/* Mobile Menu Button */}
@@ -120,7 +128,14 @@ export default function Navbar() {
                       {link.label}
                     </Link>
                   ))}
-                  <div className="px-4 pt-3">
+                  <div className="space-y-3 px-4 pt-3">
+                    <Link
+                      href="/volunteer/"
+                      onClick={() => setIsOpen(false)}
+                      className="block rounded-full bg-isr-dark-red px-4 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-isr-bright-red"
+                    >
+                      Volunteer
+                    </Link>
                     <a
                       href="https://campus.hellorubric.com/?s=10733"
                       target="_blank"

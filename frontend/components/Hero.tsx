@@ -71,6 +71,12 @@ export default function Hero() {
                 Become a Member
               </a>
               <Link
+                href="/volunteer/"
+                className="rounded-lg bg-isr-dark-red px-8 py-3 font-semibold text-white transition-colors hover:bg-isr-bright-red"
+              >
+                Volunteer with ISR
+              </Link>
+              <Link
                 href="/events/"
                 className="rounded-lg border-2 border-isr-bright-red px-8 py-3 font-semibold text-isr-bright-red transition-colors hover:bg-isr-bright-red hover:text-white"
               >
