@@ -76,4 +76,92 @@ describe('POST /api/announcements (auth)', () => {
     expect(res.status).toBe(401);
     expect(res.body).toEqual({ error: 'Unauthorized' });
   });
+
+  test('does not write to the database when unauthenticated', async () => {
+    await request(app)
+      .post('/api/announcements')
+      .field('title', 'Nope')
+      .field('body', 'Should not be created');
+
+    const res = await request(app).get('/api/announcements');
+    expect(res.body.data).toEqual([]);
+  });
+
+  test('rejects a malformed Authorization header', async () => {
+    const res = await request(app)
+      .post('/api/announcements')
+      .set('Authorization', 'token-without-bearer-prefix')
+      .field('title', 'Nope')
+      .field('body', 'Should not be created');
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
+});
+
+describe('PUT /api/announcements/:id (auth)', () => {
+  test('rejects unauthenticated update requests', async () => {
+    const { announcements } = await seedPublicData();
+
+    const res = await request(app)
+      .put(`/api/announcements/${announcements[0].id}`)
+      .field('title', 'Hijacked Announcement');
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
+
+  test('leaves the announcement unchanged when unauthenticated', async () => {
+    const { announcements } = await seedPublicData();
+    const target = announcements[0];
+
+    await request(app)
+      .put(`/api/announcements/${target.id}`)
+      .field('title', 'Hijacked Announcement')
+      .field('pinned', 'true');
+
+    const res = await request(app).get(`/api/announcements/${target.id}`);
+    expect(res.body.data.title).toBe(target.title);
+    expect(res.body.data.pinned).toBe(target.pinned);
+  });
+
+  test('rejects before validating the id, so a bad id still returns 401', async () => {
+    // checkAuth runs ahead of the controller; an unauthenticated caller must not
+    // be able to probe which ids are valid.
+    const res = await request(app)
+      .put('/api/announcements/abc')
+      .field('title', 'Hijacked Announcement');
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
+});
+
+describe('DELETE /api/announcements/:id (auth)', () => {
+  test('rejects unauthenticated delete requests', async () => {
+    const { announcements } = await seedPublicData();
+
+    const res = await request(app).delete(`/api/announcements/${announcements[0].id}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
+
+  test('leaves the announcement in place when unauthenticated', async () => {
+    const { announcements } = await seedPublicData();
+    const target = announcements[0];
+
+    await request(app).delete(`/api/announcements/${target.id}`);
+
+    const res = await request(app).get(`/api/announcements/${target.id}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.id).toBe(target.id);
+  });
+
+  test('rejects before checking existence, so a missing id still returns 401', async () => {
+    const res = await request(app).delete('/api/announcements/99999');
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
 });
