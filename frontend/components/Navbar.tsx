@@ -28,35 +28,12 @@ export default function Navbar() {
             <div className="relative z-10 flex h-14 shrink-0 items-center justify-between px-4 sm:px-6">
               {/* Logo */}
               <Link href="/" className="flex items-center gap-3">
-                {/* Mobile logos (swapped) */}
                 <Image
                   src="/images/isr_logo_lightmode.png"
                   alt="ISR logo"
                   width={40}
                   height={40}
-                  className="object-contain block dark:hidden md:hidden"
-                />
-                <Image
-                  src="/images/isr_logo_darkmode.png"
-                  alt="ISR logo"
-                  width={40}
-                  height={40}
-                  className="object-contain hidden dark:block md:dark:hidden"
-                />
-                {/* Desktop logos */}
-                <Image
-                  src="/images/isr_logo_darkmode.png"
-                  alt="ISR logo"
-                  width={40}
-                  height={40}
-                  className="object-contain hidden md:block dark:md:hidden"
-                />
-                <Image
-                  src="/images/isr_logo_lightmode.png"
-                  alt="ISR logo"
-                  width={40}
-                  height={40}
-                  className="object-contain hidden md:dark:block"
+                  className="object-contain"
                 />
 
                 <span className="font-bold text-isr-dark-red text-lg hidden sm:inline">
