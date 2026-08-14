@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import SponsorshipForm from '@/components/SponsorshipForm'
 import { CoinIcon, CommunityIcon, ArrowRight } from '@/components/Icons'
 import { CAMPUS } from '@/lib/campus'
 
@@ -22,6 +21,9 @@ export const metadata: Metadata = {
 const DONATION_URL =
   'https://www.trybooking.com/au/donate/isrdonations?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAb21jcATr-yZwZG9mAmV4dG4DYWVtAjExAHNydGMGYXBwX2lkDzU2NzA2NzM0MzM1MjQyNwABp3VRU6EumjNboDtRwC4TUNoEhfpUERekmTsbrprb2XKfCWqlghV8oEzOEi9N_aem_oiAqHTGSGge7_49zLpDiKA'
 
+const ctaClass =
+  'mt-auto inline-flex min-h-11 items-center justify-center rounded-lg bg-isr-turquoise px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red'
+
 type Way = {
   id: string
   label: string
@@ -31,8 +33,8 @@ type Way = {
   cta: string
   /** External link. Falls back to an email to ISR when absent. */
   href?: string
-  /** Same-page anchor, e.g. the sponsorship form. Takes precedence over `href`. */
-  anchor?: string
+  /** Internal route, e.g. the sponsorship form page. Takes precedence over `href`. */
+  route?: string
   subject: string
   Icon: ({ className }: { className?: string }) => JSX.Element
 }
@@ -64,7 +66,7 @@ const ways: Way[] = [
       'Reach Muslim students and alumni at RMIT University',
     ],
     cta: 'Become a sponsor',
-    anchor: '#sponsorship-form',
+    route: '/support-us/sponsor/',
     subject: 'Sponsorship with ISR',
     Icon: CommunityIcon,
   },
@@ -100,7 +102,7 @@ export default function SupportUsPage() {
         <section className="px-4 pb-16 sm:pb-20">
           <div className="container-isr">
             <div className="grid gap-6 md:grid-cols-2">
-              {ways.map(({ id, label, title, body, points, cta, href, anchor, subject, Icon }) => (
+              {ways.map(({ id, label, title, body, points, cta, href, route, subject, Icon }) => (
                 <article
                   key={id}
                   className="flex flex-col rounded-2xl bg-white p-6 shadow-[0_12px_32px_rgba(91,11,5,0.08)] ring-1 ring-black/5 sm:p-8"
@@ -129,44 +131,27 @@ export default function SupportUsPage() {
                     ))}
                   </ul>
 
-                  <a
-                    href={
-                      anchor ??
-                      href ??
-                      `mailto:${CAMPUS.email}?subject=${encodeURIComponent(subject)}`
-                    }
-                    {...(!anchor && href
-                      ? { target: '_blank', rel: 'noopener noreferrer' }
-                      : {})}
-                    className="mt-auto inline-flex min-h-11 items-center justify-center rounded-lg bg-isr-turquoise px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
-                  >
-                    {cta}
-                    <ArrowRight />
-                  </a>
+                  {route ? (
+                    <Link href={route} className={ctaClass}>
+                      {cta}
+                      <ArrowRight />
+                    </Link>
+                  ) : (
+                    <a
+                      href={
+                        href ??
+                        `mailto:${CAMPUS.email}?subject=${encodeURIComponent(subject)}`
+                      }
+                      {...(href ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      className={ctaClass}
+                    >
+                      {cta}
+                      <ArrowRight />
+                    </a>
+                  )}
                 </article>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* Sponsorship enquiry form */}
-        <section id="sponsorship-form" className="scroll-mt-24 px-4 pb-16 sm:pb-20">
-          <div className="container-isr mx-auto max-w-3xl">
-            <div className="mb-8 text-center">
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
-                Sponsorship Enquiry
-              </p>
-              <h2 className="mb-5 text-3xl font-bold text-isr-dark-red">
-                Partner with ISR
-              </h2>
-              <div className="mx-auto mb-6 h-1 w-16 bg-isr-bright-red" />
-              <p className="mx-auto max-w-2xl leading-relaxed text-gray-600">
-                Tell us about your business and we will get back to you with the sponsorship
-                options that suit you best.
-              </p>
-            </div>
-
-            <SponsorshipForm />
           </div>
         </section>
 
