@@ -28,35 +28,12 @@ export default function Navbar() {
             <div className="relative z-10 flex h-14 shrink-0 items-center justify-between px-4 sm:px-6">
               {/* Logo */}
               <Link href="/" className="flex items-center gap-3">
-                {/* Mobile logos (swapped) */}
                 <Image
                   src="/images/isr_logo_lightmode.png"
                   alt="ISR logo"
                   width={40}
                   height={40}
-                  className="object-contain block dark:hidden md:hidden"
-                />
-                <Image
-                  src="/images/isr_logo_darkmode.png"
-                  alt="ISR logo"
-                  width={40}
-                  height={40}
-                  className="object-contain hidden dark:block md:dark:hidden"
-                />
-                {/* Desktop logos */}
-                <Image
-                  src="/images/isr_logo_darkmode.png"
-                  alt="ISR logo"
-                  width={40}
-                  height={40}
-                  className="object-contain hidden md:block dark:md:hidden"
-                />
-                <Image
-                  src="/images/isr_logo_lightmode.png"
-                  alt="ISR logo"
-                  width={40}
-                  height={40}
-                  className="object-contain hidden md:dark:block"
+                  className="object-contain"
                 />
 
                 <span className="font-bold text-isr-dark-red text-lg hidden sm:inline">
@@ -75,14 +52,22 @@ export default function Navbar() {
                     {link.label}
                   </Link>
                 ))}
-                <a
-                  href="https://campus.hellorubric.com/?s=10733"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full bg-isr-turquoise px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
-                >
-                  Become a Member
-                </a>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/volunteer/"
+                    className="rounded-full bg-isr-dark-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-isr-bright-red"
+                  >
+                    Volunteer
+                  </Link>
+                  <a
+                    href="https://campus.hellorubric.com/?s=10733"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-isr-turquoise px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
+                  >
+                    Become a Member
+                  </a>
+                </div>
               </div>
 
               {/* Mobile Menu Button */}
@@ -120,7 +105,14 @@ export default function Navbar() {
                       {link.label}
                     </Link>
                   ))}
-                  <div className="px-4 pt-3">
+                  <div className="space-y-3 px-4 pt-3">
+                    <Link
+                      href="/volunteer/"
+                      onClick={() => setIsOpen(false)}
+                      className="block rounded-full bg-isr-dark-red px-4 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-isr-bright-red"
+                    >
+                      Volunteer
+                    </Link>
                     <a
                       href="https://campus.hellorubric.com/?s=10733"
                       target="_blank"

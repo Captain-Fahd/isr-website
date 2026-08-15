@@ -16,38 +16,12 @@ export default function Hero() {
             <div className="mb-8 flex justify-center lg:justify-start">
               <div className="relative rounded-[28px] bg-white/75 p-3 shadow-[0_16px_36px_rgba(91,11,5,0.08)] ring-1 ring-black/5 backdrop-blur-sm sm:p-4">
                 <div className="absolute inset-x-6 top-1/2 h-10 -translate-y-1/2 rounded-full bg-isr-turquoise/10 blur-2xl" />
-                {/* Mobile logos — match navbar (swapped vs desktop) */}
                 <Image
                   src="/images/isr_logo_lightmode.png"
                   alt="ISR logo"
                   width={180}
                   height={120}
-                  className={`${logoClassName} block dark:hidden md:hidden`}
-                  priority
-                />
-                <Image
-                  src="/images/isr_logo_darkmode.png"
-                  alt="ISR logo"
-                  width={180}
-                  height={120}
-                  className={`${logoClassName} hidden dark:block md:dark:hidden`}
-                  priority
-                />
-                {/* Desktop logos */}
-                <Image
-                  src="/images/isr_logo_darkmode.png"
-                  alt="ISR logo"
-                  width={180}
-                  height={120}
-                  className={`${logoClassName} hidden md:block dark:md:hidden`}
-                  priority
-                />
-                <Image
-                  src="/images/isr_logo_lightmode.png"
-                  alt="ISR logo"
-                  width={180}
-                  height={120}
-                  className={`${logoClassName} hidden md:dark:block`}
+                  className={logoClassName}
                   priority
                 />
               </div>
@@ -61,21 +35,29 @@ export default function Hero() {
               The Home of Muslim Students at RMIT
             </p>
 
-            <div className="flex flex-wrap justify-center gap-4 lg:justify-start">
+            <div className="mx-auto flex max-w-sm flex-col gap-3 lg:mx-0">
               <a
                 href="https://campus.hellorubric.com/?s=10733"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-lg bg-isr-turquoise px-8 py-3 font-semibold text-white transition-colors hover:bg-isr-dark-red"
+                className="rounded-xl bg-isr-turquoise px-8 py-4 text-center text-lg font-semibold text-white shadow-[0_10px_24px_rgba(80,149,137,0.35)] transition-colors hover:bg-isr-dark-red sm:text-xl"
               >
-                Become a Member
+                Join ISR
               </a>
-              <Link
-                href="/events/"
-                className="rounded-lg border-2 border-isr-bright-red px-8 py-3 font-semibold text-isr-bright-red transition-colors hover:bg-isr-bright-red hover:text-white"
-              >
-                Explore Events
-              </Link>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/volunteer/"
+                  className="rounded-lg border-2 border-isr-bright-red px-4 py-2.5 text-center text-sm font-semibold text-isr-bright-red transition-colors hover:bg-isr-bright-red hover:text-white"
+                >
+                  Volunteer
+                </Link>
+                <Link
+                  href="/events/"
+                  className="rounded-lg border-2 border-isr-bright-red px-4 py-2.5 text-center text-sm font-semibold text-isr-bright-red transition-colors hover:bg-isr-bright-red hover:text-white"
+                >
+                  Explore Events
+                </Link>
+              </div>
             </div>
           </div>
 
