@@ -122,6 +122,31 @@ export function PinIcon({ className = 'w-4 h-4' }: { className?: string }) {
   )
 }
 
+export function HeartIcon({
+  className = 'w-5 h-5',
+  filled = false,
+}: {
+  className?: string
+  filled?: boolean
+}) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill={filled ? 'currentColor' : 'none'}
+      aria-hidden
+    >
+      <path
+        d="M12 20.3l-7.1-7a4.5 4.5 0 0 1 6.4-6.3l.7.7.7-.7a4.5 4.5 0 0 1 6.4 6.3l-7.1 7z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function FacebookIcon({ className = 'w-6 h-6' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>

@@ -12,6 +12,8 @@ import {
   type EventsFilter,
 } from '@/lib/events'
 import { ArrowRight } from '@/components/Icons'
+import LikeButton from '@/components/LikeButton'
+import { getClientId } from '@/lib/likes'
 
 const FILTERS: { value: EventsFilter; label: string }[] = [
   { value: 'upcoming', label: 'Upcoming' },
@@ -117,6 +119,14 @@ function EventCard({
                 <ArrowRight />
               </a>
             )}
+            <LikeButton
+              eventId={event.id}
+              eventName={event.name}
+              likeCount={event.likeCount ?? 0}
+              likedByMe={event.likedByMe ?? false}
+              // The timeline refreshes every card's likes in one request.
+              refreshOnMount={false}
+            />
           </div>
         </div>
       </div>
@@ -145,7 +155,11 @@ export default function EventsTimeline({ initialEvents }: EventsTimelineProps) {
     const timeoutId = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
 
     try {
-      const data = await fetchEvents(selectedFilter, { signal: controller.signal })
+      const data = await fetchEvents(
+        selectedFilter,
+        { signal: controller.signal },
+        getClientId(),
+      )
       if (requestId !== requestIdRef.current) return
       setEvents(sortEventsForDisplay(data))
     } catch {
@@ -168,6 +182,35 @@ export default function EventsTimeline({ initialEvents }: EventsTimelineProps) {
     }
     void loadEvents(filter)
   }, [filter, loadEvents])
+
+  useEffect(() => {
+    // Counts baked in at build time are stale, so refresh them once on mount —
+    // one request for every card. Only the like fields are merged in, leaving the
+    // server-rendered content on screen untouched.
+    const clientId = getClientId()
+    if (!clientId) return
+
+    let active = true
+    fetchEvents('all', undefined, clientId)
+      .then((fresh) => {
+        if (!active) return
+        const likes = new Map(
+          fresh.map((e) => [e.id, { likeCount: e.likeCount ?? 0, likedByMe: e.likedByMe ?? false }]),
+        )
+        setEvents((current) =>
+          current.map((event) => {
+            const like = likes.get(event.id)
+            return like ? { ...event, ...like } : event
+          }),
+        )
+      })
+      // Likes are a nice-to-have; a stale count must never break the events list.
+      .catch(() => {})
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   return (
     <div>

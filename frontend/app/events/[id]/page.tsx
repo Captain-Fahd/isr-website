@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { ArrowRight } from '@/components/Icons'
+import LikeButton from '@/components/LikeButton'
 import { fetchEventById, fetchEvents, formatEventDate, isEventPast } from '@/lib/events'
 import {
   DEFAULT_OG_IMAGE,
@@ -150,17 +151,24 @@ export default async function EventDetailPage({ params }: PageProps) {
 
               <p className="mb-8 text-lg leading-relaxed text-gray-700 whitespace-pre-wrap">{event.description}</p>
 
-              {event.ticketUrl && (
-                <a
-                  href={event.ticketUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-11 items-center rounded-lg bg-isr-turquoise px-8 py-3 font-semibold text-white transition-colors hover:bg-isr-dark-red"
-                >
-                  Get Tickets
-                  <ArrowRight />
-                </a>
-              )}
+              <div className="flex flex-wrap items-center gap-4">
+                {event.ticketUrl && (
+                  <a
+                    href={event.ticketUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center rounded-lg bg-isr-turquoise px-8 py-3 font-semibold text-white transition-colors hover:bg-isr-dark-red"
+                  >
+                    Get Tickets
+                    <ArrowRight />
+                  </a>
+                )}
+                <LikeButton
+                  eventId={event.id}
+                  eventName={event.name}
+                  likeCount={event.likeCount ?? 0}
+                />
+              </div>
             </div>
           </article>
         </div>
