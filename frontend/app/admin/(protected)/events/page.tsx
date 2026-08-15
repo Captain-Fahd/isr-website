@@ -20,7 +20,7 @@ import {
   updateEvent,
   deleteEvent,
 } from '@/lib/admin-api'
-import { formatEventDate } from '@/lib/events'
+import { displayOccurrence, formatEventSchedule, formatRecurrence } from '@/lib/events'
 import type { Event } from '@/lib/events'
 
 export default function AdminEventsPage() {
@@ -35,7 +35,11 @@ export default function AdminEventsPage() {
   const [eventToDelete, setEventToDelete] = useState<Event | null>(null)
 
   function sortDesc(list: Event[]): Event[] {
-    return [...list].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...list].sort(
+      (a, b) =>
+        new Date(displayOccurrence(b).start).getTime() -
+        new Date(displayOccurrence(a).start).getTime(),
+    )
   }
 
   useEffect(() => {
@@ -133,7 +137,8 @@ export default function AdminEventsPage() {
                 </TableRow>
               ) : (
                 events.map((event) => {
-                  const { date, time } = formatEventDate(event.date)
+                  const { date, time } = formatEventSchedule(event)
+                  const recurrence = formatRecurrence(event)
                   return (
                     <TableRow key={event.id}>
                       <TableCell className="font-medium">{event.name}</TableCell>
@@ -141,6 +146,12 @@ export default function AdminEventsPage() {
                         {date}
                         <br />
                         {time}
+                        {recurrence && (
+                          <>
+                            <br />
+                            <span className="text-isr-turquoise">{recurrence}</span>
+                          </>
+                        )}
                       </TableCell>
                       <TableCell>
                         {event.ticketUrl ? (
