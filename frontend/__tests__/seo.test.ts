@@ -191,6 +191,54 @@ describe('eventJsonLd', () => {
     expect(jsonLd.description.endsWith('…')).toBe(true)
   })
 
+  test('omits endDate and eventSchedule for a plain single-day event', () => {
+    const jsonLd = eventJsonLd(baseEvent)
+
+    expect(jsonLd).not.toHaveProperty('endDate')
+    expect(jsonLd).not.toHaveProperty('eventSchedule')
+  })
+
+  test('adds endDate for a multi-day event', () => {
+    const jsonLd = eventJsonLd({ ...baseEvent, endDate: '2026-09-04T08:30:00.000Z' })
+
+    expect(jsonLd.endDate).toBe('2026-09-04T08:30:00.000Z')
+  })
+
+  test('describes a weekly recurrence as an ISO 8601 repeat frequency', () => {
+    const jsonLd = eventJsonLd({
+      ...baseEvent,
+      recurrenceFrequency: 'WEEKLY',
+      recurrenceInterval: 1,
+    })
+
+    expect(jsonLd.eventSchedule).toEqual({
+      '@type': 'Schedule',
+      startDate: '2026-09-01T08:30:00.000Z',
+      repeatFrequency: 'P1W',
+      scheduleTimezone: 'Australia/Melbourne',
+    })
+  })
+
+  test('carries the interval and the end of the series into the schedule', () => {
+    const jsonLd = eventJsonLd({
+      ...baseEvent,
+      recurrenceFrequency: 'MONTHLY',
+      recurrenceInterval: 2,
+      recurrenceEndDate: '2026-12-01T08:30:00.000Z',
+    })
+
+    expect(jsonLd.eventSchedule).toMatchObject({
+      repeatFrequency: 'P2M',
+      endDate: '2026-12-01T08:30:00.000Z',
+    })
+  })
+
+  test('defaults a missing interval to 1', () => {
+    const jsonLd = eventJsonLd({ ...baseEvent, recurrenceFrequency: 'DAILY' })
+
+    expect(jsonLd.eventSchedule).toMatchObject({ repeatFrequency: 'P1D' })
+  })
+
   test('names ISR as the organizer and RMIT as the location', () => {
     const jsonLd = eventJsonLd(baseEvent)
 

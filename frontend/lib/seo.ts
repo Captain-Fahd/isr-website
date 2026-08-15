@@ -67,18 +67,47 @@ type EventJsonLdInput = {
   name: string
   description: string
   startDate: string
+  endDate?: string | null
+  recurrenceFrequency?: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
+  recurrenceInterval?: number | null
+  recurrenceEndDate?: string | null
   imageUrl?: string | null
   url: string
   ticketUrl?: string | null
 }
 
+const ISO_DURATION_UNITS = { DAILY: 'D', WEEKLY: 'W', MONTHLY: 'M' } as const
+
+/**
+ * schema.org `Schedule` for a recurring event: `repeatFrequency` is an ISO 8601
+ * duration (P1W = weekly, P2W = fortnightly, P1M = monthly).
+ */
+function eventSchedule(event: EventJsonLdInput) {
+  if (!event.recurrenceFrequency) return null
+
+  const unit = ISO_DURATION_UNITS[event.recurrenceFrequency]
+  if (!unit) return null
+
+  return {
+    '@type': 'Schedule',
+    startDate: event.startDate,
+    repeatFrequency: `P${event.recurrenceInterval ?? 1}${unit}`,
+    scheduleTimezone: 'Australia/Melbourne',
+    ...(event.recurrenceEndDate ? { endDate: event.recurrenceEndDate } : {}),
+  }
+}
+
 export function eventJsonLd(event: EventJsonLdInput) {
+  const schedule = eventSchedule(event)
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Event',
     name: event.name,
     description: truncateMetaDescription(event.description, 300),
     startDate: event.startDate,
+    ...(event.endDate ? { endDate: event.endDate } : {}),
+    ...(schedule ? { eventSchedule: schedule } : {}),
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     eventStatus: 'https://schema.org/EventScheduled',
     image: event.imageUrl ? [event.imageUrl] : [DEFAULT_OG_IMAGE],

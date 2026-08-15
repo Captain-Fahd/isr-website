@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import {
+  describeSchedule,
+  displayOccurrence,
   formatEventDate,
+  formatEventSchedule,
+  formatRecurrence,
   fromDatetimeLocalValue,
+  isEventOver,
   isEventPast,
   sortEventsForDisplay,
   toDatetimeLocalValue,
@@ -207,5 +212,221 @@ describe('sortEventsForDisplay', () => {
 
   test('handles an empty list', () => {
     expect(sortEventsForDisplay([])).toEqual([])
+  })
+
+  test('keeps a running multi-day event among the upcoming ones', () => {
+    const events = [
+      event({ id: 1, date: '2026-09-01T00:00:00.000Z' }), // upcoming
+      event({
+        id: 2, // started before now, still running
+        date: '2026-08-11T00:00:00.000Z',
+        endDate: '2026-08-15T00:00:00.000Z',
+      }),
+      event({ id: 3, date: '2026-01-01T00:00:00.000Z' }), // past
+    ]
+
+    expect(sortEventsForDisplay(events).map((e) => e.id)).toEqual([1, 2, 3])
+  })
+
+  test('sorts a recurring event on its next occurrence, not its first', () => {
+    const events = [
+      event({ id: 1, date: '2026-09-01T00:00:00.000Z' }),
+      event({
+        id: 2, // first occurrence years ago, next one after id 1
+        date: '2020-01-06T00:00:00.000Z',
+        recurrenceFrequency: 'WEEKLY',
+        recurrenceInterval: 1,
+        nextOccurrence: {
+          start: '2026-10-01T00:00:00.000Z',
+          end: '2026-10-01T00:00:00.000Z',
+        },
+      }),
+    ]
+
+    expect(sortEventsForDisplay(events).map((e) => e.id)).toEqual([2, 1])
+  })
+})
+
+describe('isEventOver', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-13T00:00:00.000Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  test('trusts nextOccurrence when the API provides it', () => {
+    const recurring = event({
+      id: 1,
+      date: '2020-01-06T07:00:00.000Z',
+      recurrenceFrequency: 'WEEKLY',
+      recurrenceInterval: 1,
+      nextOccurrence: { start: '2026-08-17T07:00:00.000Z', end: '2026-08-17T07:00:00.000Z' },
+    })
+
+    expect(isEventOver(recurring)).toBe(false)
+  })
+
+  test('treats a null nextOccurrence as over even for a future start date', () => {
+    const finished = event({ id: 1, date: '2099-01-01T00:00:00.000Z', nextOccurrence: null })
+
+    expect(isEventOver(finished)).toBe(true)
+  })
+
+  test('falls back to endDate when the API omits nextOccurrence', () => {
+    const running = event({
+      id: 1,
+      date: '2026-08-11T00:00:00.000Z',
+      endDate: '2026-08-15T00:00:00.000Z',
+    })
+
+    expect(isEventOver(running)).toBe(false)
+  })
+
+  test('falls back to the start date for a single-day event', () => {
+    expect(isEventOver(event({ id: 1, date: '2026-08-12T00:00:00.000Z' }))).toBe(true)
+  })
+})
+
+describe('displayOccurrence', () => {
+  test('prefers the next occurrence over the stored first one', () => {
+    const recurring = event({
+      id: 1,
+      date: '2020-01-06T07:00:00.000Z',
+      nextOccurrence: { start: '2026-08-17T07:00:00.000Z', end: '2026-08-17T09:00:00.000Z' },
+    })
+
+    expect(displayOccurrence(recurring).start).toBe('2026-08-17T07:00:00.000Z')
+  })
+
+  test('falls back to the stored dates', () => {
+    const multiDay = event({
+      id: 1,
+      date: '2026-08-11T00:00:00.000Z',
+      endDate: '2026-08-15T00:00:00.000Z',
+    })
+
+    expect(displayOccurrence(multiDay)).toEqual({
+      start: '2026-08-11T00:00:00.000Z',
+      end: '2026-08-15T00:00:00.000Z',
+    })
+  })
+})
+
+describe('formatEventSchedule', () => {
+  test('keeps the single-day format for a one-off event', () => {
+    const single = event({ id: 1, date: '2026-08-13T08:30:00.000Z' })
+
+    expect(formatEventSchedule(single)).toEqual(formatEventDate('2026-08-13T08:30:00.000Z'))
+  })
+
+  test('renders a multi-day event as a date range', () => {
+    const multiDay = event({
+      id: 1,
+      date: '2026-08-13T08:30:00.000Z',
+      endDate: '2026-08-16T08:30:00.000Z',
+    })
+
+    expect(formatEventSchedule(multiDay).date).toBe('13 Aug 2026 – 16 Aug 2026')
+  })
+
+  test('keeps the single-day format when the end is the same Melbourne day', () => {
+    const sameDay = event({
+      id: 1,
+      date: '2026-08-13T08:30:00.000Z',
+      endDate: '2026-08-13T11:30:00.000Z',
+    })
+
+    expect(formatEventSchedule(sameDay).date).toBe(
+      formatEventDate('2026-08-13T08:30:00.000Z').date,
+    )
+  })
+
+  test('formats the next occurrence of a recurring event, not its first', () => {
+    const recurring = event({
+      id: 1,
+      date: '2020-01-06T07:00:00.000Z',
+      recurrenceFrequency: 'WEEKLY',
+      recurrenceInterval: 1,
+      nextOccurrence: { start: '2026-08-17T07:00:00.000Z', end: '2026-08-17T07:00:00.000Z' },
+    })
+
+    expect(formatEventSchedule(recurring).date).toBe(
+      formatEventDate('2026-08-17T07:00:00.000Z').date,
+    )
+  })
+})
+
+describe('formatRecurrence', () => {
+  test('returns null for a one-off event', () => {
+    expect(formatRecurrence(event({ id: 1, date: '2026-08-13T08:30:00.000Z' }))).toBeNull()
+  })
+
+  test('uses the singular noun for an interval of one', () => {
+    const weekly = event({
+      id: 1,
+      date: '2026-08-13T08:30:00.000Z',
+      recurrenceFrequency: 'WEEKLY',
+      recurrenceInterval: 1,
+    })
+
+    expect(formatRecurrence(weekly)).toBe('Every week')
+  })
+
+  test('uses the plural noun for a longer interval', () => {
+    const fortnightly = event({
+      id: 1,
+      date: '2026-08-13T08:30:00.000Z',
+      recurrenceFrequency: 'WEEKLY',
+      recurrenceInterval: 2,
+    })
+
+    expect(formatRecurrence(fortnightly)).toBe('Every 2 weeks')
+  })
+
+  test('mentions the end of the series when there is one', () => {
+    const bounded = event({
+      id: 1,
+      date: '2026-08-13T08:30:00.000Z',
+      recurrenceFrequency: 'MONTHLY',
+      recurrenceInterval: 1,
+      recurrenceEndDate: '2026-11-13T08:30:00.000Z',
+    })
+
+    expect(formatRecurrence(bounded)).toBe('Every month until 13 Nov 2026')
+  })
+})
+
+describe('describeSchedule', () => {
+  test('returns null for a plain single-day event', () => {
+    expect(describeSchedule(event({ id: 1, date: '2026-08-13T08:30:00.000Z' }))).toBeNull()
+  })
+
+  test('describes the run of a multi-day event', () => {
+    const multiDay = event({
+      id: 1,
+      date: '2026-08-13T08:30:00.000Z',
+      endDate: '2026-08-16T08:30:00.000Z',
+    })
+
+    expect(describeSchedule(multiDay)).toBe(
+      'Runs Thursday 13 August 2026 to Sunday 16 August 2026',
+    )
+  })
+
+  test('combines the run with the recurrence rule', () => {
+    const multiDayRecurring = event({
+      id: 1,
+      date: '2026-08-13T08:30:00.000Z',
+      endDate: '2026-08-16T08:30:00.000Z',
+      recurrenceFrequency: 'MONTHLY',
+      recurrenceInterval: 1,
+    })
+
+    expect(describeSchedule(multiDayRecurring)).toBe(
+      'Runs Thursday 13 August 2026 to Sunday 16 August 2026 · every month',
+    )
   })
 })
