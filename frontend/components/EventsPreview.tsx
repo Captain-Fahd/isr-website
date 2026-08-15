@@ -3,7 +3,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { fetchEvents, formatEventDate, type Event } from '@/lib/events'
+import {
+  fetchEvents,
+  formatEventSchedule,
+  formatRecurrence,
+  type Event,
+} from '@/lib/events'
 import { ArrowRight } from '@/components/Icons'
 
 const ACCENT_BARS = ['bg-isr-turquoise', 'bg-isr-bright-red', 'bg-isr-dark-red'] as const
@@ -22,7 +27,8 @@ function EventPreviewCard({
   index: number
   priorityImage?: boolean
 }) {
-  const { date, time } = formatEventDate(event.date)
+  const { date, time } = formatEventSchedule(event)
+  const recurrence = formatRecurrence(event)
 
   return (
     <Link
@@ -59,6 +65,11 @@ function EventPreviewCard({
         <p className="mb-2 shrink-0 text-xs text-gray-600">
           <strong>{date}</strong> · {time}
         </p>
+        {recurrence && (
+          <p className="mb-2 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-isr-turquoise">
+            {recurrence}
+          </p>
+        )}
         <div className="min-h-0 flex-1 overflow-hidden">
           <p className="text-sm leading-relaxed text-gray-700">{event.description}</p>
         </div>
