@@ -599,4 +599,107 @@ Delete an announcement and its stored image (if any). **Admin only.**
 | `401` | `{ "error": "Unauthorized" }` |
 | `403` | `{ "error": "Forbidden" }` |
 | `404` | `{ "error": "Announcement not found" }` |
+
+---
+
+## Email Forms
+
+Both form endpoints send mail through [Resend](https://resend.com) and require these environment
+variables:
+
+| Variable | Notes |
+|---|---|
+| `RESEND_API_KEY` | Resend API key |
+| `RESEND_FROM_ADDRESS` | Verified sender address mail is sent from |
+
+Each submission triggers **two** emails, sent in parallel:
+
+1. an **inbound** email to `isr@rmit.edu.au`, with `replyTo` set to the submitter's address, and
+2. a **confirmation** email back to the submitter.
+
+Only the inbound email is treated as critical — if the confirmation fails, the request still
+returns `200` and the failure is logged. All submitted values are HTML-escaped before being
+embedded in the email body. When `MOCK_EXTERNALS=1` (e2e / offline local runs) validation still
+runs but no mail is sent.
+
+These endpoints are public — no `Authorization` header.
+
+---
+
+### `POST /api/contact`
+
+General contact form submission. `application/json`.
+
+**Body**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | yes | |
+| `email` | string | yes | Must look like an email address |
+| `subject` | string | yes | Used as the inbound subject: `[Contact Form] <subject>` |
+| `message` | string | yes | Newlines are converted to `<br />` |
+
+```json
+{
+  "name": "Omar",
+  "email": "omar@example.com",
+  "subject": "Question about Jumu'ah",
+  "message": "Assalamu alaikum, what time does Jumu'ah start?"
+}
+```
+
+**Response** `200 OK`
+```json
+{ "success": true }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "name, email, subject, and message are all required" }` / `{ "error": "Invalid email address" }` |
+| `500` | `{ "error": "Email service not configured" }` — `RESEND_API_KEY` or `RESEND_FROM_ADDRESS` missing |
+| `502` | `{ "error": "Failed to send email" }` — Resend rejected or threw on the inbound email |
+
+---
+
+### `POST /api/sponsorship`
+
+Sponsorship enquiry from a business or organisation, submitted from `/support-us`.
+`application/json`.
+
+**Body**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | yes | Contact person |
+| `email` | string | yes | Must look like an email address |
+| `phone` | string | yes | Digits, spaces, `(` `)` `.` `-`, optional leading `+`; 6–20 chars |
+| `businessType` | string | yes | Free text, e.g. `Restaurant` |
+| `businessName` | string | yes | Used as the inbound subject: `[Sponsorship] <businessName>` |
+| `message` | string | yes | Newlines are converted to `<br />` |
+
+```json
+{
+  "name": "Omar",
+  "email": "omar@example.com",
+  "phone": "+61 400 000 000",
+  "businessType": "Restaurant",
+  "businessName": "Barakah Eats",
+  "message": "We would like to sponsor an ISR event this semester."
+}
+```
+
+**Response** `200 OK`
+```json
+{ "success": true }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "name, email, phone, businessType, businessName, and message are all required" }` / `{ "error": "Invalid email address" }` / `{ "error": "Invalid phone number" }` |
+| `500` | `{ "error": "Email service not configured" }` — `RESEND_API_KEY` or `RESEND_FROM_ADDRESS` missing |
+| `502` | `{ "error": "Failed to send email" }` — Resend rejected or threw on the inbound email |
 | `500` | `{ "error": "Failed to delete announcement" }` |
