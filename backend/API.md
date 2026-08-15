@@ -281,6 +281,9 @@ Create/update requests use **`multipart/form-data`** (not JSON), because they in
 file. Text fields (`name`, `date`, `description`, `ticketUrl`) are sent as form fields alongside
 an `image` file field.
 
+Every event carries a `likeCount`. See [Event likes](#event-likes) for how visitors like and
+unlike, and for the `clientId` they identify themselves with.
+
 ---
 
 ### `GET /api/events`
@@ -292,11 +295,14 @@ List all events, ordered by date.
 | Parameter | Type | Description |
 |---|---|---|
 | `filter` | string | Optional. `upcoming` → events with `date >= now` (ascending). `past` → events with `date < now` (descending). Omit for all events (ascending). |
+| `clientId` | string | Optional. When supplied, each event also carries `likedByMe`. |
 
 **Response** `200 OK`
 ```json
-{ "data": [ { "id": 1, "name": "Eid Dinner", "date": "...", "imageUrl": "...", "description": "...", "ticketUrl": "..." } ] }
+{ "data": [ { "id": 1, "name": "Eid Dinner", "date": "...", "imageUrl": "...", "description": "...", "ticketUrl": "...", "likeCount": 12 } ] }
 ```
+
+With `?clientId=...` each event gains `"likedByMe": true | false`.
 
 **Error** `500` — `{ "error": "Failed to fetch events" }`
 
@@ -306,9 +312,15 @@ List all events, ordered by date.
 
 Fetch a single event by id.
 
+**Query parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `clientId` | string | Optional. When supplied, the event also carries `likedByMe`. |
+
 **Response** `200 OK`
 ```json
-{ "data": { "id": 1, "name": "Eid Dinner", "date": "...", "imageUrl": "...", "description": "...", "ticketUrl": "..." } }
+{ "data": { "id": 1, "name": "Eid Dinner", "date": "...", "imageUrl": "...", "description": "...", "ticketUrl": "...", "likeCount": 12 } }
 ```
 
 **Errors**
@@ -412,6 +424,69 @@ Delete an event and its stored image. **Admin only.**
 | `403` | `{ "error": "Forbidden" }` |
 | `404` | `{ "error": "Event not found" }` |
 | `500` | `{ "error": "Failed to delete event" }` |
+
+---
+
+## Event likes
+
+Anyone can like an event — no login. Because public visitors are anonymous, the browser
+generates a random **`clientId`** once (e.g. `crypto.randomUUID()` kept in `localStorage`) and
+sends it with every like request. One like is stored per `(event, clientId)` pair, so a visitor
+liking twice does not move the count, and the same id lets them unlike later.
+
+This dedupes honest repeat taps; it is not proof of identity, and someone clearing storage can
+like again. That trade-off is deliberate — requiring accounts to like would cost more than the
+count is worth.
+
+Both endpoints are **public**, take JSON (or a query string), and reply with the event's fresh
+count. Likes are removed automatically when the event is deleted.
+
+---
+
+### `POST /api/events/:id/like`
+
+Like an event. Repeating the call is a no-op, so a retry is safe.
+
+**Body** (`application/json`) — `clientId` may also be sent as a query parameter.
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `clientId` | string | yes | 1–128 characters. |
+
+**Response** `200 OK`
+```json
+{ "data": { "id": 1, "likeCount": 13, "likedByMe": true } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "Invalid event id" }` / `{ "error": "clientId is required" }` |
+| `404` | `{ "error": "Event not found" }` |
+| `500` | `{ "error": "Failed to like event" }` |
+
+---
+
+### `DELETE /api/events/:id/like`
+
+Remove the caller's like. Succeeds even if they had not liked the event.
+
+**Body** (`application/json`) — same as `POST`. Clients that cannot send a `DELETE` body may
+pass `?clientId=...` instead.
+
+**Response** `200 OK`
+```json
+{ "data": { "id": 1, "likeCount": 12, "likedByMe": false } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "Invalid event id" }` / `{ "error": "clientId is required" }` |
+| `404` | `{ "error": "Event not found" }` |
+| `500` | `{ "error": "Failed to unlike event" }` |
 
 ---
 

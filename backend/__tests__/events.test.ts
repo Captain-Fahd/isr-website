@@ -43,9 +43,9 @@ function mockRes() {
     return { res, json, status };
 }
 
-test('getEvents returns the list of events', async () => {
-    const events = [{ id: 1, name: 'Eid Dinner', date: new Date('2099-01-01') }];
-    mockFindMany.mockResolvedValue(events);
+test('getEvents returns the list of events with their like counts', async () => {
+    const event = { id: 1, name: 'Eid Dinner', date: new Date('2099-01-01') };
+    mockFindMany.mockResolvedValue([{ ...event, _count: { likes: 4 } }]);
 
     const req = { query: {} } as unknown as Request;
     const { res, json, status } = mockRes();
@@ -53,7 +53,30 @@ test('getEvents returns the list of events', async () => {
     await getEvents(req, res);
 
     expect(status).toHaveBeenCalledWith(200);
-    expect(json).toHaveBeenCalledWith({ data: events });
+    expect(json).toHaveBeenCalledWith({ data: [{ ...event, likeCount: 4 }] });
+});
+
+test('getEvents reports likedByMe when the caller supplies a clientId', async () => {
+    const event = { id: 1, name: 'Eid Dinner', date: new Date('2099-01-01') };
+    mockFindMany.mockResolvedValue([
+        { ...event, _count: { likes: 4 }, likes: [{ id: 7 }] },
+    ]);
+
+    const req = { query: { clientId: 'abc-123' } } as unknown as Request;
+    const { res, json } = mockRes();
+
+    await getEvents(req, res);
+
+    expect(mockFindMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+            include: expect.objectContaining({
+                likes: { where: { clientId: 'abc-123' }, select: { id: true } },
+            }),
+        }),
+    );
+    expect(json).toHaveBeenCalledWith({
+        data: [{ ...event, likeCount: 4, likedByMe: true }],
+    });
 });
 
 test('getEventById returns 404 when the event does not exist', async () => {
@@ -120,7 +143,7 @@ test('createEvent uploads the image and creates the event', async () => {
 
     expect(mockUploadEventImage).toHaveBeenCalledWith(file);
     expect(status).toHaveBeenCalledWith(201);
-    expect(json).toHaveBeenCalledWith({ data: created });
+    expect(json).toHaveBeenCalledWith({ data: { ...created, likeCount: 0 } });
 });
 
 test('deleteEvent returns 404 when the event does not exist', async () => {
