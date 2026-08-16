@@ -83,6 +83,42 @@ test('getEvents returns upcoming-then-past ordering when unfiltered', async () =
   expect(respondedNames(json)).toEqual(['Future', 'Past newer', 'Past older']);
 });
 
+test('getEvents surfaces each event like count', async () => {
+  mockFindMany.mockResolvedValue([eventRow({ name: 'Eid Dinner', _count: { likes: 4 } })]);
+
+  const req = { query: {} } as unknown as Request;
+  const { res, json, status } = mockRes();
+
+  await getEvents(req, res);
+
+  expect(status).toHaveBeenCalledWith(200);
+  const payload = json.mock.calls[0][0] as { data: { likeCount: number }[] };
+  expect(payload.data[0].likeCount).toBe(4);
+});
+
+test('getEvents reports likedByMe when the caller supplies a clientId', async () => {
+  mockFindMany.mockResolvedValue([
+    eventRow({ name: 'Eid Dinner', _count: { likes: 4 }, likes: [{ id: 7 }] }),
+  ]);
+
+  const req = { query: { clientId: 'abc-123' } } as unknown as Request;
+  const { res, json } = mockRes();
+
+  await getEvents(req, res);
+
+  expect(mockFindMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      include: expect.objectContaining({
+        likes: { where: { clientId: 'abc-123' }, select: { id: true } },
+      }),
+    }),
+  );
+  const payload = json.mock.calls[0][0] as {
+    data: { likeCount: number; likedByMe: boolean }[];
+  };
+  expect(payload.data[0]).toMatchObject({ likeCount: 4, likedByMe: true });
+});
+
 test('getEvents filters upcoming events', async () => {
   mockFindMany.mockResolvedValue([
     eventRow({ id: 1, name: 'Eid Dinner' }),
@@ -603,6 +639,7 @@ test('updateEvent updates fields without replacing image', async () => {
   expect(mockUpdate).toHaveBeenCalledWith({
     where: { id: 1 },
     data: expect.objectContaining({ name: 'New', imageUrl: 'https://cdn/old.jpg' }),
+    include: { _count: { select: { likes: true } } },
   });
   expect(status).toHaveBeenCalledWith(200);
   expect(json).toHaveBeenCalledWith({ data: expect.objectContaining(updated) });
@@ -671,6 +708,7 @@ test('updateEvent clearing the frequency clears the rest of the recurrence rule'
       recurrenceInterval: null,
       recurrenceEndDate: null,
     }),
+    include: { _count: { select: { likes: true } } },
   });
   expect(status).toHaveBeenCalledWith(200);
 });
@@ -690,6 +728,7 @@ test('updateEvent clears endDate when sent blank, turning a multi-day event sing
   expect(mockUpdate).toHaveBeenCalledWith({
     where: { id: 1 },
     data: expect.objectContaining({ endDate: null }),
+    include: { _count: { select: { likes: true } } },
   });
   expect(status).toHaveBeenCalledWith(200);
 });

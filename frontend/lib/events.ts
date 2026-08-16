@@ -25,6 +25,10 @@ export type Event = {
   isRecurring?: boolean
   /** First occurrence that has not finished yet, or null once the event is over. */
   nextOccurrence?: Occurrence | null
+  /** Optional so a response from an API without likes still type-checks. */
+  likeCount?: number
+  /** Only present when the request identified the visitor with a `clientId`. */
+  likedByMe?: boolean
 }
 
 export type EventsFilter = 'all' | 'upcoming' | 'past'
@@ -230,11 +234,25 @@ function fetchOptions(): RequestInit {
   return typeof window === 'undefined' ? { next: { revalidate: 60 } } : { cache: 'no-store' }
 }
 
+function buildQuery(params: Record<string, string | undefined | null>): string {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value) search.set(key, value)
+  }
+  const query = search.toString()
+  return query ? `?${query}` : ''
+}
+
+/** Passing a `clientId` makes the API report `likedByMe` on each event. */
 export async function fetchEvents(
   filter: EventsFilter = 'all',
   init?: RequestInit,
+  clientId?: string | null,
 ): Promise<Event[]> {
-  const query = filter === 'all' ? '' : `?filter=${filter}`
+  const query = buildQuery({
+    filter: filter === 'all' ? undefined : filter,
+    clientId,
+  })
   const response = await fetch(`${API_BASE_URL}/api/events${query}`, {
     ...fetchOptions(),
     ...init,

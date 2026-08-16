@@ -33,6 +33,22 @@ model Event {
   recurrenceFrequency RecurrenceFrequency?
   recurrenceInterval  Int? // every N days/weeks/months; null when not recurring
   recurrenceEndDate   DateTime? // last day repeats may fall on; null = open-ended
+
+  likes EventLike[]
+}
+
+// One row per (event, visitor). Visitors are anonymous — `clientId` is a random id the
+// browser generates and keeps, so it dedupes honest double-taps rather than proving identity.
+model EventLike {
+  id        Int      @id @default(autoincrement())
+  eventId   Int
+  clientId  String
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, clientId])
+  @@index([eventId])
 }
 
 model Announcement {
