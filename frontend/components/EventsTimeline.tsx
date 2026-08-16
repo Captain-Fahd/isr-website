@@ -4,9 +4,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  displayOccurrence,
   fetchEvents,
-  formatEventDate,
-  isEventPast,
+  formatEventSchedule,
+  formatRecurrence,
+  isEventOver,
   sortEventsForDisplay,
   type Event,
   type EventsFilter,
@@ -32,8 +34,10 @@ function EventCard({
   isLast: boolean
   priorityImage?: boolean
 }) {
-  const { date, time } = formatEventDate(event.date)
-  const past = isEventPast(event.date)
+  const { date, time } = formatEventSchedule(event)
+  const past = isEventOver(event)
+  const recurrence = formatRecurrence(event)
+  const { start } = displayOccurrence(event)
 
   return (
     <article className="relative flex gap-6 md:gap-10">
@@ -76,12 +80,17 @@ function EventCard({
         <div className="p-6 sm:p-8">
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <time
-              dateTime={event.date}
+              dateTime={start}
               className="text-sm font-semibold uppercase tracking-[0.14em] text-isr-dark-red"
             >
               {date}
             </time>
             <span className="text-sm text-gray-500">{time}</span>
+            {recurrence && (
+              <span className="rounded-full bg-isr-turquoise/15 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-isr-turquoise">
+                {recurrence}
+              </span>
+            )}
             {past && (
               <span className="rounded-full bg-isr-light-blue/25 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-isr-dark-red">
                 Past

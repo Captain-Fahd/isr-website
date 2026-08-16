@@ -21,8 +21,8 @@ export const metadata: Metadata = {
 const DONATION_URL =
   'https://www.trybooking.com/au/donate/isrdonations?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAb21jcATr-yZwZG9mAmV4dG4DYWVtAjExAHNydGMGYXBwX2lkDzU2NzA2NzM0MzM1MjQyNwABp3VRU6EumjNboDtRwC4TUNoEhfpUERekmTsbrprb2XKfCWqlghV8oEzOEi9N_aem_oiAqHTGSGge7_49zLpDiKA'
 
-/** TODO: sponsorship portal link — falls back to an email to ISR until it exists. */
-const SPONSORSHIP_URL = ''
+const ctaClass =
+  'mt-auto inline-flex min-h-11 items-center justify-center rounded-lg bg-isr-turquoise px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red'
 
 type Way = {
   id: string
@@ -33,6 +33,8 @@ type Way = {
   cta: string
   /** External link. Falls back to an email to ISR when absent. */
   href?: string
+  /** Internal route, e.g. the sponsorship form page. Takes precedence over `href`. */
+  route?: string
   subject: string
   Icon: ({ className }: { className?: string }) => JSX.Element
 }
@@ -64,7 +66,7 @@ const ways: Way[] = [
       'Reach Muslim students and alumni at RMIT University',
     ],
     cta: 'Become a sponsor',
-    href: SPONSORSHIP_URL || undefined,
+    route: '/support-us/sponsor/',
     subject: 'Sponsorship with ISR',
     Icon: CommunityIcon,
   },
@@ -100,7 +102,7 @@ export default function SupportUsPage() {
         <section className="px-4 pb-16 sm:pb-20">
           <div className="container-isr">
             <div className="grid gap-6 md:grid-cols-2">
-              {ways.map(({ id, label, title, body, points, cta, href, subject, Icon }) => (
+              {ways.map(({ id, label, title, body, points, cta, href, route, subject, Icon }) => (
                 <article
                   key={id}
                   className="flex flex-col rounded-2xl bg-white p-6 shadow-[0_12px_32px_rgba(91,11,5,0.08)] ring-1 ring-black/5 sm:p-8"
@@ -129,17 +131,24 @@ export default function SupportUsPage() {
                     ))}
                   </ul>
 
-                  <a
-                    href={
-                      href ??
-                      `mailto:${CAMPUS.email}?subject=${encodeURIComponent(subject)}`
-                    }
-                    {...(href ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                    className="mt-auto inline-flex min-h-11 items-center justify-center rounded-lg bg-isr-turquoise px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-isr-dark-red"
-                  >
-                    {cta}
-                    <ArrowRight />
-                  </a>
+                  {route ? (
+                    <Link href={route} className={ctaClass}>
+                      {cta}
+                      <ArrowRight />
+                    </Link>
+                  ) : (
+                    <a
+                      href={
+                        href ??
+                        `mailto:${CAMPUS.email}?subject=${encodeURIComponent(subject)}`
+                      }
+                      {...(href ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      className={ctaClass}
+                    >
+                      {cta}
+                      <ArrowRight />
+                    </a>
+                  )}
                 </article>
               ))}
             </div>

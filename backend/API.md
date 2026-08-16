@@ -271,15 +271,46 @@ An event has the shape:
   "id": 1,
   "name": "Eid Dinner",
   "date": "2026-08-01T18:00:00.000Z",
+  "endDate": null,
+  "recurrenceFrequency": null,
+  "recurrenceInterval": null,
+  "recurrenceEndDate": null,
   "imageUrl": "https://<project>.supabase.co/storage/v1/object/public/event-images/...",
   "description": "Community Eid celebration dinner.",
-  "ticketUrl": "https://tickets.example.com/eid"
+  "ticketUrl": "https://tickets.example.com/eid",
+  "isMultiDay": false,
+  "isRecurring": false,
+  "nextOccurrence": { "start": "2026-08-01T18:00:00.000Z", "end": "2026-08-01T18:00:00.000Z" }
 }
 ```
 
 Create/update requests use **`multipart/form-data`** (not JSON), because they include the image
-file. Text fields (`name`, `date`, `description`, `ticketUrl`) are sent as form fields alongside
-an `image` file field.
+file. Text fields (`name`, `date`, `description`, `ticketUrl`, and the scheduling fields below)
+are sent as form fields alongside an `image` file field.
+
+#### Multi-day and recurring events
+
+`date` is the start of the **first** occurrence.
+
+- **Multi-day** — set `endDate` to when that occurrence finishes. It must be after `date`.
+- **Recurring** — set `recurrenceFrequency` to `DAILY`, `WEEKLY` or `MONTHLY` (case-insensitive).
+  `recurrenceInterval` (integer, 1–365, default `1`) repeats every N of those units, so
+  `WEEKLY` + `2` is fortnightly. `recurrenceEndDate` bounds the series; omit it for an
+  open-ended one. Monthly steps clamp to the last day of shorter months (31 Jan → 28 Feb).
+  Every occurrence keeps the duration of the first, so a recurring event may also be multi-day
+  as long as an occurrence finishes before the next one starts.
+
+Occurrences are **not** stored as separate rows — only the rule is. Each response adds three
+read-only derived fields: `isMultiDay`, `isRecurring`, and `nextOccurrence` (`{ start, end }`
+of the first occurrence that has not finished yet, or `null` once the event is over).
+
+Because of this, `upcoming` / `past` are decided by `nextOccurrence`, not by `date`: an event
+that started yesterday but runs until tomorrow, and a weekly event whose first occurrence was
+years ago, are both **upcoming**.
+
+Nullable scheduling fields can be cleared on update by sending them blank (`endDate=`), since
+`multipart/form-data` cannot carry a JSON `null`. Clearing `recurrenceFrequency` clears
+`recurrenceInterval` and `recurrenceEndDate` with it.
 
 Every event carries a `likeCount`. See [Event likes](#event-likes) for how visitors like and
 unlike, and for the `clientId` they identify themselves with.
@@ -348,9 +379,13 @@ Create an event. **Admin only.** `multipart/form-data`.
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `name` | string | yes | |
-| `date` | string | yes | Any value parseable by `Date` (e.g. ISO 8601 `2026-08-01T18:00:00Z`) |
+| `date` | string | yes | Start of the first occurrence. Any value parseable by `Date` (e.g. ISO 8601 `2026-08-01T18:00:00Z`) |
 | `description` | string | yes | |
 | `ticketUrl` | string | no | Omit or leave blank if no ticket link |
+| `endDate` | string | no | End of that occurrence, for multi-day events. Must be after `date` |
+| `recurrenceFrequency` | string | no | `DAILY`, `WEEKLY` or `MONTHLY` (case-insensitive). Omit for a one-off event |
+| `recurrenceInterval` | integer | no | Repeat every N units of the frequency. 1–365, defaults to `1`. Requires `recurrenceFrequency` |
+| `recurrenceEndDate` | string | no | Last date repeats may fall on. Omit for an open-ended series. Requires `recurrenceFrequency` |
 | `image` | file | yes | Image mimetype only, max 5 MB. Uploaded to Supabase Storage. |
 
 **Response** `201 Created`
@@ -362,7 +397,11 @@ Create an event. **Admin only.** `multipart/form-data`.
 
 | Status | Body |
 |---|---|
-| `400` | `{ "error": "name, date and description are required" }` / `{ "error": "date must be a valid date" }` / `{ "error": "An image file is required" }` |
+| `400` | `{ "error": "name, date and description are required" }` / `{ "error": "An image file is required" }` / any scheduling error below |
+| `400` | `{ "error": "date must be a valid date" }` / `{ "error": "endDate must be a valid date" }` / `{ "error": "recurrenceEndDate must be a valid date" }` |
+| `400` | `{ "error": "endDate must be after date" }` / `{ "error": "endDate must fall before the next occurrence starts" }` |
+| `400` | `{ "error": "recurrenceFrequency must be one of DAILY, WEEKLY, MONTHLY" }` / `{ "error": "recurrenceInterval must be an integer between 1 and 365" }` |
+| `400` | `{ "error": "recurrenceEndDate must be on or after date" }` / `{ "error": "recurrenceInterval and recurrenceEndDate require recurrenceFrequency" }` |
 | `401` | `{ "error": "Unauthorized" }` |
 | `403` | `{ "error": "Forbidden" }` |
 | `500` | `{ "error": "Failed to create event" }` |
@@ -392,11 +431,14 @@ old one is removed from storage; otherwise the existing `imageUrl` is kept.
 
 | Status | Body |
 |---|---|
-| `400` | `{ "error": "Invalid event id" }` / `{ "error": "date must be a valid date" }` |
+| `400` | `{ "error": "Invalid event id" }` / any scheduling error listed under `POST` |
 | `401` | `{ "error": "Unauthorized" }` |
 | `403` | `{ "error": "Forbidden" }` |
 | `404` | `{ "error": "Event not found" }` |
 | `500` | `{ "error": "Failed to update event" }` |
+
+Scheduling fields are validated against the **stored** event, so sending only `endDate`
+is checked against the existing `date`.
 
 ---
 
@@ -632,4 +674,107 @@ Delete an announcement and its stored image (if any). **Admin only.**
 | `401` | `{ "error": "Unauthorized" }` |
 | `403` | `{ "error": "Forbidden" }` |
 | `404` | `{ "error": "Announcement not found" }` |
+
+---
+
+## Email Forms
+
+Both form endpoints send mail through [Resend](https://resend.com) and require these environment
+variables:
+
+| Variable | Notes |
+|---|---|
+| `RESEND_API_KEY` | Resend API key |
+| `RESEND_FROM_ADDRESS` | Verified sender address mail is sent from |
+
+Each submission triggers **two** emails, sent in parallel:
+
+1. an **inbound** email to `isr@rmit.edu.au`, with `replyTo` set to the submitter's address, and
+2. a **confirmation** email back to the submitter.
+
+Only the inbound email is treated as critical — if the confirmation fails, the request still
+returns `200` and the failure is logged. All submitted values are HTML-escaped before being
+embedded in the email body. When `MOCK_EXTERNALS=1` (e2e / offline local runs) validation still
+runs but no mail is sent.
+
+These endpoints are public — no `Authorization` header.
+
+---
+
+### `POST /api/contact`
+
+General contact form submission. `application/json`.
+
+**Body**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | yes | |
+| `email` | string | yes | Must look like an email address |
+| `subject` | string | yes | Used as the inbound subject: `[Contact Form] <subject>` |
+| `message` | string | yes | Newlines are converted to `<br />` |
+
+```json
+{
+  "name": "Omar",
+  "email": "omar@example.com",
+  "subject": "Question about Jumu'ah",
+  "message": "Assalamu alaikum, what time does Jumu'ah start?"
+}
+```
+
+**Response** `200 OK`
+```json
+{ "success": true }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "name, email, subject, and message are all required" }` / `{ "error": "Invalid email address" }` |
+| `500` | `{ "error": "Email service not configured" }` — `RESEND_API_KEY` or `RESEND_FROM_ADDRESS` missing |
+| `502` | `{ "error": "Failed to send email" }` — Resend rejected or threw on the inbound email |
+
+---
+
+### `POST /api/sponsorship`
+
+Sponsorship enquiry from a business or organisation, submitted from `/support-us`.
+`application/json`.
+
+**Body**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | yes | Contact person |
+| `email` | string | yes | Must look like an email address |
+| `phone` | string | yes | Digits, spaces, `(` `)` `.` `-`, optional leading `+`; 6–20 chars |
+| `businessType` | string | yes | Free text, e.g. `Restaurant` |
+| `businessName` | string | yes | Used as the inbound subject: `[Sponsorship] <businessName>` |
+| `message` | string | yes | Newlines are converted to `<br />` |
+
+```json
+{
+  "name": "Omar",
+  "email": "omar@example.com",
+  "phone": "+61 400 000 000",
+  "businessType": "Restaurant",
+  "businessName": "Barakah Eats",
+  "message": "We would like to sponsor an ISR event this semester."
+}
+```
+
+**Response** `200 OK`
+```json
+{ "success": true }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "name, email, phone, businessType, businessName, and message are all required" }` / `{ "error": "Invalid email address" }` / `{ "error": "Invalid phone number" }` |
+| `500` | `{ "error": "Email service not configured" }` — `RESEND_API_KEY` or `RESEND_FROM_ADDRESS` missing |
+| `502` | `{ "error": "Failed to send email" }` — Resend rejected or threw on the inbound email |
 | `500` | `{ "error": "Failed to delete announcement" }` |

@@ -19,6 +19,10 @@ export async function seedPublicData() {
   return { events, announcements };
 }
 
+export async function seedEvent(data: Parameters<typeof prisma.event.create>[0]['data']) {
+  return prisma.event.create({ data });
+}
+
 export async function disconnectPrisma() {
   await prisma.$disconnect();
 }

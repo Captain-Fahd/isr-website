@@ -2,7 +2,8 @@ import './env';
 import { afterAll, afterEach, beforeEach, describe, expect, test } from '@jest/globals';
 import request from 'supertest';
 import { createApp } from '../../app';
-import { disconnectPrisma, resetDatabase, seedPublicData } from './helpers';
+import { disconnectPrisma, resetDatabase, seedEvent, seedPublicData } from './helpers';
+import { runningMultiDayEvent, weeklyRecurringEvent } from '../../test/fixtures';
 
 const app = createApp();
 
@@ -53,6 +54,31 @@ describe('GET /api/events', () => {
     expect(res.status).toBe(200);
     expect(res.body.data).toHaveLength(1);
     expect(res.body.data[0].name).toBe('Eid Dinner');
+  });
+
+  test('lists a multi-day event as upcoming while it is still running', async () => {
+    await seedEvent(runningMultiDayEvent);
+
+    const res = await request(app).get('/api/events').query({ filter: 'upcoming' });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0]).toMatchObject({
+      name: 'Islam Awareness Week',
+      isMultiDay: true,
+      isRecurring: false,
+    });
+  });
+
+  test('lists a recurring event as upcoming and reports its next occurrence', async () => {
+    await seedEvent(weeklyRecurringEvent);
+
+    const res = await request(app).get('/api/events').query({ filter: 'upcoming' });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].isRecurring).toBe(true);
+    expect(new Date(res.body.data[0].nextOccurrence.start).getTime()).toBeGreaterThan(
+      Date.now() - 24 * 60 * 60 * 1000,
+    );
   });
 });
 

@@ -26,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     pageEntry('/contact'),
     pageEntry('/volunteer'),
     pageEntry('/support-us'),
+    pageEntry('/support-us/sponsor'),
     pageEntry('/prayer-times'),
     pageEntry('/privacy'),
   ]

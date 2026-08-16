@@ -1,513 +1,211 @@
-import { test, expect, jest, afterEach } from '@jest/globals';
-import { Request, Response } from 'express';
-
-const mockFindMany = jest.fn<(args?: any) => Promise<any>>();
-const mockFindUnique = jest.fn<(args: any) => Promise<any>>();
-const mockCreate = jest.fn<(args: any) => Promise<any>>();
-const mockUpdate = jest.fn<(args: any) => Promise<any>>();
-const mockDelete = jest.fn<(args: any) => Promise<any>>();
-
-jest.mock('../lib/prisma', () => ({
-  prisma: {
-    event: {
-      findMany: mockFindMany,
-      findUnique: mockFindUnique,
-      create: mockCreate,
-      update: mockUpdate,
-      delete: mockDelete,
-    },
-  },
-}));
-
-const mockUploadEventImage = jest.fn<(file: any) => Promise<string>>();
-const mockDeleteEventImage = jest.fn<(url: string) => Promise<void>>();
-
-jest.mock('../lib/storage', () => ({
-  uploadEventImage: mockUploadEventImage,
-  deleteEventImage: mockDeleteEventImage,
-}));
-
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import {
-  getEvents,
-  getEventById,
-  createEvent,
-  updateEvent,
-  deleteEvent,
-} from '../controllers/eventsController';
+  formatEventDate,
+  fromDatetimeLocalValue,
+  isEventPast,
+  sortEventsForDisplay,
+  toDatetimeLocalValue,
+  type Event,
+} from '@/lib/events'
 
-afterEach(() => {
-  jest.clearAllMocks();
-});
+/**
+ * Melbourne is AEST (UTC+10) in winter and AEDT (UTC+11) from the first Sunday
+ * in October to the first Sunday in April. 2026 transitions: 5 Apr and 4 Oct.
+ */
 
-function mockRes() {
-  const json = jest.fn();
-  const status = jest.fn((_code: number) => ({ json }));
-  const res = { json, status } as unknown as Response;
-  return { res, json, status };
+function event(overrides: Partial<Event> & { id: number; date: string }): Event {
+  return {
+    name: `Event ${overrides.id}`,
+    description: 'Description',
+    imageUrl: 'https://cdn.example.com/poster.webp',
+    ticketUrl: null,
+    ...overrides,
+  }
 }
 
-/** Every event in a response carries its like count, defaulting to none. */
-function withLikes<T extends object>(event: T, likeCount = 0) {
-  return { ...event, likeCount };
-}
-
-test('getEvents returns upcoming-then-past ordering when unfiltered', async () => {
-  const upcoming = { id: 1, name: 'Future', date: new Date('2099-01-01') };
-  const pastNewer = { id: 2, name: 'Past newer', date: new Date('2020-06-01') };
-  const pastOlder = { id: 3, name: 'Past older', date: new Date('2019-01-01') };
-  // DB returns asc by date; controller re-sorts past descending
-  mockFindMany.mockResolvedValue([pastOlder, pastNewer, upcoming]);
-
-  const req = { query: {} } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await getEvents(req, res);
-
-  expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({
-    data: [upcoming, pastNewer, pastOlder].map((e) => withLikes(e)),
-  });
-});
-
-test('getEvents surfaces each event like count', async () => {
-  const event = { id: 1, name: 'Eid Dinner', date: new Date('2099-01-01') };
-  mockFindMany.mockResolvedValue([{ ...event, _count: { likes: 4 } }]);
-
-  const req = { query: {} } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await getEvents(req, res);
-
-  expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: [withLikes(event, 4)] });
-});
-
-test('getEvents reports likedByMe when the caller supplies a clientId', async () => {
-  const event = { id: 1, name: 'Eid Dinner', date: new Date('2099-01-01') };
-  mockFindMany.mockResolvedValue([{ ...event, _count: { likes: 4 }, likes: [{ id: 7 }] }]);
-
-  const req = { query: { clientId: 'abc-123' } } as unknown as Request;
-  const { res, json } = mockRes();
-
-  await getEvents(req, res);
-
-  expect(mockFindMany).toHaveBeenCalledWith(
-    expect.objectContaining({
-      include: expect.objectContaining({
-        likes: { where: { clientId: 'abc-123' }, select: { id: true } },
-      }),
-    }),
-  );
-  expect(json).toHaveBeenCalledWith({
-    data: [{ ...withLikes(event, 4), likedByMe: true }],
-  });
-});
-
-test('getEvents filters upcoming events', async () => {
-  const events = [{ id: 1, name: 'Eid Dinner', date: new Date('2099-01-01') }];
-  mockFindMany.mockResolvedValue(events);
-
-  const req = { query: { filter: 'upcoming' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await getEvents(req, res);
-
-  expect(mockFindMany).toHaveBeenCalledWith(
-    expect.objectContaining({
-      where: { date: { gte: expect.any(Date) } },
-      orderBy: { date: 'asc' },
-    }),
-  );
-  expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: events.map((e) => withLikes(e)) });
-});
-
-test('getEvents filters past events descending', async () => {
-  const events = [{ id: 1, name: 'Old', date: new Date('2020-01-01') }];
-  mockFindMany.mockResolvedValue(events);
-
-  const req = { query: { filter: 'past' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await getEvents(req, res);
-
-  expect(mockFindMany).toHaveBeenCalledWith(
-    expect.objectContaining({
-      where: { date: { lt: expect.any(Date) } },
-      orderBy: { date: 'desc' },
-    }),
-  );
-  expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: events.map((e) => withLikes(e)) });
-});
-
-test('getEvents returns 500 on db error', async () => {
-  mockFindMany.mockRejectedValue(new Error('db down'));
-
-  const req = { query: {} } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await getEvents(req, res);
-
-  expect(status).toHaveBeenCalledWith(500);
-  expect(json).toHaveBeenCalledWith({ error: 'Failed to fetch events' });
-});
-
-test('getEventById returns the event', async () => {
-  const event = { id: 1, name: 'Eid Dinner' };
-  mockFindUnique.mockResolvedValue(event);
-
-  const req = { params: { id: '1' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await getEventById(req, res);
-
-  expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: withLikes(event) });
-});
-
-test('getEventById returns 404 when the event does not exist', async () => {
-  mockFindUnique.mockResolvedValue(null);
-
-  const req = { params: { id: '99' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await getEventById(req, res);
-
-  expect(status).toHaveBeenCalledWith(404);
-  expect(json).toHaveBeenCalledWith({ error: 'Event not found' });
-});
-
-test('getEventById returns 400 for non-integer id', async () => {
-  const req = { params: { id: 'abc' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await getEventById(req, res);
-
-  expect(status).toHaveBeenCalledWith(400);
-  expect(json).toHaveBeenCalledWith({ error: 'Invalid event id' });
-  expect(mockFindUnique).not.toHaveBeenCalled();
-});
-
-test('createEvent returns 400 when a required field is missing', async () => {
-  const req = {
-    body: { name: 'Eid Dinner', description: 'x' },
-    file: { buffer: Buffer.from('x') },
-  } as unknown as Request;
-  const { res, status } = mockRes();
-
-  await createEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(400);
-  expect(mockCreate).not.toHaveBeenCalled();
-});
-
-test('createEvent returns 400 when the image file is missing', async () => {
-  const req = {
-    body: {
-      name: 'Eid Dinner',
-      date: '2026-08-01T18:00:00Z',
-      description: 'x',
-      ticketUrl: 'https://t',
-    },
-  } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await createEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(400);
-  expect(json).toHaveBeenCalledWith({ error: 'An image file is required' });
-  expect(mockCreate).not.toHaveBeenCalled();
-});
-
-test('createEvent returns 400 for invalid date', async () => {
-  const req = {
-    body: {
-      name: 'Eid Dinner',
-      date: 'not-a-date',
-      description: 'x',
-    },
-    file: { buffer: Buffer.from('x') },
-  } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await createEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(400);
-  expect(json).toHaveBeenCalledWith({ error: 'date must be a valid date' });
-  expect(mockCreate).not.toHaveBeenCalled();
-});
-
-test('createEvent uploads the image and creates the event', async () => {
-  mockUploadEventImage.mockResolvedValue('https://cdn/img.jpg');
-  const created = { id: 1, name: 'Eid Dinner', imageUrl: 'https://cdn/img.jpg' };
-  mockCreate.mockResolvedValue(created);
-
-  const file = { buffer: Buffer.from('x'), mimetype: 'image/jpeg', originalname: 'p.jpg' };
-  const req = {
-    body: {
-      name: 'Eid Dinner',
-      date: '2026-08-01T18:00:00Z',
-      description: 'x',
-      ticketUrl: 'https://t',
-    },
-    file,
-  } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await createEvent(req, res);
-
-  expect(mockUploadEventImage).toHaveBeenCalledWith(file);
-  expect(mockCreate).toHaveBeenCalledWith({
-    data: expect.objectContaining({ ticketUrl: 'https://t' }),
-  });
-  expect(status).toHaveBeenCalledWith(201);
-  expect(json).toHaveBeenCalledWith({ data: withLikes(created) });
-});
-
-test('createEvent succeeds without ticketUrl and stores null', async () => {
-  mockUploadEventImage.mockResolvedValue('https://cdn/img.jpg');
-  const created = {
-    id: 1,
-    name: 'Eid Dinner',
-    imageUrl: 'https://cdn/img.jpg',
-    ticketUrl: null,
-  };
-  mockCreate.mockResolvedValue(created);
-
-  const file = { buffer: Buffer.from('x'), mimetype: 'image/jpeg', originalname: 'p.jpg' };
-  const req = {
-    body: {
-      name: 'Eid Dinner',
-      date: '2026-08-01T18:00:00Z',
-      description: 'x',
-    },
-    file,
-  } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await createEvent(req, res);
-
-  expect(mockCreate).toHaveBeenCalledWith({
-    data: expect.objectContaining({ ticketUrl: null }),
-  });
-  expect(status).toHaveBeenCalledWith(201);
-  expect(json).toHaveBeenCalledWith({ data: withLikes(created) });
-});
-
-test('createEvent normalizes blank ticketUrl to null', async () => {
-  mockUploadEventImage.mockResolvedValue('https://cdn/img.jpg');
-  const created = {
-    id: 1,
-    name: 'Eid Dinner',
-    imageUrl: 'https://cdn/img.jpg',
-    ticketUrl: null,
-  };
-  mockCreate.mockResolvedValue(created);
-
-  const file = { buffer: Buffer.from('x'), mimetype: 'image/jpeg', originalname: 'p.jpg' };
-  const req = {
-    body: {
-      name: 'Eid Dinner',
-      date: '2026-08-01T18:00:00Z',
-      description: 'x',
-      ticketUrl: '   ',
-    },
-    file,
-  } as unknown as Request;
-  const { res, status } = mockRes();
-
-  await createEvent(req, res);
-
-  expect(mockCreate).toHaveBeenCalledWith({
-    data: expect.objectContaining({ ticketUrl: null }),
-  });
-  expect(status).toHaveBeenCalledWith(201);
-});
-
-test('createEvent returns 500 on failure', async () => {
-  mockUploadEventImage.mockRejectedValue(new Error('upload failed'));
-
-  const file = { buffer: Buffer.from('x'), mimetype: 'image/jpeg', originalname: 'p.jpg' };
-  const req = {
-    body: {
-      name: 'Eid Dinner',
-      date: '2026-08-01T18:00:00Z',
-      description: 'x',
-    },
-    file,
-  } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await createEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(500);
-  expect(json).toHaveBeenCalledWith({ error: 'Failed to create event' });
-});
-
-test('updateEvent returns 400 for non-integer id', async () => {
-  const req = { params: { id: 'abc' }, body: { name: 'x' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await updateEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(400);
-  expect(json).toHaveBeenCalledWith({ error: 'Invalid event id' });
-  expect(mockFindUnique).not.toHaveBeenCalled();
-});
-
-test('updateEvent returns 400 for invalid date', async () => {
-  const req = {
-    params: { id: '1' },
-    body: { date: 'not-a-date' },
-  } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await updateEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(400);
-  expect(json).toHaveBeenCalledWith({ error: 'date must be a valid date' });
-  expect(mockFindUnique).not.toHaveBeenCalled();
-});
-
-test('updateEvent returns 404 when the event does not exist', async () => {
-  mockFindUnique.mockResolvedValue(null);
-
-  const req = { params: { id: '99' }, body: { name: 'x' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await updateEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(404);
-  expect(json).toHaveBeenCalledWith({ error: 'Event not found' });
-  expect(mockUpdate).not.toHaveBeenCalled();
-});
-
-test('updateEvent updates fields without replacing image', async () => {
-  const existing = {
-    id: 1,
-    name: 'Old',
-    description: 'Old desc',
-    imageUrl: 'https://cdn/old.jpg',
-    ticketUrl: null,
-  };
-  const updated = { ...existing, name: 'New' };
-  mockFindUnique.mockResolvedValue(existing);
-  mockUpdate.mockResolvedValue(updated);
-
-  const req = {
-    params: { id: '1' },
-    body: { name: 'New' },
-  } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await updateEvent(req, res);
-
-  expect(mockUploadEventImage).not.toHaveBeenCalled();
-  expect(mockDeleteEventImage).not.toHaveBeenCalled();
-  // objectContaining at the top level too: the update also asks for the like count.
-  expect(mockUpdate).toHaveBeenCalledWith(
-    expect.objectContaining({
-      where: { id: 1 },
-      data: expect.objectContaining({ name: 'New', imageUrl: 'https://cdn/old.jpg' }),
-    }),
-  );
-  expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: withLikes(updated) });
-});
-
-test('updateEvent replaces image and deletes the old one', async () => {
-  const existing = {
-    id: 1,
-    name: 'Eid',
-    description: 'x',
-    imageUrl: 'https://cdn/old.jpg',
-  };
-  const updated = { ...existing, imageUrl: 'https://cdn/new.jpg' };
-  mockFindUnique.mockResolvedValue(existing);
-  mockUploadEventImage.mockResolvedValue('https://cdn/new.jpg');
-  mockUpdate.mockResolvedValue(updated);
-
-  const file = { buffer: Buffer.from('x'), mimetype: 'image/jpeg', originalname: 'new.jpg' };
-  const req = {
-    params: { id: '1' },
-    body: {},
-    file,
-  } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await updateEvent(req, res);
-
-  expect(mockUploadEventImage).toHaveBeenCalledWith(file);
-  expect(mockDeleteEventImage).toHaveBeenCalledWith('https://cdn/old.jpg');
-  expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: withLikes(updated) });
-});
-
-test('updateEvent returns 500 on failure', async () => {
-  mockFindUnique.mockResolvedValue({ id: 1, imageUrl: 'https://cdn/old.jpg' });
-  mockUpdate.mockRejectedValue(new Error('db'));
-
-  const req = {
-    params: { id: '1' },
-    body: { name: 'New' },
-  } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await updateEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(500);
-  expect(json).toHaveBeenCalledWith({ error: 'Failed to update event' });
-});
-
-test('deleteEvent returns 400 for non-integer id', async () => {
-  const req = { params: { id: 'abc' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await deleteEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(400);
-  expect(json).toHaveBeenCalledWith({ error: 'Invalid event id' });
-  expect(mockFindUnique).not.toHaveBeenCalled();
-});
-
-test('deleteEvent returns 404 when the event does not exist', async () => {
-  mockFindUnique.mockResolvedValue(null);
-
-  const req = { params: { id: '99' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await deleteEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(404);
-  expect(json).toHaveBeenCalledWith({ error: 'Event not found' });
-  expect(mockDelete).not.toHaveBeenCalled();
-});
-
-test('deleteEvent removes the event and its image', async () => {
-  mockFindUnique.mockResolvedValue({ id: 1, imageUrl: 'https://cdn/img.jpg' });
-  mockDelete.mockResolvedValue({ id: 1 });
-
-  const req = { params: { id: '1' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await deleteEvent(req, res);
-
-  expect(mockDelete).toHaveBeenCalledWith({ where: { id: 1 } });
-  expect(mockDeleteEventImage).toHaveBeenCalledWith('https://cdn/img.jpg');
-  expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: { id: 1 } });
-});
-
-test('deleteEvent returns 500 on failure', async () => {
-  mockFindUnique.mockResolvedValue({ id: 1, imageUrl: 'https://cdn/img.jpg' });
-  mockDelete.mockRejectedValue(new Error('db'));
-
-  const req = { params: { id: '1' } } as unknown as Request;
-  const { res, json, status } = mockRes();
-
-  await deleteEvent(req, res);
-
-  expect(status).toHaveBeenCalledWith(500);
-  expect(json).toHaveBeenCalledWith({ error: 'Failed to delete event' });
-});
+describe('toDatetimeLocalValue', () => {
+  test('converts a winter UTC instant to AEST wall time', () => {
+    expect(toDatetimeLocalValue('2026-08-13T08:30:00.000Z')).toBe('2026-08-13T18:30')
+  })
+
+  test('converts a summer UTC instant to AEDT wall time', () => {
+    expect(toDatetimeLocalValue('2026-01-15T07:30:00.000Z')).toBe('2026-01-15T18:30')
+  })
+
+  test('rolls the date forward when UTC and Melbourne fall on different days', () => {
+    // 22:00 UTC on 12 Aug is 08:00 on 13 Aug in Melbourne.
+    expect(toDatetimeLocalValue('2026-08-12T22:00:00.000Z')).toBe('2026-08-13T08:00')
+  })
+
+  test('renders Melbourne midnight as 00:00, not 24:00', () => {
+    expect(toDatetimeLocalValue('2026-08-12T14:00:00.000Z')).toBe('2026-08-13T00:00')
+  })
+
+  test('uses the AEDT offset right before the April DST end', () => {
+    // 2026-04-05 02:59 AEDT (UTC+11) — still summer time.
+    expect(toDatetimeLocalValue('2026-04-04T15:59:00.000Z')).toBe('2026-04-05T02:59')
+  })
+
+  test('uses the AEST offset right after the April DST end', () => {
+    // 2026-04-05 02:00 AEST (UTC+10) — the clock has gone back.
+    expect(toDatetimeLocalValue('2026-04-04T16:00:00.000Z')).toBe('2026-04-05T02:00')
+  })
+})
+
+describe('fromDatetimeLocalValue', () => {
+  test('converts AEST wall time to UTC', () => {
+    expect(fromDatetimeLocalValue('2026-08-13T18:30')).toBe('2026-08-13T08:30:00.000Z')
+  })
+
+  test('converts AEDT wall time to UTC', () => {
+    expect(fromDatetimeLocalValue('2026-01-15T18:30')).toBe('2026-01-15T07:30:00.000Z')
+  })
+
+  test('converts Melbourne midnight to the previous UTC day', () => {
+    expect(fromDatetimeLocalValue('2026-08-13T00:00')).toBe('2026-08-12T14:00:00.000Z')
+  })
+
+  test('converts a time just before the October DST start', () => {
+    // 2026-10-04 01:59 is still AEST (UTC+10).
+    expect(fromDatetimeLocalValue('2026-10-04T01:59')).toBe('2026-10-03T15:59:00.000Z')
+  })
+
+  test('converts a time just after the October DST start', () => {
+    // 2026-10-04 03:00 is AEDT (UTC+11); 02:00–02:59 does not exist locally.
+    expect(fromDatetimeLocalValue('2026-10-04T03:00')).toBe('2026-10-03T16:00:00.000Z')
+  })
+
+  test('resolves to a real instant for a wall time skipped by the DST jump', () => {
+    // 02:30 on 4 Oct never occurs in Melbourne. The convergence loop cannot
+    // match it exactly, but it must still return a valid instant rather than
+    // NaN or a throw.
+    const result = fromDatetimeLocalValue('2026-10-04T02:30')
+    expect(Number.isNaN(Date.parse(result))).toBe(false)
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+  })
+})
+
+describe('datetime-local round trip', () => {
+  const wallTimes = [
+    '2026-08-13T18:30', // AEST
+    '2026-01-15T09:05', // AEDT
+    '2026-08-13T00:00', // midnight AEST
+    '2026-01-15T00:00', // midnight AEDT
+    '2026-12-31T23:59', // year boundary
+    '2026-04-05T12:00', // DST-end day
+    '2026-10-04T12:00', // DST-start day
+  ]
+
+  test.each(wallTimes)('%s survives local -> UTC -> local', (wallTime) => {
+    expect(toDatetimeLocalValue(fromDatetimeLocalValue(wallTime))).toBe(wallTime)
+  })
+})
+
+describe('formatEventDate', () => {
+  test('formats a winter instant in Melbourne time', () => {
+    const { date, time } = formatEventDate('2026-08-13T08:30:00.000Z')
+    expect(date).toBe('Thursday 13 August 2026')
+    expect(time).toBe('6:30 pm')
+  })
+
+  test('formats a summer instant using the AEDT offset', () => {
+    const { date, time } = formatEventDate('2026-01-15T07:30:00.000Z')
+    expect(date).toBe('Thursday 15 January 2026')
+    expect(time).toBe('6:30 pm')
+  })
+
+  test('uses the Melbourne day, not the UTC day', () => {
+    const { date } = formatEventDate('2026-08-12T22:00:00.000Z')
+    expect(date).toBe('Thursday 13 August 2026')
+  })
+})
+
+describe('isEventPast', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-13T00:00:00.000Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  test('returns true for an instant before now', () => {
+    expect(isEventPast('2026-08-12T23:59:59.000Z')).toBe(true)
+  })
+
+  test('returns false for an instant after now', () => {
+    expect(isEventPast('2026-08-13T00:00:01.000Z')).toBe(false)
+  })
+
+  test('returns false at exactly now', () => {
+    expect(isEventPast('2026-08-13T00:00:00.000Z')).toBe(false)
+  })
+})
+
+describe('sortEventsForDisplay', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-13T00:00:00.000Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  test('places all upcoming events before all past events', () => {
+    const events = [
+      event({ id: 1, date: '2026-01-01T00:00:00.000Z' }), // past
+      event({ id: 2, date: '2026-09-01T00:00:00.000Z' }), // upcoming
+      event({ id: 3, date: '2025-06-01T00:00:00.000Z' }), // past
+      event({ id: 4, date: '2026-12-01T00:00:00.000Z' }), // upcoming
+    ]
+
+    expect(sortEventsForDisplay(events).map((e) => e.id)).toEqual([4, 2, 1, 3])
+  })
+
+  test('orders upcoming events furthest-first, matching the documented order', () => {
+    const events = [
+      event({ id: 1, date: '2026-09-01T00:00:00.000Z' }),
+      event({ id: 2, date: '2026-12-01T00:00:00.000Z' }),
+      event({ id: 3, date: '2026-10-01T00:00:00.000Z' }),
+    ]
+
+    expect(sortEventsForDisplay(events).map((e) => e.id)).toEqual([2, 3, 1])
+  })
+
+  test('orders past events most-recent-first', () => {
+    const events = [
+      event({ id: 1, date: '2024-01-01T00:00:00.000Z' }),
+      event({ id: 2, date: '2026-06-01T00:00:00.000Z' }),
+      event({ id: 3, date: '2025-01-01T00:00:00.000Z' }),
+    ]
+
+    expect(sortEventsForDisplay(events).map((e) => e.id)).toEqual([2, 3, 1])
+  })
+
+  test('treats an event dated exactly now as upcoming', () => {
+    const events = [
+      event({ id: 1, date: '2026-08-12T00:00:00.000Z' }),
+      event({ id: 2, date: '2026-08-13T00:00:00.000Z' }),
+    ]
+
+    expect(sortEventsForDisplay(events).map((e) => e.id)).toEqual([2, 1])
+  })
+
+  test('does not mutate the input array', () => {
+    const events = [
+      event({ id: 1, date: '2024-01-01T00:00:00.000Z' }),
+      event({ id: 2, date: '2026-09-01T00:00:00.000Z' }),
+    ]
+    const original = [...events]
+
+    sortEventsForDisplay(events)
+
+    expect(events).toEqual(original)
+  })
+
+  test('handles an empty list', () => {
+    expect(sortEventsForDisplay([])).toEqual([])
+  })
+})
