@@ -14,6 +14,7 @@ export default function Navbar() {
     { href: '/prayer-times/', label: 'Prayer' },
     { href: '/about/', label: 'About' },
     { href: '/contact/', label: 'Contact' },
+    { href: '/support-us/', label: 'Support Us' },
   ]
 
   return (
