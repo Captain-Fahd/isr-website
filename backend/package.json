@@ -6,6 +6,9 @@
   "author": "",
   "type": "module",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "nodemon --exec tsx index.ts",
     "build": "prisma generate && esbuild index.ts --bundle --platform=node --format=esm --outdir=dist --packages=external",
