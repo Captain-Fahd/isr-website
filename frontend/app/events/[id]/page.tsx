@@ -6,7 +6,14 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { ArrowRight } from '@/components/Icons'
 import LikeButton from '@/components/LikeButton'
-import { fetchEventById, fetchEvents, formatEventDate, isEventPast } from '@/lib/events'
+import {
+  describeSchedule,
+  displayOccurrence,
+  fetchEventById,
+  fetchEvents,
+  formatEventSchedule,
+  isEventOver,
+} from '@/lib/events'
 import {
   DEFAULT_OG_IMAGE,
   absoluteUrl,
@@ -87,12 +94,18 @@ export default async function EventDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  const { date, time } = formatEventDate(event.date)
-  const past = isEventPast(event.date)
+  const { date, time } = formatEventSchedule(event)
+  const past = isEventOver(event)
+  const scheduleNote = describeSchedule(event)
+  const occurrence = displayOccurrence(event)
   const jsonLd = eventJsonLd({
     name: event.name,
     description: event.description,
     startDate: event.date,
+    endDate: event.endDate,
+    recurrenceFrequency: event.recurrenceFrequency,
+    recurrenceInterval: event.recurrenceInterval,
+    recurrenceEndDate: event.recurrenceEndDate,
     imageUrl: event.imageUrl,
     url: absoluteUrl(`/events/${event.id}/`),
     ticketUrl: event.ticketUrl,
@@ -134,7 +147,7 @@ export default async function EventDetailPage({ params }: PageProps) {
             <div className="p-6 sm:p-10">
               <div className="mb-4 flex flex-wrap items-center gap-3">
                 <time
-                  dateTime={event.date}
+                  dateTime={occurrence.start}
                   className="text-sm font-semibold uppercase tracking-[0.14em] text-isr-dark-red"
                 >
                   {date}
@@ -148,6 +161,12 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
 
               <h1 className="mb-6 text-3xl font-bold text-isr-dark-red sm:text-4xl">{event.name}</h1>
+
+              {scheduleNote && (
+                <p className="mb-6 rounded-lg bg-isr-cream px-4 py-3 text-sm font-medium text-isr-dark-red">
+                  {scheduleNote}
+                </p>
+              )}
 
               <p className="mb-8 text-lg leading-relaxed text-gray-700 whitespace-pre-wrap">{event.description}</p>
 

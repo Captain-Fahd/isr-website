@@ -1,5 +1,13 @@
 import { API_BASE_URL } from '@/lib/api'
 
+export const RECURRENCE_FREQUENCIES = ['DAILY', 'WEEKLY', 'MONTHLY'] as const
+export type RecurrenceFrequency = (typeof RECURRENCE_FREQUENCIES)[number]
+
+export type Occurrence = {
+  start: string
+  end: string
+}
+
 export type Event = {
   id: number
   name: string
@@ -7,6 +15,16 @@ export type Event = {
   imageUrl: string
   description: string
   ticketUrl: string | null
+  /** End of the first occurrence; null for a single-day event. */
+  endDate?: string | null
+  recurrenceFrequency?: RecurrenceFrequency | null
+  recurrenceInterval?: number | null
+  recurrenceEndDate?: string | null
+  /** Derived by the API. Optional so an older API response still type-checks. */
+  isMultiDay?: boolean
+  isRecurring?: boolean
+  /** First occurrence that has not finished yet, or null once the event is over. */
+  nextOccurrence?: Occurrence | null
   /** Optional so a response from an API without likes still type-checks. */
   likeCount?: number
   /** Only present when the request identified the visitor with a `clientId`. */
@@ -100,21 +118,113 @@ export function isEventPast(isoDate: string): boolean {
 }
 
 /**
+ * The occurrence to show for an event: the next one still to come (or in progress),
+ * falling back to the stored dates for an API response without the derived fields.
+ */
+export function displayOccurrence(event: Event): Occurrence {
+  if (event.nextOccurrence) return event.nextOccurrence
+  return { start: event.date, end: event.endDate ?? event.date }
+}
+
+/** True once every occurrence of the event has finished. */
+export function isEventOver(event: Event): boolean {
+  if (event.nextOccurrence !== undefined) return event.nextOccurrence === null
+  return isEventPast(event.endDate ?? event.date)
+}
+
+/**
  * Orders events for display: upcoming first (furthest in the future at the top),
- * then past events from most recent down to the oldest.
+ * then past events from most recent down to the oldest. Multi-day and recurring
+ * events sort on the occurrence being shown, not on their original start date.
  */
 export function sortEventsForDisplay(events: Event[]): Event[] {
-  const now = Date.now()
-
   return [...events].sort((a, b) => {
-    const aTime = new Date(a.date).getTime()
-    const bTime = new Date(b.date).getTime()
-    const aUpcoming = aTime >= now
-    const bUpcoming = bTime >= now
+    const aOver = isEventOver(a)
+    const bOver = isEventOver(b)
+    if (aOver !== bOver) return aOver ? 1 : -1
 
-    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1
+    const aTime = new Date(displayOccurrence(a).start).getTime()
+    const bTime = new Date(displayOccurrence(b).start).getTime()
     return bTime - aTime
   })
+}
+
+function formatDay(isoDate: string): string {
+  return new Intl.DateTimeFormat('en-AU', {
+    timeZone: TIMEZONE,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(isoDate))
+}
+
+function formatShortDay(isoDate: string): string {
+  return new Intl.DateTimeFormat('en-AU', {
+    timeZone: TIMEZONE,
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(isoDate))
+}
+
+function sameDayInMelbourne(a: string, b: string): boolean {
+  const key = (iso: string) =>
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: TIMEZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date(iso))
+  return key(a) === key(b)
+}
+
+/**
+ * The date/time line for an event card. Multi-day occurrences read as a range;
+ * single-day ones keep the existing `{ date, time }` split.
+ */
+export function formatEventSchedule(event: Event): { date: string; time: string } {
+  const { start, end } = displayOccurrence(event)
+  const { date, time } = formatEventDate(start)
+
+  if (!event.endDate || sameDayInMelbourne(start, end)) {
+    return { date, time }
+  }
+
+  return { date: `${formatShortDay(start)} – ${formatShortDay(end)}`, time }
+}
+
+const FREQUENCY_NOUNS: Record<RecurrenceFrequency, { one: string; many: string }> = {
+  DAILY: { one: 'day', many: 'days' },
+  WEEKLY: { one: 'week', many: 'weeks' },
+  MONTHLY: { one: 'month', many: 'months' },
+}
+
+/** Short label for the recurrence rule, e.g. "Every 2 weeks", or null for a one-off. */
+export function formatRecurrence(event: Event): string | null {
+  if (!event.recurrenceFrequency) return null
+
+  const interval = event.recurrenceInterval ?? 1
+  const noun = FREQUENCY_NOUNS[event.recurrenceFrequency]
+  if (!noun) return null
+
+  const every = interval === 1 ? `Every ${noun.one}` : `Every ${interval} ${noun.many}`
+  return event.recurrenceEndDate
+    ? `${every} until ${formatShortDay(event.recurrenceEndDate)}`
+    : every
+}
+
+/** Full sentence describing when a recurring and/or multi-day event runs. */
+export function describeSchedule(event: Event): string | null {
+  const recurrence = formatRecurrence(event)
+  const { start, end } = displayOccurrence(event)
+
+  if (event.endDate && !sameDayInMelbourne(start, end)) {
+    const range = `Runs ${formatDay(start)} to ${formatDay(end)}`
+    return recurrence ? `${range} · ${recurrence.toLowerCase()}` : range
+  }
+
+  return recurrence
 }
 
 function fetchOptions(): RequestInit {

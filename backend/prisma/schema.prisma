@@ -11,6 +11,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
 model Event {
   id          Int      @id @default(autoincrement())
   name        String
@@ -18,6 +24,15 @@ model Event {
   imageUrl    String
   description String
   ticketUrl   String?
+
+  // Multi-day events: when the (single) occurrence finishes. Null = same-day event.
+  endDate DateTime?
+
+  // Recurring events: null frequency = one-off. When set, `date`/`endDate` describe the
+  // first occurrence and every later occurrence repeats that duration.
+  recurrenceFrequency RecurrenceFrequency?
+  recurrenceInterval  Int? // every N days/weeks/months; null when not recurring
+  recurrenceEndDate   DateTime? // last day repeats may fall on; null = open-ended
 
   likes EventLike[]
 }
