@@ -18,6 +18,22 @@ model Event {
   imageUrl    String
   description String
   ticketUrl   String?
+
+  likes EventLike[]
+}
+
+// One row per (event, visitor). Visitors are anonymous — `clientId` is a random id the
+// browser generates and keeps, so it dedupes honest double-taps rather than proving identity.
+model EventLike {
+  id        Int      @id @default(autoincrement())
+  eventId   Int
+  clientId  String
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, clientId])
+  @@index([eventId])
 }
 
 model Announcement {

@@ -46,6 +46,11 @@ function mockRes() {
   return { res, json, status };
 }
 
+/** Every event in a response carries its like count, defaulting to none. */
+function withLikes<T extends object>(event: T, likeCount = 0) {
+  return { ...event, likeCount };
+}
+
 test('getEvents returns upcoming-then-past ordering when unfiltered', async () => {
   const upcoming = { id: 1, name: 'Future', date: new Date('2099-01-01') };
   const pastNewer = { id: 2, name: 'Past newer', date: new Date('2020-06-01') };
@@ -59,7 +64,43 @@ test('getEvents returns upcoming-then-past ordering when unfiltered', async () =
   await getEvents(req, res);
 
   expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: [upcoming, pastNewer, pastOlder] });
+  expect(json).toHaveBeenCalledWith({
+    data: [upcoming, pastNewer, pastOlder].map((e) => withLikes(e)),
+  });
+});
+
+test('getEvents surfaces each event like count', async () => {
+  const event = { id: 1, name: 'Eid Dinner', date: new Date('2099-01-01') };
+  mockFindMany.mockResolvedValue([{ ...event, _count: { likes: 4 } }]);
+
+  const req = { query: {} } as unknown as Request;
+  const { res, json, status } = mockRes();
+
+  await getEvents(req, res);
+
+  expect(status).toHaveBeenCalledWith(200);
+  expect(json).toHaveBeenCalledWith({ data: [withLikes(event, 4)] });
+});
+
+test('getEvents reports likedByMe when the caller supplies a clientId', async () => {
+  const event = { id: 1, name: 'Eid Dinner', date: new Date('2099-01-01') };
+  mockFindMany.mockResolvedValue([{ ...event, _count: { likes: 4 }, likes: [{ id: 7 }] }]);
+
+  const req = { query: { clientId: 'abc-123' } } as unknown as Request;
+  const { res, json } = mockRes();
+
+  await getEvents(req, res);
+
+  expect(mockFindMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      include: expect.objectContaining({
+        likes: { where: { clientId: 'abc-123' }, select: { id: true } },
+      }),
+    }),
+  );
+  expect(json).toHaveBeenCalledWith({
+    data: [{ ...withLikes(event, 4), likedByMe: true }],
+  });
 });
 
 test('getEvents filters upcoming events', async () => {
@@ -78,7 +119,7 @@ test('getEvents filters upcoming events', async () => {
     }),
   );
   expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: events });
+  expect(json).toHaveBeenCalledWith({ data: events.map((e) => withLikes(e)) });
 });
 
 test('getEvents filters past events descending', async () => {
@@ -97,7 +138,7 @@ test('getEvents filters past events descending', async () => {
     }),
   );
   expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: events });
+  expect(json).toHaveBeenCalledWith({ data: events.map((e) => withLikes(e)) });
 });
 
 test('getEvents returns 500 on db error', async () => {
@@ -122,7 +163,7 @@ test('getEventById returns the event', async () => {
   await getEventById(req, res);
 
   expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: event });
+  expect(json).toHaveBeenCalledWith({ data: withLikes(event) });
 });
 
 test('getEventById returns 404 when the event does not exist', async () => {
@@ -221,7 +262,7 @@ test('createEvent uploads the image and creates the event', async () => {
     data: expect.objectContaining({ ticketUrl: 'https://t' }),
   });
   expect(status).toHaveBeenCalledWith(201);
-  expect(json).toHaveBeenCalledWith({ data: created });
+  expect(json).toHaveBeenCalledWith({ data: withLikes(created) });
 });
 
 test('createEvent succeeds without ticketUrl and stores null', async () => {
@@ -251,7 +292,7 @@ test('createEvent succeeds without ticketUrl and stores null', async () => {
     data: expect.objectContaining({ ticketUrl: null }),
   });
   expect(status).toHaveBeenCalledWith(201);
-  expect(json).toHaveBeenCalledWith({ data: created });
+  expect(json).toHaveBeenCalledWith({ data: withLikes(created) });
 });
 
 test('createEvent normalizes blank ticketUrl to null', async () => {
@@ -364,12 +405,15 @@ test('updateEvent updates fields without replacing image', async () => {
 
   expect(mockUploadEventImage).not.toHaveBeenCalled();
   expect(mockDeleteEventImage).not.toHaveBeenCalled();
-  expect(mockUpdate).toHaveBeenCalledWith({
-    where: { id: 1 },
-    data: expect.objectContaining({ name: 'New', imageUrl: 'https://cdn/old.jpg' }),
-  });
+  // objectContaining at the top level too: the update also asks for the like count.
+  expect(mockUpdate).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: { id: 1 },
+      data: expect.objectContaining({ name: 'New', imageUrl: 'https://cdn/old.jpg' }),
+    }),
+  );
   expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: updated });
+  expect(json).toHaveBeenCalledWith({ data: withLikes(updated) });
 });
 
 test('updateEvent replaces image and deletes the old one', async () => {
@@ -397,7 +441,7 @@ test('updateEvent replaces image and deletes the old one', async () => {
   expect(mockUploadEventImage).toHaveBeenCalledWith(file);
   expect(mockDeleteEventImage).toHaveBeenCalledWith('https://cdn/old.jpg');
   expect(status).toHaveBeenCalledWith(200);
-  expect(json).toHaveBeenCalledWith({ data: updated });
+  expect(json).toHaveBeenCalledWith({ data: withLikes(updated) });
 });
 
 test('updateEvent returns 500 on failure', async () => {
