@@ -25,9 +25,33 @@ export type PrayerTimesResponse = {
 
 const TIMEZONE = 'Australia/Melbourne'
 
+export const NO_IQAMAH = '--:--'
+
+const IQAMAH_OFFSET_MINUTES: Record<DailyPrayer, number | null> = {
+  Fajr: null,
+  Dhuhr: 10,
+  Asr: 10,
+  Maghrib: 10,
+  Isha: null,
+}
+
 function parseTimeToMinutes(time: string): number {
   const [hours, minutes] = time.split(':').map(Number)
   return hours * 60 + minutes
+}
+
+export function getIqamahTime(prayer: DailyPrayer, athaan: string | undefined): string {
+  const offset = IQAMAH_OFFSET_MINUTES[prayer]
+  if (offset === null || !athaan) return NO_IQAMAH
+
+  const match = athaan.match(/^\s*(\d{1,2}):(\d{2})/)
+  if (!match) return NO_IQAMAH
+
+  const total = (Number(match[1]) * 60 + Number(match[2]) + offset) % (24 * 60)
+  const hours = String(Math.floor(total / 60)).padStart(2, '0')
+  const minutes = String(total % 60).padStart(2, '0')
+
+  return `${hours}:${minutes}`
 }
 
 function currentMinutesInMelbourne(): number {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   DAILY_PRAYERS,
   fetchPrayerTimes,
+  getIqamahTime,
   getNextPrayer,
   type DailyPrayer,
   type PrayerTimesData,
@@ -104,7 +105,10 @@ export default function PrayerTimesTable() {
               className="flex items-center justify-between rounded-lg bg-isr-cream/60 px-4 py-3"
             >
               <div className="h-4 w-20 animate-pulse rounded bg-isr-light-blue/40" />
-              <div className="h-4 w-14 animate-pulse rounded bg-isr-light-blue/40" />
+              <div className="flex items-center gap-4">
+                <div className="h-4 w-14 animate-pulse rounded bg-isr-light-blue/40" />
+                <div className="h-4 w-14 animate-pulse rounded bg-isr-light-blue/40" />
+              </div>
             </div>
           ))}
         </div>
@@ -128,7 +132,8 @@ export default function PrayerTimesTable() {
           <thead>
             <tr className="text-left text-xs uppercase tracking-[0.16em] text-gray-500">
               <th className="pb-3 font-semibold">Prayer</th>
-              <th className="pb-3 text-right font-semibold">Time</th>
+              <th className="pb-3 text-right font-semibold">Athaan</th>
+              <th className="pb-3 text-right font-semibold">Iqamah</th>
             </tr>
           </thead>
           <tbody>
@@ -148,8 +153,11 @@ export default function PrayerTimesTable() {
                       </span>
                     )}
                   </td>
-                  <td className={`${cellClass} pr-3 text-right font-mono text-base text-gray-800 last:rounded-r-lg`}>
+                  <td className={`${cellClass} pr-3 text-right font-mono text-base text-gray-800`}>
                     {data.timings[prayer]}
+                  </td>
+                  <td className={`${cellClass} pr-3 text-right font-mono text-base text-gray-800 last:rounded-r-lg`}>
+                    {getIqamahTime(prayer, data.timings[prayer])}
                   </td>
                 </tr>
               )
