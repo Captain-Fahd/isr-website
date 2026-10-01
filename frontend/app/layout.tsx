@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { Geist } from 'next/font/google'
 import { cn } from '@/lib/utils'
+import FloatingWhatsApp from '@/components/FloatingWhatsApp'
 import {
   DEFAULT_OG_IMAGE,
   SITE_NAME,
@@ -64,6 +65,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         {children}
+        <FloatingWhatsApp />
       </body>
     </html>
   )
