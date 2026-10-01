@@ -9,8 +9,13 @@ import { CAMPUS } from '@/lib/campus'
 const HIDDEN_ON = ['/admin', '/contact']
 const COLLAPSED_KEY = 'isr:whatsapp-collapsed'
 const DISMISSED_KEY = 'isr:whatsapp-dismissed'
-// Horizontal distance (px) a swipe must travel to dismiss the button.
-const DISMISS_THRESHOLD = 80
+// The button sits 16px from the edge, so a thumb starting on it only has
+// ~44px of travel before leaving the screen — keep these well under that.
+// Drag this far right (half the button) to dismiss...
+const DISMISS_DISTANCE = 24
+// ...or flick at least this fast (px/ms) over a shorter distance.
+const DISMISS_VELOCITY = 0.3
+const MIN_FLICK_DISTANCE = 12
 
 // Storage can throw (private mode, blocked site data) — treat that as "unset".
 function readFlag(storage: () => Storage, key: string) {
@@ -46,7 +51,10 @@ export default function FloatingWhatsApp() {
   const [dismissed, setDismissed] = useState(false)
   const [dragX, setDragX] = useState(0)
   const [dragging, setDragging] = useState(false)
-  const touchStart = useRef<{ x: number; y: number } | null>(null)
+  const touchStart = useRef<{ x: number; y: number; t: number } | null>(null)
+  // Mirrors dragX: a fast flick can end before React re-renders with the
+  // latest state, so touchend must not read it from the render closure.
+  const dragXRef = useRef(0)
   const didSwipe = useRef(false)
 
   useEffect(() => {
@@ -66,9 +74,15 @@ export default function FloatingWhatsApp() {
 
   const onTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0]
-    touchStart.current = { x: t.clientX, y: t.clientY }
+    touchStart.current = { x: t.clientX, y: t.clientY, t: e.timeStamp }
+    dragXRef.current = 0
     didSwipe.current = false
     setDragging(true)
+  }
+
+  const moveTo = (x: number) => {
+    dragXRef.current = x
+    setDragX(x)
   }
 
   const onTouchMove = (e: React.TouchEvent) => {
@@ -78,21 +92,36 @@ export default function FloatingWhatsApp() {
     const dy = t.clientY - touchStart.current.y
     // Ignore mostly-vertical movement so page scrolling still works.
     if (Math.abs(dx) < Math.abs(dy)) return
-    if (Math.abs(dx) > 8) didSwipe.current = true
+    if (Math.abs(dx) > 6) didSwipe.current = true
     // Only follow the finger rightwards, toward the screen edge.
-    setDragX(Math.max(0, dx))
+    moveTo(Math.max(0, dx))
   }
 
-  const onTouchEnd = () => {
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStart.current
     touchStart.current = null
     setDragging(false)
-    if (dragX >= DISMISS_THRESHOLD) {
-      setDragX(window.innerWidth)
+    // Browsers hold back touchmove until the finger leaves a ~15px "slop"
+    // zone, so a short flick may arrive with no moves at all — take the
+    // distance from where the finger lifted, not just from the last move.
+    let dx = dragXRef.current
+    const lift = e.changedTouches[0]
+    if (start && lift) {
+      const liftDx = lift.clientX - start.x
+      const liftDy = lift.clientY - start.y
+      if (Math.abs(liftDx) > Math.abs(liftDy)) dx = Math.max(dx, liftDx)
+      // Any real movement means this wasn't a tap, so don't open WhatsApp.
+      if (Math.hypot(liftDx, liftDy) > 6) didSwipe.current = true
+    }
+    const elapsed = start ? Math.max(1, e.timeStamp - start.t) : Infinity
+    const flicked = dx >= MIN_FLICK_DISTANCE && dx / elapsed >= DISMISS_VELOCITY
+    if (dx >= DISMISS_DISTANCE || flicked) {
+      moveTo(window.innerWidth)
       writeFlag(() => sessionStorage, DISMISSED_KEY, true)
       // Let the slide-out animation finish before unmounting.
       window.setTimeout(() => setDismissed(true), 200)
     } else {
-      setDragX(0)
+      moveTo(0)
     }
   }
 
@@ -115,12 +144,16 @@ export default function FloatingWhatsApp() {
           // A swipe shouldn't also open WhatsApp.
           if (didSwipe.current) e.preventDefault()
         }}
-        className={`flex h-14 w-14 touch-pan-y items-center justify-center rounded-full bg-isr-turquoise text-white shadow-lg md:hidden ${
+        // Stop iOS/Android treating a press-and-drag as a link drag or
+        // long-press preview, which swallows the touch events.
+        draggable={false}
+        onContextMenu={(e) => e.preventDefault()}
+        className={`flex h-14 w-14 touch-pan-y select-none items-center justify-center rounded-full bg-isr-turquoise text-white shadow-lg [-webkit-touch-callout:none] md:hidden ${
           dragging ? '' : 'motion-safe:transition-[transform,opacity] motion-safe:duration-200'
         }`}
         style={{
           transform: `translateX(${dragX}px)`,
-          opacity: Math.max(0.2, 1 - dragX / (DISMISS_THRESHOLD * 2.5)),
+          opacity: Math.max(0.2, 1 - dragX / (DISMISS_DISTANCE * 2.5)),
         }}
       >
         <WhatsappGlyph className="h-7 w-7 shrink-0" />
