@@ -3,7 +3,7 @@ export const SITE_URL =
 
 export const SITE_NAME = 'Islamic Society of RMIT'
 export const SITE_SHORT_NAME = 'ISR'
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/images/isr_logo_transparent.png`
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/images/isr_logo_lightmode.png`
 
 export function absoluteUrl(path = '/'): string {
   if (path.startsWith('http://') || path.startsWith('https://')) return path

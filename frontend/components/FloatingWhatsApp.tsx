@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { siWhatsapp } from 'simple-icons'
 import { CAMPUS } from '@/lib/campus'
+import { FLAGSHIP_EVENTS } from '@/lib/flagship'
 
-const HIDDEN_ON = ['/admin', '/contact']
+// Flagship event pages have their own sticky CTA bar along the bottom
+const HIDDEN_ON = ['/admin', '/contact', ...FLAGSHIP_EVENTS.map(({ slug }) => `/${slug}`)]
 const COLLAPSED_KEY = 'isr:whatsapp-collapsed'
 const DISMISSED_KEY = 'isr:whatsapp-dismissed'
 // The button sits 16px from the edge, so a thumb starting on it only has
