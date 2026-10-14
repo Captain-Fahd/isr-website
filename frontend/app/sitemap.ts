@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { fetchEvents } from '@/lib/events'
+import { FLAGSHIP_EVENTS } from '@/lib/flagship'
 import { SITE_URL, withTrailingSlash } from '@/lib/seo'
 
 export const dynamic = 'force-static'
@@ -27,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     pageEntry('/volunteer'),
     pageEntry('/support-us'),
     pageEntry('/support-us/sponsor'),
+    ...FLAGSHIP_EVENTS.map(({ slug }) => pageEntry(`/${slug}`)),
     pageEntry('/prayer-times'),
     pageEntry('/privacy'),
   ]
