@@ -52,6 +52,7 @@ export const sacredUnion: FlagshipEvent = {
     alt: 'The Sacred Union — event banner',
     width: 1600,
     height: 900,
+    mobile: { src: '/images/sacred-union/banner-mobile.jpg', width: 1080, height: 1350 },
   },
 
   /** 1200×630 image used for link previews on WhatsApp, Instagram, etc. */
@@ -61,10 +62,31 @@ export const sacredUnion: FlagshipEvent = {
     dark: '#5B0B05',
     onDark: '#EAE3D8',
     light: '#EAE3D8',
-    onLight: '#5B0B05',
+    onLight: '#561610',
     primary: '#D43325',
     onPrimary: '#FFFFFF',
     accent: '#509589',
+    hero: {
+      backdrop: '/images/sacred-union/backdrop.webp',
+      text: '#561610',
+      heading: '#561610',
+      // Palette approximation of the backdrop, shown while it loads: a white
+      // spotlight from the top-left over a cream haze, rose vignettes on the
+      // right, deepening to dark red along the bottom.
+      background: [
+        'radial-gradient(60% 45% at 0% 0%, rgb(255 255 255 / 0.95), transparent 70%)',
+        'radial-gradient(45% 35% at 100% 0%, color-mix(in srgb, var(--su-dark) 30%, transparent), transparent 75%)',
+        'radial-gradient(30% 45% at 100% 65%, color-mix(in srgb, var(--su-dark) 25%, transparent), transparent 75%)',
+        'radial-gradient(45% 7rem at 0% 100%, var(--su-dark), transparent)',
+        `linear-gradient(to bottom,
+          color-mix(in srgb, var(--su-dark) 8%, var(--su-light)) 0%,
+          color-mix(in srgb, var(--su-light), white 40%) 35%,
+          color-mix(in srgb, var(--su-light), white 25%) 55%,
+          color-mix(in srgb, var(--su-dark) 25%, var(--su-light)) calc(100% - 14rem),
+          color-mix(in srgb, var(--su-dark) 40%, var(--su-light)) calc(100% - 6rem),
+          var(--su-dark) 100%)`,
+      ].join(', '),
+    },
   },
 
   highlights: [

@@ -22,6 +22,17 @@ export type EventTheme = {
   onPrimary: string
   /** Eyebrows, dividers, pattern and small highlights */
   accent: string
+  /** Event page hero and home carousel slide */
+  hero: {
+    /** Backdrop image, cropped to cover the hero */
+    backdrop: string
+    /** CSS `background-image` layers shown beneath (and while loading) the backdrop */
+    background: string
+    /** Body text, eyebrow and pattern on `background` */
+    text: string
+    /** Event name */
+    heading: string
+  }
 }
 
 export type Speaker = {
@@ -65,7 +76,14 @@ export type FlagshipEvent = {
     mapUrl: string
     notes: string[]
   }
-  banner: { src: string; alt: string; width: number; height: number }
+  banner: {
+    src: string
+    alt: string
+    width: number
+    height: number
+    /** Portrait version shown instead of `src` on phones in the home carousel slide */
+    mobile?: { src: string; width: number; height: number }
+  }
   /** 1200×630 image used for link previews on WhatsApp, Instagram, etc. */
   ogImage: string
   theme: EventTheme

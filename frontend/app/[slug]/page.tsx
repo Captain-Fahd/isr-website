@@ -53,7 +53,7 @@ export async function generateMetadata({
 }
 
 const secondaryBtn =
-  'inline-flex min-h-11 items-center justify-center rounded-lg border border-current px-5 py-3 text-sm font-semibold transition hover:bg-(--su-on-dark)/10'
+  'inline-flex min-h-11 items-center justify-center rounded-lg border border-current px-5 py-3 text-sm font-semibold transition hover:bg-current/10'
 
 function SectionHeading({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
@@ -103,17 +103,9 @@ export default async function FlagshipEventPage({
         {/* ── Hero ─────────────────────────────────────────────────── */}
         <section
           id="hero"
-          className="relative isolate overflow-hidden bg-(--su-dark) px-4 pb-16 pt-28 text-(--su-on-dark) sm:pb-20 sm:pt-32"
+          className="relative isolate overflow-hidden bg-(--su-light) bg-(image:--su-hero-bg) px-4 pb-24 pt-28 text-(--su-hero-text) sm:pt-32"
         >
-          {/* Blurred banner wash ties the hero background to the banner's colours */}
-          <Image
-            src={event.banner.src}
-            alt=""
-            fill
-            priority
-            className="-z-20 scale-110 object-cover opacity-30 blur-3xl"
-          />
-          <GeometricPattern className="absolute inset-0 -z-10 h-full w-full text-(--su-accent) opacity-15" />
+          <Image src={event.theme.hero.backdrop} alt="" fill priority className="-z-20 object-cover" />
 
           <div className="container-isr grid items-center gap-10 lg:grid-cols-[1.15fr_1fr]">
             <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
@@ -123,16 +115,17 @@ export default async function FlagshipEventPage({
                 width={event.banner.width}
                 height={event.banner.height}
                 priority
-                className="h-auto w-full rounded-2xl shadow-2xl ring-1 ring-(--su-on-dark)/15"
+                className="h-auto w-full rounded-2xl shadow-2xl ring-1 ring-current/15"
               />
             </div>
 
-            <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700 motion-safe:delay-150">
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-(--su-accent)">
+            {/* Frosted panel keeps text legible over the backdrop's dark lower half */}
+            <div className="rounded-2xl bg-(--su-light)/75 p-6 shadow-xl ring-1 ring-current/10 backdrop-blur-md sm:p-8 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700 motion-safe:delay-150">
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]">
                 {isBooking ? 'Tickets on sale' : 'Save the date'}
               </p>
               <h1
-                className="mb-4 text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl"
+                className="mb-4 text-4xl font-bold leading-tight text-(--su-hero-heading) sm:text-5xl lg:text-6xl"
                 style={{ textWrap: 'balance' } as React.CSSProperties}
               >
                 {event.name}
