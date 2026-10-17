@@ -42,7 +42,7 @@ export default function FlagshipHeroSlide({ event }: { event: FlagshipEvent }) {
     >
       <HeroBackdrop hero={event.theme.hero} />
 
-      <div className="container-isr grid w-full items-center gap-4 max-sm:content-between sm:gap-10 lg:items-stretch lg:grid-cols-[1.6fr_1.05fr]">
+      <div className="container-isr grid w-full items-center gap-4 max-sm:content-center sm:gap-10 lg:items-stretch lg:grid-cols-[1.6fr_1.05fr]">
         <Link href={`/${event.slug}/`} className="block lg:flex lg:items-center" tabIndex={-1} aria-hidden="true">
           <BannerImage banner={event.banner} />
         </Link>
@@ -58,6 +58,7 @@ export default function FlagshipHeroSlide({ event }: { event: FlagshipEvent }) {
           >
             {event.name}
           </h2>
+          <p className="mb-3 text-lg font-semibold italic opacity-85 max-sm:hidden lg:mb-2 lg:text-base">{event.tagline}</p>
           <p className="mb-6 text-lg font-semibold max-sm:hidden lg:mb-4">{event.dateLabel}</p>
 
           <div className="mb-6 flex justify-center sm:mb-8 lg:mb-5 lg:justify-start">

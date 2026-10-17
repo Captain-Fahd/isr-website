@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '@/lib/api'
 import type { Event } from '@/lib/events'
 import type { Announcement } from '@/lib/announcements'
+import type { SiteSettings } from '@/lib/siteSettings'
 
 function authHeaders(token: string): HeadersInit {
   return { Authorization: `Bearer ${token}` }
@@ -106,4 +107,18 @@ export async function deleteAnnouncement(token: string, id: number): Promise<voi
     const json = await res.json()
     throw new Error(json.error ?? 'Failed to delete announcement')
   }
+}
+
+export async function updateSiteSettings(
+  token: string,
+  settings: Pick<SiteSettings, 'flagshipReleased'>,
+): Promise<SiteSettings> {
+  const res = await fetch(`${API_BASE_URL}/api/settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Failed to update settings')
+  return json.data as SiteSettings
 }

@@ -26,13 +26,13 @@ export const sacredUnion: FlagshipEvent = {
   /** TryBooking event URL. Leave empty until booking opens. */
   ticketUrl: '',
 
-  /** ISO 8601 with Melbourne offset (AEDT is +11:00). PLACEHOLDER — times not yet confirmed. */
-  start: '2026-11-15T17:00:00+11:00',
-  end: '2026-11-15T21:30:00+11:00',
+  /** ISO 8601 with Melbourne offset (AEDT is +11:00). */
+  start: '2026-11-15T13:30:00+11:00',
+  end: '2026-11-15T19:30:00+11:00',
 
   /** Human-readable labels shown on the page. */
   dateLabel: 'Sunday 15 November 2026',
-  timeLabel: '5:00 pm – 9:30 pm', // PLACEHOLDER
+  timeLabel: '1:30 pm – 7:30 pm',
 
   venue: {
     name: 'RMIT Storey Hall',
@@ -41,7 +41,6 @@ export const sacredUnion: FlagshipEvent = {
       'https://www.google.com/maps/search/?api=1&query=RMIT+Storey+Hall,+336-348+Swanston+Street,+Melbourne+VIC+3000',
     notes: [
       'Melbourne Central Station is a short walk away, with trams along Swanston Street.',
-      'No on-campus visitor parking. Commercial car parks and metered parking are nearby.',
       'Prayer space available on site',
     ],
     image: {
@@ -97,16 +96,16 @@ export const sacredUnion: FlagshipEvent = {
 
   highlights: [
     {
-      title: 'Panel Discussion',
-      body: 'A conversation with the panel on the questions that matter for marriage.',
-    },
-    {
       title: 'Renowned Scholars',
-      body: 'Lectures and discussion with scholars invited for the conference.',
+      body: 'Lectures and discussions with scholars invited to the conference.',
     },
     {
       title: 'Dedicated breakout rooms for brothers and sisters',
       body: 'Separate spaces for brothers and sisters throughout the programme.',
+    },
+    {
+      title: 'Panel Discussion',
+      body: 'A conversation with the panel on the questions that matter for marriage.',
     },
   ],
 
@@ -131,10 +130,6 @@ export const sacredUnion: FlagshipEvent = {
     {
       question: 'Is there a dress code?',
       answer: 'Smart casual / modest dress.',
-    },
-    {
-      question: 'Is there separate seating?',
-      answer: 'Seating arrangements for brothers and sisters.',
     },
   ],
 }
