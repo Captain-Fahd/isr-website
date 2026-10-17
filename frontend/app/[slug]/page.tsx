@@ -109,8 +109,8 @@ export default async function FlagshipEventPage({
         >
           <Image src={event.theme.hero.backdrop} alt="" fill priority className="-z-20 object-cover" />
 
-          <div className="container-isr grid items-center gap-10 lg:grid-cols-[1.15fr_1fr]">
-            <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
+          <div className="container-isr grid items-center gap-10 lg:items-stretch lg:grid-cols-[1.6fr_1.05fr]">
+            <div className="lg:flex lg:items-center motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
               <Image
                 src={event.banner.src}
                 alt={event.banner.alt}
@@ -122,19 +122,19 @@ export default async function FlagshipEventPage({
             </div>
 
             {/* Frosted panel keeps text legible over the backdrop's dark lower half */}
-            <div className="rounded-2xl bg-(--su-light)/75 p-6 shadow-xl ring-1 ring-current/10 backdrop-blur-md sm:p-8 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700 motion-safe:delay-150">
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]">
+            <div className="rounded-2xl bg-(--su-light)/75 p-6 shadow-xl ring-1 ring-current/10 backdrop-blur-md sm:p-8 lg:flex lg:flex-col lg:justify-center lg:p-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700 motion-safe:delay-150">
+              <p className="mb-4 text-xl font-semibold uppercase tracking-[0.2em] text-(--su-hero-heading) sm:hidden">
                 {isBooking ? 'Tickets on sale' : 'Save the date'}
               </p>
               <h1
-                className="mb-4 text-4xl font-bold leading-tight text-(--su-hero-heading) sm:text-5xl lg:text-6xl"
+                className="mb-4 text-4xl font-bold leading-tight text-(--su-hero-heading) sm:text-5xl lg:mb-2 lg:text-4xl"
                 style={{ textWrap: 'balance' } as React.CSSProperties}
               >
                 {event.name}
               </h1>
-              <p className="mb-6 text-lg opacity-85">{event.tagline}</p>
+              <p className="mb-6 text-lg opacity-85 lg:mb-3 lg:text-base">{event.tagline}</p>
 
-              <dl className="mb-8 space-y-1 text-base">
+              <dl className="mb-8 space-y-1 text-base lg:mb-3 lg:space-y-0 lg:text-sm">
                 <div className="flex gap-2">
                   <dt className="sr-only">Date</dt>
                   <dd className="font-semibold">{event.dateLabel}</dd>
@@ -151,16 +151,16 @@ export default async function FlagshipEventPage({
                 </div>
               </dl>
 
-              <div className="mb-8">
+              <div className="mb-8 lg:mb-4">
                 <Countdown start={event.start} end={event.end} />
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:gap-2">
                 <PrimaryCta phase={event.phase} ticketUrl={event.ticketUrl} />
-                <a href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer" className={secondaryBtn}>
+                <a href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer" className={`${secondaryBtn} lg:min-h-9 lg:px-3 lg:py-2 lg:text-xs`}>
                   Add to Google Calendar
                 </a>
-                <a href={icsDataUri(event)} download={`${event.slug}.ics`} className={secondaryBtn}>
+                <a href={icsDataUri(event)} download={`${event.slug}.ics`} className={`${secondaryBtn} lg:min-h-9 lg:px-3 lg:py-2 lg:text-xs`}>
                   Apple / Outlook (.ics)
                 </a>
               </div>
@@ -190,46 +190,30 @@ export default async function FlagshipEventPage({
           </div>
         </section>
 
-        {/* ── Speakers ────────────────────────────────────────────── */}
-        <section className="bg-white/50 px-4 py-16 sm:py-20">
-          <div className="container-isr">
-            <SectionHeading eyebrow="Speakers" title={event.speakers.length ? 'Who you’ll hear from' : 'Speakers revealing soon'} />
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {event.speakers.length
-                ? event.speakers.map((speaker) => (
-                    <article key={speaker.name} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-(--su-on-light)/10">
-                      <Image src={speaker.image} alt={speaker.name} width={600} height={600} className="aspect-square w-full object-cover" />
-                      <div className="p-5">
-                        <h3 className="text-lg font-semibold">{speaker.name}</h3>
-                        <p className="text-sm opacity-75">{speaker.title}</p>
-                        {speaker.topic && <p className="mt-2 text-sm font-medium text-(--su-accent)">{speaker.topic}</p>}
-                      </div>
-                    </article>
-                  ))
-                : Array.from({ length: event.speakerPlaceholderCount }, (_, i) => (
-                    <article key={i} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-(--su-on-light)/10">
-                      <Image
-                        src="/images/flagship/speaker-placeholder.svg"
-                        alt=""
-                        width={600}
-                        height={600}
-                        className="aspect-square w-full object-cover"
-                      />
-                      <div className="p-5">
-                        <h3 className="text-lg font-semibold">To be announced</h3>
-                        <p className="text-sm opacity-75">Follow our Instagram for the reveal</p>
-                      </div>
-                    </article>
-                  ))}
+        {event.speakers.length > 0 && (
+          <section className="bg-white/50 px-4 py-16 sm:py-20">
+            <div className="container-isr">
+              <SectionHeading eyebrow="Speakers" title="Who you’ll hear from" />
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {event.speakers.map((speaker) => (
+                  <article key={speaker.name} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-(--su-on-light)/10">
+                    <Image src={speaker.image} alt={speaker.name} width={600} height={600} className="aspect-square w-full object-cover" />
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold">{speaker.name}</h3>
+                      <p className="text-sm opacity-75">{speaker.title}</p>
+                      {speaker.topic && <p className="mt-2 text-sm font-medium text-(--su-accent)">{speaker.topic}</p>}
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-        {/* ── Programme ───────────────────────────────────────────── */}
-        <section className="px-4 py-16 sm:py-20">
-          <div className="container-isr max-w-3xl">
-            <SectionHeading eyebrow="Programme" title="On the night" />
-            {event.programme.length ? (
+        {event.programme.length > 0 && (
+          <section className="px-4 py-16 sm:py-20">
+            <div className="container-isr max-w-3xl">
+              <SectionHeading eyebrow="Programme" title="On the night" />
               <ol className="relative space-y-8 border-l-2 border-(--su-accent)/40 pl-8">
                 {event.programme.map((item) => (
                   <li key={`${item.time}-${item.title}`} className="relative">
@@ -240,13 +224,9 @@ export default async function FlagshipEventPage({
                   </li>
                 ))}
               </ol>
-            ) : (
-              <p className="rounded-2xl border-2 border-dashed border-(--su-on-light)/20 p-8 text-center opacity-80">
-                The full programme will be released when tickets go on sale.
-              </p>
-            )}
-          </div>
-        </section>
+            </div>
+          </section>
+        )}
 
         {/* ── Venue ───────────────────────────────────────────────── */}
         <section className="bg-white/50 px-4 py-16 sm:py-20">

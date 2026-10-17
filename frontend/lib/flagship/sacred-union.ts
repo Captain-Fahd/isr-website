@@ -35,13 +35,13 @@ export const sacredUnion: FlagshipEvent = {
   timeLabel: '5:00 pm – 9:30 pm', // PLACEHOLDER
 
   venue: {
-    name: 'Venue to be announced',
-    address: 'Melbourne, VIC',
-    /** Google Maps link — leave empty while the venue is TBA. */
-    mapUrl: '',
+    name: 'RMIT Storey Hall',
+    address: 'Building 16, 336–348 Swanston St, Melbourne VIC 3000',
+    mapUrl:
+      'https://www.google.com/maps/search/?api=1&query=RMIT+Storey+Hall,+336-348+Swanston+Street,+Melbourne+VIC+3000',
     notes: [
-      'PLACEHOLDER — nearest tram/train stops',
-      'PLACEHOLDER — parking and accessibility details',
+      'Melbourne Central Station is a short walk away, with trams along Swanston Street.',
+      'No on-campus visitor parking. Commercial car parks and metered parking are nearby.',
       'Prayer space available on site',
     ],
     image: {
@@ -58,7 +58,6 @@ export const sacredUnion: FlagshipEvent = {
     alt: 'Save the date — The Sacred Union: The Marriage Conference. Renowned speakers, lectures, break out rooms, panel discussion.',
     width: 1600,
     height: 900,
-    mobile: { src: '/images/sacred-union/banner-mobile.jpg', width: 1080, height: 1350 },
   },
 
   /** 1200×630 image used for link previews on WhatsApp, Instagram, etc. */
@@ -97,24 +96,24 @@ export const sacredUnion: FlagshipEvent = {
 
   highlights: [
     {
-      title: 'PLACEHOLDER — Inspiring speakers',
-      body: 'Short line on who is speaking and why it matters.',
+      title: 'Panel Discussion',
+      body: 'A conversation with the panel on the questions that matter for marriage.',
     },
     {
-      title: 'PLACEHOLDER — Community',
-      body: 'Short line on meeting students and families from across Melbourne.',
+      title: 'Renowned Scholars',
+      body: 'Lectures and discussion with scholars invited for the conference.',
     },
     {
-      title: 'PLACEHOLDER — Dinner included',
-      body: 'Short line on food, venue or anything else that makes the night special.',
+      title: 'Dedicated breakout rooms for brothers and sisters',
+      body: 'Separate spaces for brothers and sisters throughout the programme.',
     },
   ],
 
-  /** Shown as "To be announced" cards while empty. */
+  /** Hidden on the page while empty. */
   speakers: [],
   speakerPlaceholderCount: 3,
 
-  /** Shown as "Programme released with tickets" while empty. */
+  /** Hidden on the page while empty. */
   programme: [],
 
   /** Logo image paths. Shows a "become a sponsor" prompt while empty. */
@@ -130,10 +129,6 @@ export const sacredUnion: FlagshipEvent = {
       question: 'When do tickets go on sale?',
       answer:
         'Tickets will be sold through TryBooking. Join the mailing list or our WhatsApp community and we’ll let you know the moment they’re live.',
-    },
-    {
-      question: 'Is the food halal?',
-      answer: 'PLACEHOLDER — Yes, all catering is halal.',
     },
     {
       question: 'Is there a dress code?',

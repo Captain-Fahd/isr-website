@@ -90,10 +90,10 @@ export type FlagshipEvent = {
   ogImage: string
   theme: EventTheme
   highlights: { title: string; body: string }[]
-  /** Shown as "To be announced" cards while empty. */
+  /** Hidden while empty. */
   speakers: Speaker[]
   speakerPlaceholderCount: number
-  /** Shown as "Programme released with tickets" while empty. */
+  /** Hidden while empty. */
   programme: ProgrammeItem[]
   /** Shows a "become a sponsor" prompt while empty. */
   sponsors: { name: string; logo: string; url?: string }[]
