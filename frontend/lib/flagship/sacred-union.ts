@@ -44,12 +44,18 @@ export const sacredUnion: FlagshipEvent = {
       'PLACEHOLDER — parking and accessibility details',
       'Prayer space available on site',
     ],
+    image: {
+      src: '/images/sacred-union/venue-storey-hall.webp',
+      alt: 'Storey Hall auditorium at RMIT',
+      width: 1024,
+      height: 576,
+    },
   },
 
-  /** Replace with the real banner; the colour scheme below should follow it. */
+  /** Save-the-date banner; the colour scheme below follows it. */
   banner: {
-    src: '/images/sacred-union/banner-placeholder.png',
-    alt: 'The Sacred Union — event banner',
+    src: '/images/sacred-union/save-the-date.webp',
+    alt: 'Save the date — The Sacred Union: The Marriage Conference. Renowned speakers, lectures, break out rooms, panel discussion.',
     width: 1600,
     height: 900,
     mobile: { src: '/images/sacred-union/banner-mobile.jpg', width: 1080, height: 1350 },

@@ -75,6 +75,8 @@ export type FlagshipEvent = {
     /** Google Maps link — leave empty while the venue is TBA. */
     mapUrl: string
     notes: string[]
+    /** Shown beside the venue details; a placeholder box is shown while unset. */
+    image?: { src: string; alt: string; width: number; height: number }
   }
   banner: {
     src: string

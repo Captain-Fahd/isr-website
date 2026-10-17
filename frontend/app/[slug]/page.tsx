@@ -274,10 +274,19 @@ export default async function FlagshipEventPage({
                 </a>
               )}
             </div>
-            {/* PLACEHOLDER — venue photo */}
-            <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border-2 border-dashed border-(--su-on-light)/20 bg-(--su-on-light)/5 text-sm opacity-60">
-              Venue photo
-            </div>
+            {event.venue.image ? (
+              <Image
+                src={event.venue.image.src}
+                alt={event.venue.image.alt}
+                width={event.venue.image.width}
+                height={event.venue.image.height}
+                className="aspect-[4/3] h-auto w-full rounded-2xl object-cover shadow-sm ring-1 ring-(--su-on-light)/10"
+              />
+            ) : (
+              <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border-2 border-dashed border-(--su-on-light)/20 bg-(--su-on-light)/5 text-sm opacity-60">
+                Venue photo
+              </div>
+            )}
           </div>
         </section>
 
