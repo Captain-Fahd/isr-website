@@ -62,7 +62,8 @@ export default function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       onFocus={(e) => setKeyboardFocus(e.target.matches(':focus-visible'))}
       onBlur={() => setKeyboardFocus(false)}
     >
-      <div className="grid">
+      {/* On phones only the active slide sets the height (inactive ones are taken out of flow), so a short slide isn't stretched to match a tall one */}
+      <div className="grid max-sm:relative max-sm:overflow-hidden">
         {slides.map((slide, i) => (
           <div
             key={slide.id}
@@ -71,7 +72,9 @@ export default function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             aria-label={`${i + 1} of ${slides.length}: ${slide.label}`}
             aria-hidden={i !== active}
             className={`[grid-area:1/1] transition-opacity duration-700 ease-in-out ${
-              i === active ? 'z-10 opacity-100' : 'pointer-events-none invisible opacity-0'
+              i === active
+                ? 'z-10 opacity-100'
+                : 'pointer-events-none invisible opacity-0 max-sm:absolute max-sm:inset-x-0 max-sm:top-0'
             }`}
           >
             {slide.content}

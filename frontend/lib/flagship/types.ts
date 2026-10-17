@@ -26,6 +26,8 @@ export type EventTheme = {
   hero: {
     /** Backdrop image, cropped to cover the hero */
     backdrop: string
+    /** Portrait version shown instead of `backdrop` on phones (ideally 1290×2796) */
+    backdropMobile?: string
     /** CSS `background-image` layers shown beneath (and while loading) the backdrop */
     background: string
     /** Body text, eyebrow and pattern on `background` */
@@ -95,7 +97,5 @@ export type FlagshipEvent = {
   speakerPlaceholderCount: number
   /** Hidden while empty. */
   programme: ProgrammeItem[]
-  /** Shows a "become a sponsor" prompt while empty. */
-  sponsors: { name: string; logo: string; url?: string }[]
   faqs: Faq[]
 }

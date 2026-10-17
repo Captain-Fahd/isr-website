@@ -10,9 +10,9 @@ import type { FlagshipEvent } from './types'
 export const sacredUnion: FlagshipEvent = {
   slug: 'sacred-union',
   name: 'The Sacred Union',
-  tagline: 'PLACEHOLDER — one-line tagline for the event',
+  tagline: 'Prepare for the future you pray for',
   description:
-    'PLACEHOLDER — ISR’s flagship conference for 2026. An evening of talks, reflection and community, bringing together students and guests from across Melbourne.',
+    'The Islamic Society of RMIT proudly presents one of Victoria’s most anticipated Muslim marriage conferences of the year.\n\nMore than preparing for marriage, it’s about investing in yourself, refining your character, and building the foundations for a blessed marriage and a lasting legacy.',
 
   /**
    * 'save-the-date' — date announced, tickets not yet on sale.
@@ -73,6 +73,7 @@ export const sacredUnion: FlagshipEvent = {
     accent: '#509589',
     hero: {
       backdrop: '/images/sacred-union/backdrop.webp',
+      backdropMobile: '/images/sacred-union/backdrop-mobile.webp',
       text: '#561610',
       heading: '#561610',
       // Palette approximation of the backdrop, shown while it loads: a white
@@ -116,14 +117,11 @@ export const sacredUnion: FlagshipEvent = {
   /** Hidden on the page while empty. */
   programme: [],
 
-  /** Logo image paths. Shows a "become a sponsor" prompt while empty. */
-  sponsors: [],
-
   faqs: [
     {
       question: 'Who can attend?',
       answer:
-        'PLACEHOLDER — Everyone is welcome: RMIT and non-RMIT students, Muslims and non-Muslims, families and friends.',
+        'Everyone is welcome: RMIT and non-RMIT students, Muslims and non-Muslims, families and friends.',
     },
     {
       question: 'When do tickets go on sale?',
@@ -132,15 +130,11 @@ export const sacredUnion: FlagshipEvent = {
     },
     {
       question: 'Is there a dress code?',
-      answer: 'PLACEHOLDER — Smart casual / modest dress.',
+      answer: 'Smart casual / modest dress.',
     },
     {
       question: 'Is there separate seating?',
-      answer: 'PLACEHOLDER — Seating arrangements for brothers and sisters.',
-    },
-    {
-      question: 'What is the refund policy?',
-      answer: 'PLACEHOLDER — Refund policy once tickets are on sale.',
+      answer: 'Seating arrangements for brothers and sisters.',
     },
   ],
 }

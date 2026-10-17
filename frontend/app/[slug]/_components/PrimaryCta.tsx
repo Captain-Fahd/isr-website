@@ -49,7 +49,12 @@ export default function PrimaryCta({ phase, ticketUrl, className = '' }: Props) 
   }
 
   return (
-    <a href="#notify" className={`${base} ${className}`}>
+    <a
+      href={withRef('https://www.trybooking.com/au/event/1662679', ref)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${base} ${className}`}
+    >
       Notify me when tickets open
     </a>
   )

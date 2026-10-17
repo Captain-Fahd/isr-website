@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -13,6 +12,7 @@ import { themeVars } from '@/lib/flagship/theme'
 import Countdown from '@/components/flagship/Countdown'
 import PrimaryCta from './_components/PrimaryCta'
 import StickyCtaBar from './_components/StickyCtaBar'
+import HeroBackdrop from '@/components/flagship/HeroBackdrop'
 import GeometricPattern from '@/components/flagship/GeometricPattern'
 import FlagshipReleaseGate from '@/components/flagship/FlagshipReleaseGate'
 
@@ -107,7 +107,7 @@ export default async function FlagshipEventPage({
           id="hero"
           className="relative isolate overflow-hidden bg-(--su-light) bg-(image:--su-hero-bg) px-4 pb-24 pt-28 text-(--su-hero-text) sm:pt-32"
         >
-          <Image src={event.theme.hero.backdrop} alt="" fill priority className="-z-20 object-cover" />
+          <HeroBackdrop hero={event.theme.hero} />
 
           <div className="container-isr grid items-center gap-10 lg:items-stretch lg:grid-cols-[1.6fr_1.05fr]">
             <div className="lg:flex lg:items-center motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
@@ -132,7 +132,7 @@ export default async function FlagshipEventPage({
               >
                 {event.name}
               </h1>
-              <p className="mb-6 text-lg opacity-85 lg:mb-3 lg:text-base">{event.tagline}</p>
+              <p className="mb-6 text-lg font-semibold italic opacity-85 lg:mb-3 lg:text-base">{event.tagline}</p>
 
               <dl className="mb-8 space-y-1 text-base lg:mb-3 lg:space-y-0 lg:text-sm">
                 <div className="flex gap-2">
@@ -172,9 +172,11 @@ export default async function FlagshipEventPage({
         <section className="px-4 py-16 sm:py-20">
           <div className="container-isr">
             <SectionHeading eyebrow="About the event" title={`What is ${event.name}?`} />
-            <p className="mx-auto mb-12 max-w-2xl text-center text-lg leading-relaxed opacity-85">
-              {event.description}
-            </p>
+            <div className="mx-auto mb-12 max-w-2xl space-y-5 text-center text-lg leading-relaxed opacity-85">
+              {event.description.split(/\n\s*\n/).map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
             <div className="grid gap-6 md:grid-cols-3">
               {event.highlights.map((item) => (
                 <article
@@ -267,34 +269,6 @@ export default async function FlagshipEventPage({
                 Venue photo
               </div>
             )}
-          </div>
-        </section>
-
-        {/* ── Sponsors ────────────────────────────────────────────── */}
-        <section className="px-4 py-16 sm:py-20">
-          <div className="container-isr text-center">
-            <SectionHeading eyebrow="Our partners" title="Supported by" />
-            {event.sponsors.length ? (
-              <div className="flex flex-wrap items-center justify-center gap-10">
-                {event.sponsors.map((sponsor) => (
-                  <Image key={sponsor.name} src={sponsor.logo} alt={sponsor.name} width={160} height={80} className="h-16 w-auto object-contain" />
-                ))}
-              </div>
-            ) : (
-              <div className="mx-auto mb-6 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
-                {Array.from({ length: 4 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="flex h-20 items-center justify-center rounded-xl border-2 border-dashed border-(--su-on-light)/20 text-xs opacity-60"
-                  >
-                    Sponsor logo
-                  </div>
-                ))}
-              </div>
-            )}
-            <Link href="/support-us/sponsor/" className="mt-6 inline-block font-semibold text-(--su-primary) underline-offset-4 hover:underline">
-              Interested in sponsoring {event.name}? →
-            </Link>
           </div>
         </section>
 
