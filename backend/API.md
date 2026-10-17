@@ -677,6 +677,49 @@ Delete an announcement and its stored image (if any). **Admin only.**
 
 ---
 
+## Site Settings
+
+Site-wide switches admins flip from the admin panel without a rebuild (the frontend is a static export, so it reads these at runtime). Stored as a single Postgres row; before an admin first saves, the defaults below are returned with `updatedAt: null`.
+
+| Field | Meaning |
+|---|---|
+| `flagshipReleased` | `true` shows the home page hero carousel and the flagship event pages (e.g. `/sacred-union/`). `false` (default) shows the plain home hero and hides flagship pages from the public. |
+
+---
+
+### `GET /api/settings`
+
+Current settings. **Public.**
+
+**Response** `200 OK`
+```json
+{ "data": { "flagshipReleased": false, "updatedAt": "2026-10-17T00:00:00.000Z" } }
+```
+
+---
+
+### `PUT /api/settings`
+
+Update settings. **Admin only.** JSON body.
+
+**Body**
+```json
+{ "flagshipReleased": true }
+```
+
+**Response** `200 OK` — the saved settings, same shape as `GET`.
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "flagshipReleased must be a boolean" }` |
+| `401` | `{ "error": "Unauthorized" }` |
+| `403` | `{ "error": "Forbidden" }` |
+| `500` | `{ "error": "Failed to update settings" }` |
+
+---
+
 ## Email Forms
 
 Both form endpoints send mail through [Resend](https://resend.com) and require these environment

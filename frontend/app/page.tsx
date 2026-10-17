@@ -1,6 +1,7 @@
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
-import HeroCarousel, { type HeroSlide } from '@/components/HeroCarousel'
+import HomeHero from '@/components/HomeHero'
+import type { HeroSlide } from '@/components/HeroCarousel'
 import FlagshipHeroSlide from '@/components/flagship/FlagshipHeroSlide'
 import { getFeaturedFlagshipEvent } from '@/lib/flagship'
 import Mission from '@/components/Mission'
@@ -18,11 +19,12 @@ export default async function Home() {
   }
 
   const featured = getFeaturedFlagshipEvent()
-  const slides: HeroSlide[] = [
-    // Flagship event leads and stays up longer than the regular hero.
-    ...(featured
-      ? [{ id: featured.slug, label: featured.name, duration: 12000, content: <FlagshipHeroSlide event={featured} /> }]
-      : []),
+  // Flagship event leads and stays up longer than the regular hero, once
+  // released from the admin panel.
+  const flagshipSlides: HeroSlide[] = featured
+    ? [{ id: featured.slug, label: featured.name, duration: 12000, content: <FlagshipHeroSlide event={featured} /> }]
+    : []
+  const defaultSlides: HeroSlide[] = [
     {
       id: 'home',
       label: 'Islamic Society of RMIT',
@@ -40,7 +42,7 @@ export default async function Home() {
       <Navbar />
       {/* Pull up under the navbar spacer so the hero fills the screen */}
       <div className="-mt-20">
-        <HeroCarousel slides={slides} />
+        <HomeHero flagshipSlides={flagshipSlides} defaultSlides={defaultSlides} />
       </div>
       <EventsPreview initialEvents={upcomingEvents} />
       <Mission />

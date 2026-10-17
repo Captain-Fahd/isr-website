@@ -8,6 +8,7 @@ import { getToken, removeToken } from '@/lib/auth'
 const NAV_LINKS = [
   { href: '/admin/events', label: 'Events' },
   { href: '/admin/announcements', label: 'Announcements' },
+  { href: '/admin/site', label: 'Site' },
 ]
 
 export default function AdminProtectedLayout({

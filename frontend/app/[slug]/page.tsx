@@ -14,6 +14,7 @@ import Countdown from '@/components/flagship/Countdown'
 import PrimaryCta from './_components/PrimaryCta'
 import StickyCtaBar from './_components/StickyCtaBar'
 import GeometricPattern from '@/components/flagship/GeometricPattern'
+import FlagshipReleaseGate from '@/components/flagship/FlagshipReleaseGate'
 
 type Params = { slug: string }
 
@@ -92,6 +93,7 @@ export default async function FlagshipEventPage({
   })
 
   return (
+    <FlagshipReleaseGate>
     <div style={themeVars(event)} className="min-h-screen bg-(--su-light) text-(--su-on-light)">
       <script
         type="application/ld+json"
@@ -375,5 +377,6 @@ export default async function FlagshipEventPage({
       <Footer />
       <StickyCtaBar phase={event.phase} ticketUrl={event.ticketUrl} name={event.name} dateLabel={event.dateLabel} />
     </div>
+    </FlagshipReleaseGate>
   )
 }
