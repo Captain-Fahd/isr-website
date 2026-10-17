@@ -67,7 +67,7 @@ export default function Countdown({ start, end }: Props) {
       {units.map(([key, label]) => (
         <div
           key={key}
-          className="rounded-xl border border-(--su-on-dark)/20 bg-(--su-on-dark)/10 px-2 py-3 text-center backdrop-blur-sm"
+          className="rounded-xl border border-current/20 bg-current/10 px-2 py-3 text-center backdrop-blur-sm"
         >
           <span className="block text-2xl font-bold tabular-nums sm:text-3xl">
             {parts ? String(parts[key]).padStart(2, '0') : '--'}

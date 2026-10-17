@@ -59,3 +59,12 @@ model Announcement {
   imageUrl  String?
   createdAt DateTime @default(now())
 }
+
+// Single-row table (id is always 1) for site-wide switches admins flip at runtime.
+// The frontend is a static export, so these can't be build-time flags.
+model SiteSettings {
+  id               Int      @id @default(1)
+  // Home carousel + flagship event pages are live. Off = the pre-launch default site.
+  flagshipReleased Boolean  @default(false)
+  updatedAt        DateTime @updatedAt
+}

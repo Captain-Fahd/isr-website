@@ -22,6 +22,19 @@ export type EventTheme = {
   onPrimary: string
   /** Eyebrows, dividers, pattern and small highlights */
   accent: string
+  /** Event page hero and home carousel slide */
+  hero: {
+    /** Backdrop image, cropped to cover the hero */
+    backdrop: string
+    /** Portrait version shown instead of `backdrop` on phones (ideally 1290×2796) */
+    backdropMobile?: string
+    /** CSS `background-image` layers shown beneath (and while loading) the backdrop */
+    background: string
+    /** Body text, eyebrow and pattern on `background` */
+    text: string
+    /** Event name */
+    heading: string
+  }
 }
 
 export type Speaker = {
@@ -64,18 +77,25 @@ export type FlagshipEvent = {
     /** Google Maps link — leave empty while the venue is TBA. */
     mapUrl: string
     notes: string[]
+    /** Shown beside the venue details; a placeholder box is shown while unset. */
+    image?: { src: string; alt: string; width: number; height: number }
   }
-  banner: { src: string; alt: string; width: number; height: number }
+  banner: {
+    src: string
+    alt: string
+    width: number
+    height: number
+    /** Portrait version shown instead of `src` on phones in the home carousel slide */
+    mobile?: { src: string; width: number; height: number }
+  }
   /** 1200×630 image used for link previews on WhatsApp, Instagram, etc. */
   ogImage: string
   theme: EventTheme
   highlights: { title: string; body: string }[]
-  /** Shown as "To be announced" cards while empty. */
+  /** Hidden while empty. */
   speakers: Speaker[]
   speakerPlaceholderCount: number
-  /** Shown as "Programme released with tickets" while empty. */
+  /** Hidden while empty. */
   programme: ProgrammeItem[]
-  /** Shows a "become a sponsor" prompt while empty. */
-  sponsors: { name: string; logo: string; url?: string }[]
   faqs: Faq[]
 }

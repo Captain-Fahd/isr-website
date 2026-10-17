@@ -11,5 +11,8 @@ export function themeVars({ theme }: FlagshipEvent): CSSProperties {
     '--su-primary': theme.primary,
     '--su-on-primary': theme.onPrimary,
     '--su-accent': theme.accent,
+    '--su-hero-bg': theme.hero.background,
+    '--su-hero-text': theme.hero.text,
+    '--su-hero-heading': theme.hero.heading,
   } as CSSProperties
 }

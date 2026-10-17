@@ -3,9 +3,16 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
+import { getFeaturedFlagshipEvent } from '@/lib/flagship'
+import { useSiteSettings } from '@/lib/siteSettings'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const { settings } = useSiteSettings()
+  // Once an admin releases the flagship event, its page takes the Volunteer slot.
+  const flagship = settings.flagshipReleased ? getFeaturedFlagshipEvent() : undefined
+  const ctaHref = flagship ? `/${flagship.slug}/` : '/volunteer/'
+  const ctaLabel = flagship ? flagship.name : 'Volunteer'
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -55,10 +62,10 @@ export default function Navbar() {
                 ))}
                 <div className="flex items-center gap-3">
                   <Link
-                    href="/volunteer/"
+                    href={ctaHref}
                     className="rounded-full bg-isr-dark-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-isr-bright-red"
                   >
-                    Volunteer
+                    {ctaLabel}
                   </Link>
                   <a
                     href="https://campus.hellorubric.com/?s=10733"
@@ -108,11 +115,11 @@ export default function Navbar() {
                   ))}
                   <div className="space-y-3 px-4 pt-3">
                     <Link
-                      href="/volunteer/"
+                      href={ctaHref}
                       onClick={() => setIsOpen(false)}
                       className="block rounded-full bg-isr-dark-red px-4 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-isr-bright-red"
                     >
-                      Volunteer
+                      {ctaLabel}
                     </Link>
                     <a
                       href="https://campus.hellorubric.com/?s=10733"
