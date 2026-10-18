@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Geist } from 'next/font/google'
+import Script from 'next/script'
 import { cn } from '@/lib/utils'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
 import {
@@ -66,6 +67,20 @@ export default function RootLayout({
         />
         {children}
         <FloatingWhatsApp />
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-KHWS08VVDX"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-KHWS08VVDX');
+          `}
+        </Script>
       </body>
     </html>
   )
