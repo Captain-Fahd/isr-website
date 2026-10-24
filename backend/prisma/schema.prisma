@@ -24,6 +24,8 @@ model Event {
   imageUrl    String
   description String
   ticketUrl   String?
+  // Overrides where "Learn More" / "View Details" link to, instead of the internal event page.
+  customUrl   String?
 
   // Multi-day events: when the (single) occurrence finishes. Null = same-day event.
   endDate DateTime?

@@ -21,6 +21,14 @@ import {
 
 type FrequencyValue = '' | RecurrenceFrequency
 
+function isValidHttpUrl(value: string): boolean {
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol)
+  } catch {
+    return false
+  }
+}
+
 const FREQUENCY_OPTIONS: { value: FrequencyValue; label: string }[] = [
   { value: '', label: 'Does not repeat' },
   { value: 'DAILY', label: 'Daily' },
@@ -48,6 +56,7 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
   const [date, setDate] = useState(event ? toDatetimeLocalValue(event.date) : '')
   const [description, setDescription] = useState(event?.description ?? '')
   const [ticketUrl, setTicketUrl] = useState(event?.ticketUrl ?? '')
+  const [customUrl, setCustomUrl] = useState(event?.customUrl ?? '')
   const [endDate, setEndDate] = useState(
     event?.endDate ? toDatetimeLocalValue(event.endDate) : '',
   )
@@ -67,6 +76,7 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
     setDate(event ? toDatetimeLocalValue(event.date) : '')
     setDescription(event?.description ?? '')
     setTicketUrl(event?.ticketUrl ?? '')
+    setCustomUrl(event?.customUrl ?? '')
     setEndDate(event?.endDate ? toDatetimeLocalValue(event.endDate) : '')
     setFrequency(event?.recurrenceFrequency ?? '')
     setInterval(String(event?.recurrenceInterval ?? 1))
@@ -84,6 +94,10 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
     }
     if (!isEdit && !imageFile) {
       setError('An image is required')
+      return
+    }
+    if (customUrl && !isValidHttpUrl(customUrl)) {
+      setError('Custom URL must be a valid http:// or https:// link')
       return
     }
     if (endDate && fromDatetimeLocalValue(endDate) <= fromDatetimeLocalValue(date)) {
@@ -113,6 +127,7 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
     formData.set('date', fromDatetimeLocalValue(date))
     formData.set('description', description)
     formData.set('ticketUrl', ticketUrl)
+    formData.set('customUrl', customUrl)
     // Blank values clear the field server-side, which is how a multi-day or
     // recurring event is turned back into a plain one-off.
     formData.set('endDate', endDate ? fromDatetimeLocalValue(endDate) : '')
@@ -246,6 +261,21 @@ export function EventModal({ open, event, onClose, onSubmit }: Props) {
               onChange={(e) => setTicketUrl(e.target.value)}
               placeholder="https://tickets.example.com/event"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="ev-custom-url">Custom URL (optional)</Label>
+            <Input
+              id="ev-custom-url"
+              type="url"
+              value={customUrl}
+              onChange={(e) => setCustomUrl(e.target.value)}
+              placeholder="https://example.com/event-page"
+            />
+            <p className="text-xs text-muted-foreground">
+              If set, &quot;Learn More&quot; and &quot;View Details&quot; for this event link
+              here instead of its page on this site.
+            </p>
           </div>
 
           <div className="space-y-1.5">

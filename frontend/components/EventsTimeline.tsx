@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   displayOccurrence,
+  eventHref,
   fetchEvents,
   formatEventSchedule,
   formatRecurrence,
@@ -38,6 +39,10 @@ function EventCard({
   const past = isEventOver(event)
   const recurrence = formatRecurrence(event)
   const { start } = displayOccurrence(event)
+  const href = eventHref(event)
+  // A custom URL is an external/arbitrary destination, so it gets a plain anchor
+  // rather than Next's client-side Link.
+  const DetailsLink = event.customUrl ? 'a' : Link
 
   return (
     <article className="relative flex gap-6 md:gap-10">
@@ -99,24 +104,21 @@ function EventCard({
           </div>
 
           <h3 className="mb-3 text-2xl font-bold text-isr-dark-red sm:text-3xl">
-            <Link
-              href={`/events/${event.id}/`}
-              className="hover:text-isr-turquoise transition-colors"
-            >
+            <DetailsLink href={href} className="hover:text-isr-turquoise transition-colors">
               {event.name}
-            </Link>
+            </DetailsLink>
           </h3>
 
           <p className="mb-6 leading-relaxed text-gray-700 line-clamp-3">{event.description}</p>
 
           <div className="flex flex-wrap gap-3">
-            <Link
-              href={`/events/${event.id}/`}
+            <DetailsLink
+              href={href}
               className="inline-flex min-h-11 items-center rounded-lg border-2 border-isr-turquoise px-6 py-3 text-sm font-semibold text-isr-dark-red transition-colors hover:bg-isr-turquoise hover:text-white"
             >
               View Details
               <ArrowRight />
-            </Link>
+            </DetailsLink>
             {event.ticketUrl && (
               <a
                 href={event.ticketUrl}

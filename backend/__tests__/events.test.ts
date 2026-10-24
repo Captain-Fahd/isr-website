@@ -54,6 +54,7 @@ function eventRow(overrides: Record<string, unknown>) {
     description: 'x',
     imageUrl: 'https://cdn/img.jpg',
     ticketUrl: null,
+    customUrl: null,
     date: new Date('2099-01-01'),
     endDate: null,
     recurrenceFrequency: null,
@@ -402,6 +403,56 @@ test('createEvent normalizes blank ticketUrl to null', async () => {
   expect(status).toHaveBeenCalledWith(201);
 });
 
+test('createEvent stores a customUrl when provided', async () => {
+  mockUploadEventImage.mockResolvedValue('https://cdn/img.jpg');
+  const created = eventRow({ id: 1, name: 'Eid Dinner', customUrl: 'https://example.com/eid' });
+  mockCreate.mockResolvedValue(created);
+
+  const file = { buffer: Buffer.from('x'), mimetype: 'image/jpeg', originalname: 'p.jpg' };
+  const req = {
+    body: {
+      name: 'Eid Dinner',
+      date: '2026-08-01T18:00:00Z',
+      description: 'x',
+      customUrl: 'https://example.com/eid',
+    },
+    file,
+  } as unknown as Request;
+  const { res, json, status } = mockRes();
+
+  await createEvent(req, res);
+
+  expect(mockCreate).toHaveBeenCalledWith({
+    data: expect.objectContaining({ customUrl: 'https://example.com/eid' }),
+  });
+  expect(status).toHaveBeenCalledWith(201);
+  expect(json).toHaveBeenCalledWith({ data: expect.objectContaining(created) });
+});
+
+test('createEvent normalizes blank customUrl to null', async () => {
+  mockUploadEventImage.mockResolvedValue('https://cdn/img.jpg');
+  mockCreate.mockResolvedValue(eventRow({ id: 1, name: 'Eid Dinner' }));
+
+  const file = { buffer: Buffer.from('x'), mimetype: 'image/jpeg', originalname: 'p.jpg' };
+  const req = {
+    body: {
+      name: 'Eid Dinner',
+      date: '2026-08-01T18:00:00Z',
+      description: 'x',
+      customUrl: '   ',
+    },
+    file,
+  } as unknown as Request;
+  const { res, status } = mockRes();
+
+  await createEvent(req, res);
+
+  expect(mockCreate).toHaveBeenCalledWith({
+    data: expect.objectContaining({ customUrl: null }),
+  });
+  expect(status).toHaveBeenCalledWith(201);
+});
+
 test('createEvent returns 500 on failure', async () => {
   mockUploadEventImage.mockRejectedValue(new Error('upload failed'));
 
@@ -643,6 +694,28 @@ test('updateEvent updates fields without replacing image', async () => {
   });
   expect(status).toHaveBeenCalledWith(200);
   expect(json).toHaveBeenCalledWith({ data: expect.objectContaining(updated) });
+});
+
+test('updateEvent updates customUrl', async () => {
+  const existing = eventRow({ name: 'Eid', customUrl: null });
+  const updated = { ...existing, customUrl: 'https://example.com/eid' };
+  mockFindUnique.mockResolvedValue(existing);
+  mockUpdate.mockResolvedValue(updated);
+
+  const req = {
+    params: { id: '1' },
+    body: { customUrl: 'https://example.com/eid' },
+  } as unknown as Request;
+  const { res, status } = mockRes();
+
+  await updateEvent(req, res);
+
+  expect(mockUpdate).toHaveBeenCalledWith({
+    where: { id: 1 },
+    data: expect.objectContaining({ customUrl: 'https://example.com/eid' }),
+    include: { _count: { select: { likes: true } } },
+  });
+  expect(status).toHaveBeenCalledWith(200);
 });
 
 test('updateEvent replaces image and deletes the old one', async () => {
