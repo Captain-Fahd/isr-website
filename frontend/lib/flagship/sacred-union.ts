@@ -27,11 +27,11 @@ export const sacredUnion: FlagshipEvent = {
   ticketUrl: '',
 
   /** ISO 8601 with Melbourne offset (AEDT is +11:00). */
-  start: '2026-11-15T13:30:00+11:00',
-  end: '2026-11-15T19:30:00+11:00',
+  start: '2026-11-28T13:30:00+11:00',
+  end: '2026-11-28T19:30:00+11:00',
 
   /** Human-readable labels shown on the page. */
-  dateLabel: 'Sunday 15 November 2026',
+  dateLabel: 'Saturday 28 November 2026',
   timeLabel: '1:30 pm – 7:30 pm',
 
   venue: {
