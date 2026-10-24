@@ -54,7 +54,7 @@ export const sacredUnion: FlagshipEvent = {
   /** Save-the-date banner; the colour scheme below follows it. */
   banner: {
     src: '/images/sacred-union/save-the-date.webp',
-    alt: 'Save the date — The Sacred Union: The Marriage Conference. Renowned speakers, lectures, break out rooms, panel discussion.',
+    alt: 'Save the date — The Sacred Union: The Marriage Conference. Renowned speakers, lectures, men’s & women’s segment.',
     width: 1600,
     height: 900,
   },
