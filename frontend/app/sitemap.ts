@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { fetchEvents } from '@/lib/events'
-import { FLAGSHIP_EVENTS } from '@/lib/flagship'
+import { fetchFlagshipEvents } from '@/lib/flagship'
 import { SITE_URL, withTrailingSlash } from '@/lib/seo'
 
 export const dynamic = 'force-static'
@@ -17,6 +17,13 @@ function pageEntry(
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  let flagshipEvents: Awaited<ReturnType<typeof fetchFlagshipEvents>> = []
+  try {
+    flagshipEvents = await fetchFlagshipEvents()
+  } catch {
+    flagshipEvents = []
+  }
+
   const staticPages = [
     pageEntry('/'),
     pageEntry('/events'),
@@ -28,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     pageEntry('/volunteer'),
     pageEntry('/support-us'),
     pageEntry('/support-us/sponsor'),
-    ...FLAGSHIP_EVENTS.map(({ slug }) => pageEntry(`/${slug}`)),
+    ...flagshipEvents.map(({ slug }) => pageEntry(`/${slug}`)),
     pageEntry('/prayer-times'),
     pageEntry('/privacy'),
   ]

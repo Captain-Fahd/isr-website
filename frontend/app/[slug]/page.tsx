@@ -6,7 +6,7 @@ import Footer from '@/components/Footer'
 import NewsletterSignup from '@/components/NewsletterSignup'
 import { CAMPUS } from '@/lib/campus'
 import { absoluteUrl, eventJsonLd, truncateMetaDescription } from '@/lib/seo'
-import { FLAGSHIP_EVENTS, getFlagshipEvent } from '@/lib/flagship'
+import { fetchFlagshipEvents, fetchFlagshipEventBySlug } from '@/lib/flagship'
 import { googleCalendarUrl, icsDataUri } from '@/lib/flagship/calendar'
 import { themeVars } from '@/lib/flagship/theme'
 import Countdown from '@/components/flagship/Countdown'
@@ -21,8 +21,13 @@ type Params = { slug: string }
 // Static export: only registered flagship slugs are built; anything else 404s.
 export const dynamicParams = false
 
-export function generateStaticParams(): Params[] {
-  return FLAGSHIP_EVENTS.map(({ slug }) => ({ slug }))
+export async function generateStaticParams(): Promise<Params[]> {
+  try {
+    const events = await fetchFlagshipEvents()
+    return events.map(({ slug }) => ({ slug }))
+  } catch {
+    return []
+  }
 }
 
 export async function generateMetadata({
@@ -31,7 +36,7 @@ export async function generateMetadata({
   params: Promise<Params>
 }): Promise<Metadata> {
   const { slug } = await params
-  const event = getFlagshipEvent(slug)
+  const event = await fetchFlagshipEventBySlug(slug)
   if (!event) return {}
 
   const pagePath = `/${event.slug}/`
@@ -76,7 +81,7 @@ export default async function FlagshipEventPage({
   params: Promise<Params>
 }) {
   const { slug } = await params
-  const event = getFlagshipEvent(slug)
+  const event = await fetchFlagshipEventBySlug(slug)
   if (!event) notFound()
 
   const pagePath = `/${event.slug}/`
@@ -93,7 +98,7 @@ export default async function FlagshipEventPage({
   })
 
   return (
-    <FlagshipReleaseGate>
+    <FlagshipReleaseGate slug={event.slug}>
     <div style={themeVars(event)} className="min-h-screen bg-(--su-light) text-(--su-on-light)">
       <script
         type="application/ld+json"

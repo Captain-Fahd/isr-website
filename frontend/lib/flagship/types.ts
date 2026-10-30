@@ -56,6 +56,7 @@ export type Faq = {
 }
 
 export type FlagshipEvent = {
+  id: number
   /** URL path segment — the page is served at /<slug>/ */
   slug: string
   name: string
@@ -64,6 +65,8 @@ export type FlagshipEvent = {
   phase: EventPhase
   /** Show this event as the first slide of the home page hero carousel. */
   featuredOnHome: boolean
+  /** Page is public. Off = hidden from visitors; admins can still preview it. */
+  released: boolean
   /** TryBooking event URL. Leave empty until booking opens. */
   ticketUrl: string
   /**

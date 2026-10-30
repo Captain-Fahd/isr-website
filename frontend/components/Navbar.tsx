@@ -3,14 +3,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { getFeaturedFlagshipEvent } from '@/lib/flagship'
-import { useSiteSettings } from '@/lib/siteSettings'
+import { useFlagshipEvents, pickFeaturedFlagshipEvent } from '@/lib/flagship'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
-  const { settings } = useSiteSettings()
-  // Once an admin releases the flagship event, its page takes the Volunteer slot.
-  const flagship = settings.flagshipReleased ? getFeaturedFlagshipEvent() : undefined
+  const { events } = useFlagshipEvents()
+  // Once an admin features+releases a flagship event, its page takes the Volunteer slot.
+  const flagship = pickFeaturedFlagshipEvent(events)
   const ctaHref = flagship ? `/${flagship.slug}/` : '/volunteer/'
   const ctaLabel = flagship ? flagship.name : 'Volunteer'
 

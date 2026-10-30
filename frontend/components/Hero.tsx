@@ -3,16 +3,15 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import PrayerTimesTable from '@/components/PrayerTimesTable'
-import { getFeaturedFlagshipEvent } from '@/lib/flagship'
-import { useSiteSettings } from '@/lib/siteSettings'
+import { useFlagshipEvents, pickFeaturedFlagshipEvent } from '@/lib/flagship'
 
 const logoClassName =
   'relative z-10 mx-auto h-auto w-[140px] object-contain sm:w-[180px] lg:mx-0'
 
 export default function Hero() {
-  const { settings } = useSiteSettings()
-  // Once an admin releases the flagship event, its page takes the Volunteer slot.
-  const flagship = settings.flagshipReleased ? getFeaturedFlagshipEvent() : undefined
+  const { events } = useFlagshipEvents()
+  // Once an admin features+releases a flagship event, its page takes the Volunteer slot.
+  const flagship = pickFeaturedFlagshipEvent(events)
 
   return (
     <section id="hero" className="flex items-center px-4 pb-20 pt-24 max-sm:items-start sm:min-h-screen sm:py-20">

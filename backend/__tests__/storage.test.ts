@@ -27,10 +27,15 @@ import {
   deleteEventImage,
   uploadAnnouncementImage,
   deleteAnnouncementImage,
+  uploadFlagshipImage,
+  deleteFlagshipImage,
+  deleteFlagshipImages,
+  collectFlagshipImageUrls,
 } from '../lib/storage';
 
 const EVENT_BUCKET = 'event-images';
 const ANNOUNCEMENT_BUCKET = 'announcement-images';
+const FLAGSHIP_BUCKET = 'flagship-images';
 const OPTIMISED = Buffer.from('optimised-webp-bytes');
 
 function multerFile(overrides: Record<string, unknown> = {}) {
@@ -239,5 +244,120 @@ describe('deleteAnnouncementImage', () => {
       'Failed to delete announcement image:',
       expect.any(Error),
     );
+  });
+});
+
+// --- uploadFlagshipImage / deleteFlagshipImage(s) ---
+
+describe('uploadFlagshipImage', () => {
+  test('uploads to the flagship bucket', async () => {
+    const url = await uploadFlagshipImage(multerFile());
+
+    expect(mockFrom).toHaveBeenCalledWith(FLAGSHIP_BUCKET);
+    const [key] = mockUpload.mock.calls[0];
+    expect(key).toMatch(/\.webp$/);
+    expect(url).toContain(key);
+  });
+});
+
+describe('deleteFlagshipImage', () => {
+  test('extracts the storage key from the public URL', async () => {
+    await deleteFlagshipImage(
+      'https://cdn.example.com/storage/v1/object/public/flagship-images/sacred-union/banner.webp',
+    );
+
+    expect(mockFrom).toHaveBeenCalledWith(FLAGSHIP_BUCKET);
+    expect(mockRemove).toHaveBeenCalledWith(['sacred-union/banner.webp']);
+  });
+
+  test('does not delete when handed an event URL', async () => {
+    await deleteFlagshipImage(
+      'https://cdn.example.com/storage/v1/object/public/event-images/poster.webp',
+    );
+
+    expect(mockRemove).not.toHaveBeenCalled();
+  });
+
+  test('swallows a storage failure so it cannot block the DB delete', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockRemove.mockRejectedValue(new Error('network down'));
+
+    await expect(
+      deleteFlagshipImage(
+        'https://cdn.example.com/storage/v1/object/public/flagship-images/gone.webp',
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to delete flagship image:',
+      expect.any(Error),
+    );
+  });
+});
+
+describe('deleteFlagshipImages', () => {
+  test('removes every url in the list', async () => {
+    await deleteFlagshipImages([
+      'https://cdn.example.com/storage/v1/object/public/flagship-images/a.webp',
+      'https://cdn.example.com/storage/v1/object/public/flagship-images/b.webp',
+    ]);
+
+    expect(mockRemove).toHaveBeenCalledWith(['a.webp']);
+    expect(mockRemove).toHaveBeenCalledWith(['b.webp']);
+  });
+
+  test('swallows a failure so it cannot block the DB operation', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockRemove.mockRejectedValue(new Error('network down'));
+
+    await expect(
+      deleteFlagshipImages(['https://cdn.example.com/storage/v1/object/public/flagship-images/a.webp']),
+    ).resolves.toBeUndefined();
+
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to delete flagship image(s):',
+      expect.any(Error),
+    );
+  });
+});
+
+describe('collectFlagshipImageUrls', () => {
+  const FLAGSHIP_PREFIX = 'https://cdn.example.com/storage/v1/object/public/flagship-images';
+  const LOCAL_BANNER = '/images/sacred-union/save-the-date.webp';
+
+  test('collects every image field stored in the flagship bucket', () => {
+    const urls = collectFlagshipImageUrls({
+      banner: { src: `${FLAGSHIP_PREFIX}/banner.webp`, mobile: { src: `${FLAGSHIP_PREFIX}/banner-mobile.webp` } },
+      ogImage: `${FLAGSHIP_PREFIX}/og.png`,
+      theme: { hero: { backdrop: `${FLAGSHIP_PREFIX}/backdrop.webp`, backdropMobile: `${FLAGSHIP_PREFIX}/backdrop-mobile.webp` } },
+      venue: { image: { src: `${FLAGSHIP_PREFIX}/venue.webp` } },
+      speakers: [{ image: `${FLAGSHIP_PREFIX}/speaker-1.webp` }, { image: `${FLAGSHIP_PREFIX}/speaker-2.webp` }],
+    });
+
+    expect(urls).toEqual([
+      `${FLAGSHIP_PREFIX}/banner.webp`,
+      `${FLAGSHIP_PREFIX}/banner-mobile.webp`,
+      `${FLAGSHIP_PREFIX}/og.png`,
+      `${FLAGSHIP_PREFIX}/backdrop.webp`,
+      `${FLAGSHIP_PREFIX}/backdrop-mobile.webp`,
+      `${FLAGSHIP_PREFIX}/venue.webp`,
+      `${FLAGSHIP_PREFIX}/speaker-1.webp`,
+      `${FLAGSHIP_PREFIX}/speaker-2.webp`,
+    ]);
+  });
+
+  test('filters out urls that are not in the flagship bucket', () => {
+    const urls = collectFlagshipImageUrls({
+      banner: { src: LOCAL_BANNER },
+      ogImage: `${FLAGSHIP_PREFIX}/og.png`,
+    });
+
+    expect(urls).toEqual([`${FLAGSHIP_PREFIX}/og.png`]);
+  });
+
+  test('tolerates missing/optional fields', () => {
+    const urls = collectFlagshipImageUrls({});
+
+    expect(urls).toEqual([]);
   });
 });

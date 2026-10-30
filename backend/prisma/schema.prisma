@@ -62,11 +62,54 @@ model Announcement {
   createdAt DateTime @default(now())
 }
 
-// Single-row table (id is always 1) for site-wide switches admins flip at runtime.
-// The frontend is a static export, so these can't be build-time flags.
-model SiteSettings {
-  id               Int      @id @default(1)
-  // Home carousel + flagship event pages are live. Off = the pre-launch default site.
-  flagshipReleased Boolean  @default(false)
-  updatedAt        DateTime @updatedAt
+// A flagship event's own marketing page at /<slug>/, with a home-carousel slide and
+// a ticket page. Content is admin-managed; `released`/`featuredOnHome` are flipped at
+// runtime (the frontend is a static export, so these can't be build-time flags —
+// visitors read them live, same reasoning the old SiteSettings singleton used).
+model FlagshipEvent {
+  id          Int    @id @default(autoincrement())
+  slug        String @unique
+  name        String
+  tagline     String
+  description String
+
+  /** 'save-the-date' | 'booking' — validated in the controller, not the DB. */
+  phase String
+
+  /** Shown on the home page hero carousel. */
+  featuredOnHome Boolean @default(false)
+  /** Page is public. Off = hidden from visitors; admins can still preview it. */
+  released       Boolean @default(false)
+
+  /** TryBooking event URL. Empty until booking opens. */
+  ticketUrl String @default("")
+  /** TryBooking event id (`data-eid`) for the booking widget. Empty until set. */
+  ticketEventId String @default("")
+
+  start     DateTime
+  end       DateTime
+  dateLabel String
+  timeLabel String
+
+  /** { name, address, mapUrl, notes: string[], image?: {src,alt,width,height} } */
+  venue Json
+  /** { src, alt, width, height, mobile?: {src,width,height} } */
+  banner Json
+  /** 1200x630 image used for link previews. */
+  ogImage String
+  /** { dark, onDark, light, onLight, primary, onPrimary, accent, hero: {...} } */
+  theme Json
+
+  /** { title, body }[] */
+  highlights Json @default("[]")
+  /** { name, title, topic?, image }[] */
+  speakers   Json @default("[]")
+  speakerPlaceholderCount Int @default(0)
+  /** { time, title, detail? }[] */
+  programme  Json @default("[]")
+  /** { question, answer }[] */
+  faqs       Json @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
