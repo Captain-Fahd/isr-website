@@ -66,6 +66,11 @@ export type FlagshipEvent = {
   featuredOnHome: boolean
   /** TryBooking event URL. Leave empty until booking opens. */
   ticketUrl: string
+  /**
+   * TryBooking event ID (`data-eid`) for the booking widget on
+   * /<slug>/tickets/. A placeholder is shown while empty.
+   */
+  ticketEventId: string
   /** ISO 8601 with Melbourne offset (AEDT is +11:00). */
   start: string
   end: string
