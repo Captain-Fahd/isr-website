@@ -26,6 +26,9 @@ export const sacredUnion: FlagshipEvent = {
   /** TryBooking event URL. Leave empty until booking opens. */
   ticketUrl: '',
 
+  /** TryBooking event ID (`data-eid`) for the booking widget on /sacred-union/tickets/. */
+  ticketEventId: '1662679',
+
   /** ISO 8601 with Melbourne offset (AEDT is +11:00). */
   start: '2026-11-28T13:30:00+11:00',
   end: '2026-11-28T19:30:00+11:00',
