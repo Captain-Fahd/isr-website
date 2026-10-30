@@ -1,11 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import type { EventPhase } from '@/lib/flagship/types'
 
 type Props = {
   phase: EventPhase
   ticketUrl: string
+  slug: string
+  ticketsOnSale: boolean
   className?: string
 }
 
@@ -25,7 +28,7 @@ function withRef(url: string, ref: string | null): string {
   }
 }
 
-export default function PrimaryCta({ phase, ticketUrl, className = '' }: Props) {
+export default function PrimaryCta({ phase, ticketUrl, slug, ticketsOnSale, className = '' }: Props) {
   const [ref, setRef] = useState<string | null>(null)
 
   useEffect(() => {
@@ -45,6 +48,14 @@ export default function PrimaryCta({ phase, ticketUrl, className = '' }: Props) 
       >
         Get tickets on TryBooking
       </a>
+    )
+  }
+
+  if (ticketsOnSale) {
+    return (
+      <Link href={`/${slug}/tickets/`} className={`${base} ${className}`}>
+        Get tickets
+      </Link>
     )
   }
 

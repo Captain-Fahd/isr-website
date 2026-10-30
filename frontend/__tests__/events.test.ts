@@ -24,6 +24,7 @@ function event(overrides: Partial<Event> & { id: number; date: string }): Event 
     description: 'Description',
     imageUrl: 'https://cdn.example.com/poster.webp',
     ticketUrl: null,
+    customUrl: null,
     ...overrides,
   }
 }

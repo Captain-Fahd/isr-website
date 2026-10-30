@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  eventHref,
   fetchEvents,
   formatEventSchedule,
   formatRecurrence,
@@ -29,10 +30,14 @@ function EventPreviewCard({
 }) {
   const { date, time } = formatEventSchedule(event)
   const recurrence = formatRecurrence(event)
+  const href = eventHref(event)
+  // A custom URL is an external/arbitrary destination, so it gets a plain anchor
+  // rather than Next's client-side Link.
+  const CardLink = event.customUrl ? 'a' : Link
 
   return (
-    <Link
-      href={`/events/${event.id}/`}
+    <CardLink
+      href={href}
       className="group flex shrink-0 flex-col overflow-hidden rounded-xl bg-isr-cream shadow-[0_1px_5px_rgba(91,11,5,0.1)] transition-shadow hover:shadow-[0_2px_7px_rgba(91,11,5,0.14)]"
       style={{ width: EVENT_CARD_WIDTH, height: EVENT_CARD_HEIGHT }}
     >
@@ -78,7 +83,7 @@ function EventPreviewCard({
           <ArrowRight />
         </span>
       </div>
-    </Link>
+    </CardLink>
   )
 }
 

@@ -6,7 +6,7 @@ import Footer from '@/components/Footer'
 import NewsletterSignup from '@/components/NewsletterSignup'
 import { CAMPUS } from '@/lib/campus'
 import { absoluteUrl, eventJsonLd, truncateMetaDescription } from '@/lib/seo'
-import { FLAGSHIP_EVENTS, getFlagshipEvent } from '@/lib/flagship'
+import { fetchFlagshipEvents, fetchFlagshipEventBySlug } from '@/lib/flagship'
 import { googleCalendarUrl, icsDataUri } from '@/lib/flagship/calendar'
 import { themeVars } from '@/lib/flagship/theme'
 import Countdown from '@/components/flagship/Countdown'
@@ -21,8 +21,13 @@ type Params = { slug: string }
 // Static export: only registered flagship slugs are built; anything else 404s.
 export const dynamicParams = false
 
-export function generateStaticParams(): Params[] {
-  return FLAGSHIP_EVENTS.map(({ slug }) => ({ slug }))
+export async function generateStaticParams(): Promise<Params[]> {
+  try {
+    const events = await fetchFlagshipEvents()
+    return events.map(({ slug }) => ({ slug }))
+  } catch {
+    return []
+  }
 }
 
 export async function generateMetadata({
@@ -31,7 +36,7 @@ export async function generateMetadata({
   params: Promise<Params>
 }): Promise<Metadata> {
   const { slug } = await params
-  const event = getFlagshipEvent(slug)
+  const event = await fetchFlagshipEventBySlug(slug)
   if (!event) return {}
 
   const pagePath = `/${event.slug}/`
@@ -76,11 +81,12 @@ export default async function FlagshipEventPage({
   params: Promise<Params>
 }) {
   const { slug } = await params
-  const event = getFlagshipEvent(slug)
+  const event = await fetchFlagshipEventBySlug(slug)
   if (!event) notFound()
 
   const pagePath = `/${event.slug}/`
   const isBooking = event.phase === 'booking' && Boolean(event.ticketUrl)
+  const ticketsLive = isBooking || event.ticketsOnSale
 
   const jsonLd = eventJsonLd({
     name: event.name,
@@ -93,7 +99,7 @@ export default async function FlagshipEventPage({
   })
 
   return (
-    <FlagshipReleaseGate>
+    <FlagshipReleaseGate slug={event.slug}>
     <div style={themeVars(event)} className="min-h-screen bg-(--su-light) text-(--su-on-light)">
       <script
         type="application/ld+json"
@@ -156,7 +162,12 @@ export default async function FlagshipEventPage({
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:gap-2">
-                <PrimaryCta phase={event.phase} ticketUrl={event.ticketUrl} />
+                <PrimaryCta
+                  phase={event.phase}
+                  ticketUrl={event.ticketUrl}
+                  slug={event.slug}
+                  ticketsOnSale={event.ticketsOnSale}
+                />
                 <a href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer" className={`${secondaryBtn} lg:min-h-9 lg:px-3 lg:py-2 lg:text-xs`}>
                   Add to Google Calendar
                 </a>
@@ -304,18 +315,25 @@ export default async function FlagshipEventPage({
           <div className="container-isr grid items-center gap-10 md:grid-cols-2">
             <div>
               <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-(--su-accent)">
-                {isBooking ? 'Don’t miss out' : 'Be first to know'}
+                {ticketsLive ? 'Don’t miss out' : 'Be first to know'}
               </p>
               <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-                {isBooking ? 'Secure your seat' : 'Tickets open soon on TryBooking'}
+                {ticketsLive ? 'Secure your seat' : 'Tickets open soon on TryBooking'}
               </h2>
               <p className="mb-6 text-lg opacity-85">
-                {isBooking
-                  ? 'Seats are limited — book through TryBooking today.'
+                {ticketsLive
+                  ? 'Seats are limited — book today.'
                   : 'Join our WhatsApp community or mailing list and we’ll message you the moment booking opens.'}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
-                {isBooking && <PrimaryCta phase={event.phase} ticketUrl={event.ticketUrl} />}
+                {ticketsLive && (
+                  <PrimaryCta
+                    phase={event.phase}
+                    ticketUrl={event.ticketUrl}
+                    slug={event.slug}
+                    ticketsOnSale={event.ticketsOnSale}
+                  />
+                )}
                 <a href={CAMPUS.whatsappUrl} target="_blank" rel="noopener noreferrer" className={secondaryBtn}>
                   Message us on WhatsApp
                 </a>
@@ -338,7 +356,14 @@ export default async function FlagshipEventPage({
       </main>
 
       <Footer />
-      <StickyCtaBar phase={event.phase} ticketUrl={event.ticketUrl} name={event.name} dateLabel={event.dateLabel} />
+      <StickyCtaBar
+        phase={event.phase}
+        ticketUrl={event.ticketUrl}
+        slug={event.slug}
+        ticketsOnSale={event.ticketsOnSale}
+        name={event.name}
+        dateLabel={event.dateLabel}
+      />
     </div>
     </FlagshipReleaseGate>
   )

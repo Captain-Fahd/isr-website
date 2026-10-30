@@ -677,46 +677,192 @@ Delete an announcement and its stored image (if any). **Admin only.**
 
 ---
 
-## Site Settings
+## Flagship Events
 
-Site-wide switches admins flip from the admin panel without a rebuild (the frontend is a static export, so it reads these at runtime). Stored as a single Postgres row; before an admin first saves, the defaults below are returned with `updatedAt: null`.
+A flagship event is a marketing landing page at `/<slug>/` (e.g. `/sacred-union/`) with its own ticket page, a home-carousel slide, and admin-managed content/images. Data is stored in Postgres (via Prisma); images are stored in Supabase Storage (`flagship-images` bucket). Read endpoints are **public**; create/update/delete/upload are **admin-only** (require `Authorization: Bearer <access_token>` with `app_metadata.role === "admin"`).
 
-| Field | Meaning |
-|---|---|
-| `flagshipReleased` | `true` shows the home page hero carousel and the flagship event pages (e.g. `/sacred-union/`). `false` (default) shows the plain home hero and hides flagship pages from the public. |
+`released` and `featuredOnHome` are read live by the frontend (the site is a static export, so these flip at runtime without a rebuild) — `GET /api/flagship-events` always returns every row, released or not, and the frontend decides what to show.
+
+A flagship event has the shape:
+
+```json
+{
+  "id": 1,
+  "slug": "sacred-union",
+  "name": "The Sacred Union",
+  "tagline": "Prepare for the future you pray for",
+  "description": "...",
+  "phase": "save-the-date",
+  "featuredOnHome": true,
+  "released": false,
+  "ticketUrl": "",
+  "ticketEventId": "1662679",
+  "start": "2026-11-28T13:30:00.000Z",
+  "end": "2026-11-28T19:30:00.000Z",
+  "dateLabel": "Saturday 28 November 2026",
+  "timeLabel": "1:30 pm – 7:30 pm",
+  "venue": {
+    "name": "RMIT Storey Hall",
+    "address": "...",
+    "mapUrl": "...",
+    "notes": ["..."],
+    "image": { "src": "...", "alt": "...", "width": 1024, "height": 576 }
+  },
+  "banner": { "src": "...", "alt": "...", "width": 1600, "height": 900, "mobile": { "src": "...", "width": 1290, "height": 2796 } },
+  "ogImage": "...",
+  "theme": {
+    "dark": "#5B0B05", "onDark": "#EAE3D8", "light": "#EAE3D8", "onLight": "#561610",
+    "primary": "#D43325", "onPrimary": "#FFFFFF", "accent": "#509589",
+    "hero": { "backdrop": "...", "backdropMobile": "...", "background": "...", "text": "#561610", "heading": "#561610" }
+  },
+  "highlights": [{ "title": "...", "body": "..." }],
+  "speakers": [{ "name": "...", "title": "...", "topic": "...", "image": "..." }],
+  "speakerPlaceholderCount": 3,
+  "programme": [{ "time": "...", "title": "...", "detail": "..." }],
+  "faqs": [{ "question": "...", "answer": "..." }],
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+```
+
+`phase` is one of `"save-the-date"` | `"booking"`. `venue.image`, `banner.mobile` and `theme.hero.backdropMobile` are optional. `speakers`, `highlights`, `programme`, `faqs` default to `[]`.
+
+`POST`/`PUT` take a **JSON** body with the full shape above (unlike `Event`/`Announcement`, a flagship event has too many images for one multipart request) — upload each image first via `POST /api/flagship-events/upload-image` and put the returned URL in the relevant field before saving.
 
 ---
 
-### `GET /api/settings`
+### `GET /api/flagship-events`
 
-Current settings. **Public.**
+List all flagship events, ordered by `start` ascending.
 
 **Response** `200 OK`
 ```json
-{ "data": { "flagshipReleased": false, "updatedAt": "2026-10-17T00:00:00.000Z" } }
+{ "data": [ { "id": 1, "slug": "sacred-union", "...": "..." } ] }
 ```
+
+**Error** `500` — `{ "error": "Failed to fetch flagship events" }`
 
 ---
 
-### `PUT /api/settings`
+### `GET /api/flagship-events/:slug`
 
-Update settings. **Admin only.** JSON body.
+Fetch a single flagship event by slug.
 
-**Body**
+**Response** `200 OK`
 ```json
-{ "flagshipReleased": true }
+{ "data": { "id": 1, "slug": "sacred-union", "...": "..." } }
 ```
 
-**Response** `200 OK` — the saved settings, same shape as `GET`.
+**Error** `404` — `{ "error": "Flagship event not found" }`
+
+---
+
+### `POST /api/flagship-events/upload-image`
+
+Upload one image and get back its Storage URL. **Admin only.** `multipart/form-data`.
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Form fields**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `image` | file | yes | Image mimetype only, max 5 MB. |
+
+**Response** `201 Created`
+```json
+{ "data": { "url": "https://<project>.supabase.co/storage/v1/object/public/flagship-images/..." } }
+```
 
 **Errors**
 
 | Status | Body |
 |---|---|
-| `400` | `{ "error": "flagshipReleased must be a boolean" }` |
+| `400` | `{ "error": "An image file is required" }` |
 | `401` | `{ "error": "Unauthorized" }` |
 | `403` | `{ "error": "Forbidden" }` |
-| `500` | `{ "error": "Failed to update settings" }` |
+| `500` | `{ "error": "Failed to upload image" }` |
+
+---
+
+### `POST /api/flagship-events`
+
+Create a flagship event. **Admin only.** JSON body — the full shape above, minus `id`/`createdAt`/`updatedAt`. `featuredOnHome`/`released` default to `false`; `ticketUrl`/`ticketEventId` default to `""`; `highlights`/`speakers`/`programme`/`faqs` default to `[]`; `speakerPlaceholderCount` defaults to `0`.
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Response** `201 Created` — the created event, same shape as `GET`.
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "<field> is required" }` |
+| `400` | `{ "error": "phase must be one of: save-the-date, booking" }` |
+| `400` | `{ "error": "A flagship event with that slug already exists" }` |
+| `401` | `{ "error": "Unauthorized" }` |
+| `403` | `{ "error": "Forbidden" }` |
+| `500` | `{ "error": "Failed to create flagship event" }` |
+
+---
+
+### `PUT /api/flagship-events/:id`
+
+Update a flagship event. **Admin only.** JSON body, all fields optional — only the provided fields are changed. Any image URL referenced by the previous version but not the new one is removed from Supabase Storage.
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Response** `200 OK` — the updated event, same shape as `GET`.
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "Invalid flagship event id" }` |
+| `400` | `{ "error": "phase must be one of: save-the-date, booking" }` |
+| `400` | `{ "error": "A flagship event with that slug already exists" }` |
+| `401` | `{ "error": "Unauthorized" }` |
+| `403` | `{ "error": "Forbidden" }` |
+| `404` | `{ "error": "Flagship event not found" }` |
+| `500` | `{ "error": "Failed to update flagship event" }` |
+
+---
+
+### `DELETE /api/flagship-events/:id`
+
+Delete a flagship event and every image it referenced. **Admin only.**
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <access_token>` |
+
+**Response** `200 OK`
+```json
+{ "data": { "id": 1 } }
+```
+
+**Errors**
+
+| Status | Body |
+|---|---|
+| `400` | `{ "error": "Invalid flagship event id" }` |
+| `401` | `{ "error": "Unauthorized" }` |
+| `403` | `{ "error": "Forbidden" }` |
+| `404` | `{ "error": "Flagship event not found" }` |
 
 ---
 

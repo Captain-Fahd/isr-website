@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { CAMPUS } from '@/lib/campus'
-import { FLAGSHIP_EVENTS, getFlagshipEvent } from '@/lib/flagship'
+import { fetchFlagshipEvents, fetchFlagshipEventBySlug } from '@/lib/flagship'
 import { googleCalendarUrl, icsDataUri } from '@/lib/flagship/calendar'
 import { themeVars } from '@/lib/flagship/theme'
 import HeroBackdrop from '@/components/flagship/HeroBackdrop'
@@ -17,8 +17,13 @@ type Params = { slug: string }
 // Static export: only registered flagship slugs are built; anything else 404s.
 export const dynamicParams = false
 
-export function generateStaticParams(): Params[] {
-  return FLAGSHIP_EVENTS.map(({ slug }) => ({ slug }))
+export async function generateStaticParams(): Promise<Params[]> {
+  try {
+    const events = await fetchFlagshipEvents()
+    return events.map(({ slug }) => ({ slug }))
+  } catch {
+    return []
+  }
 }
 
 export async function generateMetadata({
@@ -27,7 +32,7 @@ export async function generateMetadata({
   params: Promise<Params>
 }): Promise<Metadata> {
   const { slug } = await params
-  const event = getFlagshipEvent(slug)
+  const event = await fetchFlagshipEventBySlug(slug)
   if (!event) return {}
 
   const pagePath = `/${event.slug}/tickets/`
@@ -60,13 +65,13 @@ export default async function FlagshipTicketsPage({
   params: Promise<Params>
 }) {
   const { slug } = await params
-  const event = getFlagshipEvent(slug)
+  const event = await fetchFlagshipEventBySlug(slug)
   if (!event) notFound()
 
   const eventPath = `/${event.slug}/`
 
   return (
-    <FlagshipReleaseGate>
+    <FlagshipReleaseGate slug={event.slug}>
     <div style={themeVars(event)} className="min-h-screen bg-(--su-light) text-(--su-on-light)">
       <Navbar />
 
@@ -118,7 +123,10 @@ export default async function FlagshipTicketsPage({
                   know the moment tickets go live.
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <PrimaryCta phase={event.phase} ticketUrl={event.ticketUrl} />
+                  {/* This block only renders when there's no ticketEventId, so the
+                      widget isn't live here either — never send the visitor back to
+                      this same page. */}
+                  <PrimaryCta phase={event.phase} ticketUrl={event.ticketUrl} slug={event.slug} ticketsOnSale={false} />
                   <a href={CAMPUS.whatsappUrl} target="_blank" rel="noopener noreferrer" className={secondaryBtn}>
                     Message us on WhatsApp
                   </a>

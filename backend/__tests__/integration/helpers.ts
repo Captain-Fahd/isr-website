@@ -7,6 +7,7 @@ export async function resetDatabase() {
   assertDisposableDatabase('integration resetDatabase()');
   await prisma.event.deleteMany();
   await prisma.announcement.deleteMany();
+  await prisma.flagshipEvent.deleteMany();
 }
 
 export async function seedPublicData() {
@@ -21,6 +22,12 @@ export async function seedPublicData() {
 
 export async function seedEvent(data: Parameters<typeof prisma.event.create>[0]['data']) {
   return prisma.event.create({ data });
+}
+
+export async function seedFlagshipEvent(
+  data: Parameters<typeof prisma.flagshipEvent.create>[0]['data'],
+) {
+  return prisma.flagshipEvent.create({ data });
 }
 
 export async function disconnectPrisma() {

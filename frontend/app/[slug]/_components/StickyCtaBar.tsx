@@ -7,12 +7,14 @@ import type { EventPhase } from '@/lib/flagship/types'
 type Props = {
   phase: EventPhase
   ticketUrl: string
+  slug: string
+  ticketsOnSale: boolean
   name: string
   dateLabel: string
 }
 
 /** Phone-only bottom bar that appears once the hero CTA scrolls out of view. */
-export default function StickyCtaBar({ phase, ticketUrl, name, dateLabel }: Props) {
+export default function StickyCtaBar({ phase, ticketUrl, slug, ticketsOnSale, name, dateLabel }: Props) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -36,7 +38,13 @@ export default function StickyCtaBar({ phase, ticketUrl, name, dateLabel }: Prop
           <p className="truncate text-sm font-bold">{name}</p>
           <p className="truncate text-xs opacity-75">{dateLabel}</p>
         </div>
-        <PrimaryCta phase={phase} ticketUrl={ticketUrl} className="shrink-0 px-4 text-xs" />
+        <PrimaryCta
+          phase={phase}
+          ticketUrl={ticketUrl}
+          slug={slug}
+          ticketsOnSale={ticketsOnSale}
+          className="shrink-0 px-4 text-xs"
+        />
       </div>
     </div>
   )

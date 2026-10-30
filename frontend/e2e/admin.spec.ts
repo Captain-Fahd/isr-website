@@ -42,6 +42,13 @@ async function stubEmptyAdminLists(page: Page) {
       body: JSON.stringify({ data: [] }),
     })
   })
+  await page.route('**/api/flagship-events', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [] }),
+    })
+  })
 }
 
 async function fillLogin(page: Page, email: string, password: string) {
@@ -65,6 +72,12 @@ test.describe('Admin route guard', () => {
 
   test('redirects the announcements page to login when signed out', async ({ page }) => {
     await page.goto('/admin/announcements/')
+
+    await expect(page).toHaveURL(/\/admin\/login\/?$/)
+  })
+
+  test('redirects the flagship events page to login when signed out', async ({ page }) => {
+    await page.goto('/admin/flagship-events/')
 
     await expect(page).toHaveURL(/\/admin\/login\/?$/)
   })

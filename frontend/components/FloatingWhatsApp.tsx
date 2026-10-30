@@ -5,10 +5,9 @@ import { useEffect, useRef, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { siWhatsapp } from 'simple-icons'
 import { CAMPUS } from '@/lib/campus'
-import { FLAGSHIP_EVENTS } from '@/lib/flagship'
+import { useFlagshipEvents } from '@/lib/flagship'
 
-// Flagship event pages have their own sticky CTA bar along the bottom
-const HIDDEN_ON = ['/admin', '/contact', ...FLAGSHIP_EVENTS.map(({ slug }) => `/${slug}`)]
+const STATIC_HIDDEN_ON = ['/admin', '/contact']
 const COLLAPSED_KEY = 'isr:whatsapp-collapsed'
 const DISMISSED_KEY = 'isr:whatsapp-dismissed'
 // The button sits 16px from the edge, so a thumb starting on it only has
@@ -47,6 +46,9 @@ function WhatsappGlyph({ className }: { className: string }) {
 
 export default function FloatingWhatsApp() {
   const pathname = usePathname()
+  // Flagship event pages have their own sticky CTA bar along the bottom.
+  const { events } = useFlagshipEvents()
+  const hiddenOn = [...STATIC_HIDDEN_ON, ...events.map(({ slug }) => `/${slug}`)]
   // Storage is only readable on the client, so nothing renders until mount.
   const [mounted, setMounted] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -67,7 +69,7 @@ export default function FloatingWhatsApp() {
   }, [])
 
   if (!mounted || dismissed) return null
-  if (HIDDEN_ON.some((route) => pathname?.startsWith(route))) return null
+  if (hiddenOn.some((route) => pathname?.startsWith(route))) return null
 
   const toggleCollapsed = (value: boolean) => {
     setCollapsed(value)

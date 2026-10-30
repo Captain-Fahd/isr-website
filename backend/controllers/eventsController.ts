@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma";
 import { uploadEventImage, deleteEventImage } from "../lib/storage";
 import { parseSchedule, withSchedule } from "../lib/recurrence";
 
-function normalizeTicketUrl(value: unknown): string | null {
+function normalizeOptionalUrl(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed || null;
@@ -109,6 +109,7 @@ export const createEvent = async (req: Request, res: Response) => {
     date,
     description,
     ticketUrl,
+    customUrl,
     endDate,
     recurrenceFrequency,
     recurrenceInterval,
@@ -141,7 +142,8 @@ export const createEvent = async (req: Request, res: Response) => {
       data: {
         name,
         description,
-        ticketUrl: normalizeTicketUrl(ticketUrl),
+        ticketUrl: normalizeOptionalUrl(ticketUrl),
+        customUrl: normalizeOptionalUrl(customUrl),
         imageUrl,
         date: schedule.values.date!,
         endDate: schedule.values.endDate ?? null,
@@ -170,6 +172,7 @@ export const updateEvent = async (req: Request, res: Response) => {
     date,
     description,
     ticketUrl,
+    customUrl,
     endDate,
     recurrenceFrequency,
     recurrenceInterval,
@@ -212,7 +215,10 @@ export const updateEvent = async (req: Request, res: Response) => {
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
         ...(ticketUrl !== undefined && {
-          ticketUrl: normalizeTicketUrl(ticketUrl),
+          ticketUrl: normalizeOptionalUrl(ticketUrl),
+        }),
+        ...(customUrl !== undefined && {
+          customUrl: normalizeOptionalUrl(customUrl),
         }),
         ...schedule.values,
         imageUrl,

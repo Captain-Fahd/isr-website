@@ -15,6 +15,8 @@ export type Event = {
   imageUrl: string
   description: string
   ticketUrl: string | null
+  /** When set, "Learn More" / "View Details" link here instead of the internal event page. */
+  customUrl: string | null
   /** End of the first occurrence; null for a single-day event. */
   endDate?: string | null
   recurrenceFrequency?: RecurrenceFrequency | null
@@ -124,6 +126,11 @@ export function isEventPast(isoDate: string): boolean {
 export function displayOccurrence(event: Event): Occurrence {
   if (event.nextOccurrence) return event.nextOccurrence
   return { start: event.date, end: event.endDate ?? event.date }
+}
+
+/** Where "Learn More" / "View Details" should link to for this event. */
+export function eventHref(event: Event): string {
+  return event.customUrl || `/events/${event.id}/`
 }
 
 /** True once every occurrence of the event has finished. */
