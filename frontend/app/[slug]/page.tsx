@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import NewsletterSignup from '@/components/NewsletterSignup'
-import { CAMPUS } from '@/lib/campus'
 import { absoluteUrl, eventJsonLd, truncateMetaDescription } from '@/lib/seo'
 import { fetchFlagshipEvents, fetchFlagshipEventBySlug } from '@/lib/flagship'
 import { googleCalendarUrl, icsDataUri } from '@/lib/flagship/calendar'
@@ -12,6 +11,7 @@ import { themeVars } from '@/lib/flagship/theme'
 import Countdown from '@/components/flagship/Countdown'
 import PrimaryCta from './_components/PrimaryCta'
 import StickyCtaBar from './_components/StickyCtaBar'
+import TicketsCtaSection from './_components/TicketsCtaSection'
 import HeroBackdrop from '@/components/flagship/HeroBackdrop'
 import GeometricPattern from '@/components/flagship/GeometricPattern'
 import FlagshipReleaseGate from '@/components/flagship/FlagshipReleaseGate'
@@ -86,7 +86,6 @@ export default async function FlagshipEventPage({
 
   const pagePath = `/${event.slug}/`
   const isBooking = event.phase === 'booking' && Boolean(event.ticketUrl)
-  const ticketsLive = isBooking || event.ticketsOnSale
 
   const jsonLd = eventJsonLd({
     name: event.name,
@@ -313,40 +312,13 @@ export default async function FlagshipEventPage({
         >
           <GeometricPattern className="absolute inset-0 -z-10 h-full w-full text-(--su-accent) opacity-10" />
           <div className="container-isr grid items-center gap-10 md:grid-cols-2">
-            <div>
-              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-(--su-accent)">
-                {ticketsLive ? 'Don’t miss out' : 'Be first to know'}
-              </p>
-              <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-                {ticketsLive ? 'Secure your seat' : 'Tickets open soon on TryBooking'}
-              </h2>
-              <p className="mb-6 text-lg opacity-85">
-                {ticketsLive
-                  ? 'Seats are limited — book today.'
-                  : 'Join our WhatsApp community or mailing list and we’ll message you the moment booking opens.'}
-              </p>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                {ticketsLive && (
-                  <PrimaryCta
-                    phase={event.phase}
-                    ticketUrl={event.ticketUrl}
-                    slug={event.slug}
-                    ticketsOnSale={event.ticketsOnSale}
-                  />
-                )}
-                <a href={CAMPUS.whatsappUrl} target="_blank" rel="noopener noreferrer" className={secondaryBtn}>
-                  Message us on WhatsApp
-                </a>
-                <a
-                  href="https://www.instagram.com/islamicsocietyofrmit/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={secondaryBtn}
-                >
-                  Follow on Instagram
-                </a>
-              </div>
-            </div>
+            <TicketsCtaSection
+              slug={event.slug}
+              phase={event.phase}
+              ticketUrl={event.ticketUrl}
+              ticketsOnSale={event.ticketsOnSale}
+              secondaryBtnClassName={secondaryBtn}
+            />
             <NewsletterSignup
               title={`${event.name} updates`}
               description="Get an email when tickets go on sale and speakers are announced."
