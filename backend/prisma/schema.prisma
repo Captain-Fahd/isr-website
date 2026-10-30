@@ -85,6 +85,8 @@ model FlagshipEvent {
   ticketUrl String @default("")
   /** TryBooking event id (`data-eid`) for the booking widget. Empty until set. */
   ticketEventId String @default("")
+  /** Switches the hero/CTA buttons from the external "Notify me" link to the internal /<slug>/tickets/ page. */
+  ticketsOnSale Boolean @default(false)
 
   start     DateTime
   end       DateTime

@@ -74,6 +74,8 @@ export type FlagshipEvent = {
    * /<slug>/tickets/. A placeholder is shown while empty.
    */
   ticketEventId: string
+  /** Switches the CTA buttons from the external "Notify me" link to the internal /<slug>/tickets/ page. */
+  ticketsOnSale: boolean
   /** ISO 8601 with Melbourne offset (AEDT is +11:00). */
   start: string
   end: string

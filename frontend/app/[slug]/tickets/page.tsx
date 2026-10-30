@@ -123,7 +123,10 @@ export default async function FlagshipTicketsPage({
                   know the moment tickets go live.
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <PrimaryCta phase={event.phase} ticketUrl={event.ticketUrl} />
+                  {/* This block only renders when there's no ticketEventId, so the
+                      widget isn't live here either — never send the visitor back to
+                      this same page. */}
+                  <PrimaryCta phase={event.phase} ticketUrl={event.ticketUrl} slug={event.slug} ticketsOnSale={false} />
                   <a href={CAMPUS.whatsappUrl} target="_blank" rel="noopener noreferrer" className={secondaryBtn}>
                     Message us on WhatsApp
                   </a>

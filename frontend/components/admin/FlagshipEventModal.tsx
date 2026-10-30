@@ -109,6 +109,7 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
   const [released, setReleased] = useState(event?.released ?? false)
   const [ticketUrl, setTicketUrl] = useState(event?.ticketUrl ?? '')
   const [ticketEventId, setTicketEventId] = useState(event?.ticketEventId ?? '')
+  const [ticketsOnSale, setTicketsOnSale] = useState(event?.ticketsOnSale ?? false)
   const [start, setStart] = useState(event ? toDatetimeLocalValue(event.start) : '')
   const [end, setEnd] = useState(event ? toDatetimeLocalValue(event.end) : '')
   const [dateLabel, setDateLabel] = useState(event?.dateLabel ?? '')
@@ -137,6 +138,7 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
     setReleased(event?.released ?? false)
     setTicketUrl(event?.ticketUrl ?? '')
     setTicketEventId(event?.ticketEventId ?? '')
+    setTicketsOnSale(event?.ticketsOnSale ?? false)
     setStart(event ? toDatetimeLocalValue(event.start) : '')
     setEnd(event ? toDatetimeLocalValue(event.end) : '')
     setDateLabel(event?.dateLabel ?? '')
@@ -188,6 +190,7 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
         released,
         ticketUrl,
         ticketEventId,
+        ticketsOnSale,
         start: fromDatetimeLocalValue(start),
         end: fromDatetimeLocalValue(end),
         dateLabel,
@@ -288,7 +291,17 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
                 <Switch checked={released} onCheckedChange={setReleased} id="fe-released" />
                 <Label htmlFor="fe-released">Released (live)</Label>
               </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={ticketsOnSale} onCheckedChange={setTicketsOnSale} id="fe-tickets-on-sale" />
+                <Label htmlFor="fe-tickets-on-sale">Tickets on sale</Label>
+              </div>
             </div>
+            {ticketsOnSale && (
+              <p className="text-xs text-muted-foreground">
+                CTA buttons will link to /{slug || '<slug>'}/tickets/ instead of the external &quot;Notify
+                me&quot; link.
+              </p>
+            )}
           </Fieldset>
 
           <Fieldset title="Schedule & Venue">
