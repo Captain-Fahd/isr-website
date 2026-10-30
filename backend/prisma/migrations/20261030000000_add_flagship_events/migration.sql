@@ -68,19 +68,19 @@ SELECT
       "Prayer space available on site"
     ],
     "image": {
-      "src": "__VENUE_IMAGE_URL__",
+      "src": "https://fmulogrxdtkmdrhhcldz.supabase.co/storage/v1/object/public/flagship-images/sacred-union/venue.webp",
       "alt": "Storey Hall auditorium at RMIT",
       "width": 1024,
       "height": 576
     }
   }'::jsonb,
   '{
-    "src": "__BANNER_URL__",
+    "src": "https://fmulogrxdtkmdrhhcldz.supabase.co/storage/v1/object/public/flagship-images/sacred-union/banner.webp",
     "alt": "Save the date — The Sacred Union: The Marriage Conference. Renowned speakers, lectures, men’s & women’s segment.",
     "width": 1600,
     "height": 900
   }'::jsonb,
-  '__OG_IMAGE_URL__',
+  'https://fmulogrxdtkmdrhhcldz.supabase.co/storage/v1/object/public/flagship-images/sacred-union/og-image.png',
   '{
     "dark": "#5B0B05",
     "onDark": "#EAE3D8",
@@ -90,8 +90,8 @@ SELECT
     "onPrimary": "#FFFFFF",
     "accent": "#509589",
     "hero": {
-      "backdrop": "__BACKDROP_URL__",
-      "backdropMobile": "__BACKDROP_MOBILE_URL__",
+      "backdrop": "https://fmulogrxdtkmdrhhcldz.supabase.co/storage/v1/object/public/flagship-images/sacred-union/backdrop.webp",
+      "backdropMobile": "https://fmulogrxdtkmdrhhcldz.supabase.co/storage/v1/object/public/flagship-images/sacred-union/backdrop-mobile.webp",
       "text": "#561610",
       "heading": "#561610",
       "background": "radial-gradient(60% 45% at 0% 0%, rgb(255 255 255 / 0.95), transparent 70%), radial-gradient(45% 35% at 100% 0%, color-mix(in srgb, var(--su-dark) 30%, transparent), transparent 75%), radial-gradient(30% 45% at 100% 65%, color-mix(in srgb, var(--su-dark) 25%, transparent), transparent 75%), radial-gradient(45% 7rem at 0% 100%, var(--su-dark), transparent), linear-gradient(to bottom, color-mix(in srgb, var(--su-dark) 8%, var(--su-light)) 0%, color-mix(in srgb, var(--su-light), white 40%) 35%, color-mix(in srgb, var(--su-light), white 25%) 55%, color-mix(in srgb, var(--su-dark) 25%, var(--su-light)) calc(100% - 14rem), color-mix(in srgb, var(--su-dark) 40%, var(--su-light)) calc(100% - 6rem), var(--su-dark) 100%)"
