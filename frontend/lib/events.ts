@@ -133,6 +133,25 @@ export function eventHref(event: Event): string {
   return event.customUrl || `/events/${event.id}/`
 }
 
+/**
+ * Shell page served for /events/<id>/ URLs that weren't pre-rendered at build time
+ * (events created after the last deploy). See public/.htaccess and EventDetail.tsx.
+ */
+export const LIVE_EVENT_SHELL_PATH = '/events/live/'
+
+/**
+ * The event ID in an /events/<id>/ pathname, or null for any other path.
+ * On the shell page itself an `?id=` query is accepted too, so it can be linked to directly.
+ */
+export function parseEventIdFromLocation(pathname: string, search = ''): number | null {
+  const match = /^\/events\/(\d+)\/?$/.exec(pathname)
+  const onShell = pathname.replace(/\/?$/, '/') === LIVE_EVENT_SHELL_PATH
+  const raw = match?.[1] ?? (onShell ? new URLSearchParams(search).get('id') : null)
+  if (!raw || !/^\d+$/.test(raw)) return null
+  const id = Number(raw)
+  return Number.isSafeInteger(id) && id > 0 ? id : null
+}
+
 /** True once every occurrence of the event has finished. */
 export function isEventOver(event: Event): boolean {
   if (event.nextOccurrence !== undefined) return event.nextOccurrence === null

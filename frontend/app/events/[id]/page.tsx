@@ -1,19 +1,9 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { ArrowRight } from '@/components/Icons'
-import LikeButton from '@/components/LikeButton'
-import {
-  describeSchedule,
-  displayOccurrence,
-  fetchEventById,
-  fetchEvents,
-  formatEventSchedule,
-  isEventOver,
-} from '@/lib/events'
+import EventDetail from '@/components/EventDetail'
+import { fetchEventById, fetchEvents } from '@/lib/events'
 import {
   DEFAULT_OG_IMAGE,
   absoluteUrl,
@@ -94,10 +84,6 @@ export default async function EventDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  const { date, time } = formatEventSchedule(event)
-  const past = isEventOver(event)
-  const scheduleNote = describeSchedule(event)
-  const occurrence = displayOccurrence(event)
   const jsonLd = eventJsonLd({
     name: event.name,
     description: event.description,
@@ -118,81 +104,8 @@ export default async function EventDetailPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Navbar />
-
-      <main className="py-16 px-4 sm:py-20">
-        <div className="container-isr max-w-3xl mx-auto">
-          <Link
-            href="/events/"
-            className="mb-8 inline-flex min-h-11 items-center text-sm font-semibold text-isr-dark-red hover:text-isr-turquoise transition-colors"
-          >
-            ← Back to Events
-          </Link>
-
-          <article className="overflow-hidden rounded-2xl bg-white shadow-[0_16px_40px_rgba(91,11,5,0.1)] ring-1 ring-black/5">
-            {event.imageUrl && (
-              <div className="w-full bg-isr-cream">
-                <Image
-                  src={event.imageUrl}
-                  alt={`${event.name} poster`}
-                  width={0}
-                  height={0}
-                  sizes="(max-width: 768px) 100vw, 768px"
-                  className="h-auto w-full"
-                  style={{ width: '100%', height: 'auto' }}
-                  priority
-                />
-              </div>
-            )}
-
-            <div className="p-6 sm:p-10">
-              <div className="mb-4 flex flex-wrap items-center gap-3">
-                <time
-                  dateTime={occurrence.start}
-                  className="text-sm font-semibold uppercase tracking-[0.14em] text-isr-dark-red"
-                >
-                  {date}
-                </time>
-                <span className="text-sm text-gray-500">{time}</span>
-                {past && (
-                  <span className="rounded-full bg-isr-light-blue/25 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-isr-dark-red">
-                    Past
-                  </span>
-                )}
-              </div>
-
-              <h1 className="mb-6 text-3xl font-bold text-isr-dark-red sm:text-4xl">{event.name}</h1>
-
-              {scheduleNote && (
-                <p className="mb-6 rounded-lg bg-isr-cream px-4 py-3 text-sm font-medium text-isr-dark-red">
-                  {scheduleNote}
-                </p>
-              )}
-
-              <p className="mb-8 text-lg leading-relaxed text-gray-700 whitespace-pre-wrap">{event.description}</p>
-
-              <div className="flex flex-wrap items-center gap-4">
-                {event.ticketUrl && (
-                  <a
-                    href={event.ticketUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex min-h-11 items-center rounded-lg bg-isr-turquoise px-8 py-3 font-semibold text-white transition-colors hover:bg-isr-dark-red"
-                  >
-                    Get Tickets
-                    <ArrowRight />
-                  </a>
-                )}
-                <LikeButton
-                  eventId={event.id}
-                  eventName={event.name}
-                  likeCount={event.likeCount ?? 0}
-                />
-              </div>
-            </div>
-          </article>
-        </div>
-      </main>
-
+      {/* Re-fetches live on mount, so admin edits show without a rebuild. */}
+      <EventDetail initialEvent={event} />
       <Footer />
     </div>
   )
