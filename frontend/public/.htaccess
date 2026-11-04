@@ -1,3 +1,14 @@
+# Events created in the admin panel after the last build have no pre-rendered
+# /events/<id>/ page. Serve the generic live shell for them instead (URL unchanged);
+# it loads the event from the API in the browser. Pre-rendered events still match
+# their real directory first, so this only kicks in for missing ones.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^events/[0-9]+/?$ /events/live/index.html [L]
+</IfModule>
+
 # Serve the Next.js static-export 404 page (app/not-found.tsx -> out/404.html)
 # for any path that doesn't match a file or directory.
 ErrorDocument 404 /404.html

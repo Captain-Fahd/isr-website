@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import NotFoundEventFallback from '@/components/NotFoundEventFallback'
 
 export const metadata: Metadata = {
   title: 'Page Not Found',
@@ -27,64 +28,66 @@ export default function NotFound() {
     <div className="min-h-screen bg-gradient-to-b from-isr-cream via-white to-isr-yellow/30">
       <Navbar />
 
-      <main>
-        {/* Page Header */}
-        <section className="px-4 pb-16 pt-24 sm:pt-28">
-          <div className="container-isr text-center">
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
-              Error 404
-            </p>
-            <h1
-              className="mb-5 text-4xl font-bold text-isr-dark-red md:text-5xl"
-              style={{ textWrap: 'balance' } as React.CSSProperties}
-            >
-              We couldn&rsquo;t find that page
-            </h1>
-            <div className="mx-auto mb-8 h-1 w-16 bg-isr-bright-red" />
-            <p className="mx-auto max-w-2xl text-lg leading-relaxed text-gray-600">
-              The page you were after may have moved, been renamed, or never existed. Let&rsquo;s
-              get you back on track.
-            </p>
-
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link href="/" className={primaryCtaClass}>
-                Back to home
-              </Link>
-              <Link href="/contact/" className={secondaryCtaClass}>
-                Report a broken link
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* Suggested Pages */}
-        <section className="bg-white px-4 py-16 sm:py-20">
-          <div className="container-isr">
-            <div className="mx-auto max-w-3xl">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
-                Popular pages
+      <NotFoundEventFallback>
+        <main>
+          {/* Page Header */}
+          <section className="px-4 pb-16 pt-24 sm:pt-28">
+            <div className="container-isr text-center">
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-isr-dark-red">
+                Error 404
               </p>
-              <h2 className="mb-8 text-2xl font-bold text-isr-dark-red">
-                You might be looking for
-              </h2>
+              <h1
+                className="mb-5 text-4xl font-bold text-isr-dark-red md:text-5xl"
+                style={{ textWrap: 'balance' } as React.CSSProperties}
+              >
+                We couldn&rsquo;t find that page
+              </h1>
+              <div className="mx-auto mb-8 h-1 w-16 bg-isr-bright-red" />
+              <p className="mx-auto max-w-2xl text-lg leading-relaxed text-gray-600">
+                The page you were after may have moved, been renamed, or never existed. Let&rsquo;s
+                get you back on track.
+              </p>
 
-              <ul className="grid gap-4 sm:grid-cols-2">
-                {SUGGESTED_LINKS.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="flex h-full flex-col rounded-lg border border-isr-light-blue/40 bg-isr-cream/30 p-5 transition-colors hover:border-isr-turquoise hover:bg-isr-cream"
-                    >
-                      <span className="mb-1 font-semibold text-isr-dark-red">{link.label}</span>
-                      <span className="text-sm leading-relaxed text-gray-600">{link.blurb}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Link href="/" className={primaryCtaClass}>
+                  Back to home
+                </Link>
+                <Link href="/contact/" className={secondaryCtaClass}>
+                  Report a broken link
+                </Link>
+              </div>
             </div>
-          </div>
-        </section>
-      </main>
+          </section>
+
+          {/* Suggested Pages */}
+          <section className="bg-white px-4 py-16 sm:py-20">
+            <div className="container-isr">
+              <div className="mx-auto max-w-3xl">
+                <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-isr-turquoise">
+                  Popular pages
+                </p>
+                <h2 className="mb-8 text-2xl font-bold text-isr-dark-red">
+                  You might be looking for
+                </h2>
+
+                <ul className="grid gap-4 sm:grid-cols-2">
+                  {SUGGESTED_LINKS.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="flex h-full flex-col rounded-lg border border-isr-light-blue/40 bg-isr-cream/30 p-5 transition-colors hover:border-isr-turquoise hover:bg-isr-cream"
+                      >
+                        <span className="mb-1 font-semibold text-isr-dark-red">{link.label}</span>
+                        <span className="text-sm leading-relaxed text-gray-600">{link.blurb}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+        </main>
+      </NotFoundEventFallback>
 
       <Footer />
     </div>

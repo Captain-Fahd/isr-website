@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import {
+  parseEventIdFromLocation,
   describeSchedule,
   displayOccurrence,
   formatEventDate,
@@ -429,5 +430,28 @@ describe('describeSchedule', () => {
     expect(describeSchedule(multiDayRecurring)).toBe(
       'Runs Thursday 13 August 2026 to Sunday 16 August 2026 · every month',
     )
+  })
+})
+
+describe('parseEventIdFromLocation', () => {
+  test('reads the ID from an event detail path, with or without a trailing slash', () => {
+    expect(parseEventIdFromLocation('/events/42/')).toBe(42)
+    expect(parseEventIdFromLocation('/events/42')).toBe(42)
+  })
+
+  test('accepts an ?id= query only on the live shell page', () => {
+    expect(parseEventIdFromLocation('/events/live/', '?id=7')).toBe(7)
+    expect(parseEventIdFromLocation('/events/live', '?id=7')).toBe(7)
+    expect(parseEventIdFromLocation('/about/', '?id=7')).toBeNull()
+  })
+
+  test('rejects anything that is not a positive integer event path', () => {
+    expect(parseEventIdFromLocation('/events/')).toBeNull()
+    expect(parseEventIdFromLocation('/events/live/')).toBeNull()
+    expect(parseEventIdFromLocation('/events/abc/')).toBeNull()
+    expect(parseEventIdFromLocation('/events/0/')).toBeNull()
+    expect(parseEventIdFromLocation('/events/12/extra/')).toBeNull()
+    expect(parseEventIdFromLocation('/events/live/', '?id=1e3')).toBeNull()
+    expect(parseEventIdFromLocation('/sacred-union/')).toBeNull()
   })
 })
