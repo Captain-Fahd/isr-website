@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: '/admin/events', label: 'Events' },
   { href: '/admin/announcements', label: 'Announcements' },
   { href: '/admin/flagship-events', label: 'Flagship Events' },
+  { href: '/admin/connect-page', label: 'Connect Page' },
 ]
 
 export default function AdminProtectedLayout({

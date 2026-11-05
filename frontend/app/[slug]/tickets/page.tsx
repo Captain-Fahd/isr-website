@@ -11,6 +11,7 @@ import HeroBackdrop from '@/components/flagship/HeroBackdrop'
 import FlagshipReleaseGate from '@/components/flagship/FlagshipReleaseGate'
 import PrimaryCta from '../_components/PrimaryCta'
 import TryBookingWidget from '../_components/TryBookingWidget'
+import TicketsBelowCue from '../_components/TicketsBelowCue'
 
 type Params = { slug: string }
 
@@ -77,7 +78,7 @@ export default async function FlagshipTicketsPage({
 
       <main>
         {/* ── Header ──────────────────────────────────────────────── */}
-        <section className="relative isolate overflow-hidden bg-(--su-light) bg-(image:--su-hero-bg) px-4 pb-16 pt-28 text-(--su-hero-text) sm:pt-32">
+        <section className="relative isolate overflow-hidden bg-(--su-light) bg-(image:--su-hero-bg) px-4 pb-16 pt-14 text-(--su-hero-text) sm:pt-24">
           <HeroBackdrop hero={event.theme.hero} />
 
           <div className="container-isr">
@@ -92,7 +93,7 @@ export default async function FlagshipTicketsPage({
                 Tickets
               </p>
               <h1
-                className="mb-4 text-4xl font-bold leading-tight text-(--su-hero-heading) sm:text-5xl"
+                className="mb-4 text-4xl font-semibold leading-tight text-(--su-hero-heading) sm:text-6xl sm:font-bold"
                 style={{ textWrap: 'balance' } as React.CSSProperties}
               >
                 {event.name}
@@ -103,6 +104,10 @@ export default async function FlagshipTicketsPage({
                 {event.venue.name} · {event.venue.address}
               </p>
             </div>
+
+            {/* Mobile-only cue: on small screens the booking widget sits below
+                the fold, so nudge visitors to keep scrolling. */}
+            <TicketsBelowCue />
           </div>
         </section>
 
