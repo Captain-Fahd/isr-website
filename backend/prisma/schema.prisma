@@ -115,3 +115,23 @@ model FlagshipEvent {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// A single unlisted page (not linked from the navbar or home page) with a title,
+// intro and a list of CTA buttons — e.g. "Feedback" and "Ask the Sheikh" forms.
+// Singleton row (id is always 1), same "admin toggles, frontend reads live" pattern
+// as FlagshipEvent.released: the site is a static export, so visibility can't be a
+// build-time flag.
+model CommunityFormsPage {
+  id Int @id @default(1)
+
+  /** Page is public. Off = visiting the URL shows a not-found page. */
+  enabled Boolean @default(false)
+
+  title String @default("")
+  intro String @default("")
+
+  /** { label, url }[] — rendered as buttons in order, admin can add/remove/reorder. */
+  buttons Json @default("[]")
+
+  updatedAt DateTime @updatedAt
+}

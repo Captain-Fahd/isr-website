@@ -2,6 +2,7 @@ import { API_BASE_URL } from '@/lib/api'
 import type { Event } from '@/lib/events'
 import type { Announcement } from '@/lib/announcements'
 import type { FlagshipEvent } from '@/lib/flagship'
+import type { CommunityFormsPage } from '@/lib/communityFormsPage'
 
 function authHeaders(token: string): HeadersInit {
   return { Authorization: `Bearer ${token}` }
@@ -170,4 +171,25 @@ export async function uploadFlagshipImage(token: string, file: File): Promise<st
   const json = await res.json()
   if (!res.ok) throw new Error(json.error ?? 'Failed to upload image')
   return (json.data as { url: string }).url
+}
+
+export async function fetchCommunityFormsPageAdmin(): Promise<CommunityFormsPage> {
+  const res = await fetch(`${API_BASE_URL}/api/community-forms-page`, { cache: 'no-store' })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Failed to fetch community forms page')
+  return json.data as CommunityFormsPage
+}
+
+export async function updateCommunityFormsPage(
+  token: string,
+  payload: Partial<CommunityFormsPage>,
+): Promise<CommunityFormsPage> {
+  const res = await fetch(`${API_BASE_URL}/api/community-forms-page`, {
+    method: 'PUT',
+    headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Failed to update community forms page')
+  return json.data as CommunityFormsPage
 }

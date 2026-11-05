@@ -8,6 +8,7 @@ import sponsorshipRouter from './routes/sponsorship';
 import weatherRouter from './routes/weather';
 import announcementsRouter from './routes/announcements';
 import flagshipEventsRouter from './routes/flagshipEvents';
+import communityFormsPageRouter from './routes/communityFormsPage';
 import { healthCheck } from './controllers/healthController';
 
 export function createApp() {
@@ -25,6 +26,7 @@ export function createApp() {
   app.use('/api/weather', weatherRouter);
   app.use('/api/announcements', announcementsRouter);
   app.use('/api/flagship-events', flagshipEventsRouter);
+  app.use('/api/community-forms-page', communityFormsPageRouter);
 
   return app;
 }
