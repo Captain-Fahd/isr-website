@@ -12,6 +12,7 @@ import Countdown from '@/components/flagship/Countdown'
 import PrimaryCta from './_components/PrimaryCta'
 import StickyCtaBar from './_components/StickyCtaBar'
 import TicketsCtaSection from './_components/TicketsCtaSection'
+import SpeakersSection from './_components/SpeakersSection'
 import HeroBackdrop from '@/components/flagship/HeroBackdrop'
 import GeometricPattern from '@/components/flagship/GeometricPattern'
 import FlagshipReleaseGate from '@/components/flagship/FlagshipReleaseGate'
@@ -202,25 +203,13 @@ export default async function FlagshipEventPage({
           </div>
         </section>
 
-        {event.speakers.length > 0 && (
-          <section className="bg-white/50 px-4 py-16 sm:py-20">
-            <div className="container-isr">
-              <SectionHeading eyebrow="Speakers" title="Who you’ll hear from" />
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {event.speakers.map((speaker) => (
-                  <article key={speaker.name} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-(--su-on-light)/10">
-                    <Image src={speaker.image} alt={speaker.name} width={600} height={600} className="aspect-square w-full object-cover" />
-                    <div className="p-5">
-                      <h3 className="text-lg font-semibold">{speaker.name}</h3>
-                      <p className="text-sm opacity-75">{speaker.title}</p>
-                      {speaker.topic && <p className="mt-2 text-sm font-medium text-(--su-accent)">{speaker.topic}</p>}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+        <SpeakersSection
+          slug={event.slug}
+          showSpeakers={event.showSpeakers}
+          speakers={event.speakers}
+          speakerPlaceholderCount={event.speakerPlaceholderCount}
+          heading={<SectionHeading eyebrow="Speakers" title="Who you’ll hear from" />}
+        />
 
         {event.programme.length > 0 && (
           <section className="px-4 py-16 sm:py-20">

@@ -167,6 +167,7 @@ test('createFlagshipEvent creates with defaults applied', async () => {
                 ticketUrl: '',
                 ticketEventId: '',
                 highlights: [],
+                showSpeakers: false,
                 speakers: [],
                 speakerPlaceholderCount: 0,
                 programme: [],

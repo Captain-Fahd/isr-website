@@ -102,6 +102,7 @@ export const createFlagshipEvent = async (req: Request, res: Response) => {
         ogImage: body.ogImage,
         theme: body.theme,
         highlights: body.highlights ?? [],
+        showSpeakers: Boolean(body.showSpeakers),
         speakers: body.speakers ?? [],
         speakerPlaceholderCount: body.speakerPlaceholderCount ?? 0,
         programme: body.programme ?? [],
@@ -158,6 +159,7 @@ export const updateFlagshipEvent = async (req: Request, res: Response) => {
         ...(body.ogImage !== undefined && { ogImage: body.ogImage }),
         ...(body.theme !== undefined && { theme: body.theme }),
         ...(body.highlights !== undefined && { highlights: body.highlights }),
+        ...(body.showSpeakers !== undefined && { showSpeakers: Boolean(body.showSpeakers) }),
         ...(body.speakers !== undefined && { speakers: body.speakers }),
         ...(body.speakerPlaceholderCount !== undefined && {
           speakerPlaceholderCount: body.speakerPlaceholderCount,

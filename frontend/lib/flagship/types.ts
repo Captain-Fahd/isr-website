@@ -102,8 +102,10 @@ export type FlagshipEvent = {
   ogImage: string
   theme: EventTheme
   highlights: { title: string; body: string }[]
-  /** Hidden while empty. */
+  /** Show the speakers section. Off = the whole section is hidden. */
+  showSpeakers: boolean
   speakers: Speaker[]
+  /** Total speaker slots; any not filled by `speakers` show as "To be announced". */
   speakerPlaceholderCount: number
   /** Hidden while empty. */
   programme: ProgrammeItem[]
