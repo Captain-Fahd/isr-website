@@ -57,7 +57,7 @@ export default function SpeakersSection({
               key={`${speaker.name}-${index}`}
               className="h-full overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-(--su-on-light)/10"
             >
-              {speaker.image ? (
+              {speaker.image?.trim() ? (
                 <Image
                   src={speaker.image}
                   alt={speaker.name}

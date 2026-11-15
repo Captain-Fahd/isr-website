@@ -104,8 +104,11 @@ model FlagshipEvent {
 
   /** { title, body }[] */
   highlights Json @default("[]")
+  /** Show the speakers section on the event page. Off = the whole section is hidden. */
+  showSpeakers Boolean @default(false)
   /** { name, title, topic?, image }[] */
   speakers   Json @default("[]")
+  /** Total speaker slots; any not filled by `speakers` show as "To be announced". */
   speakerPlaceholderCount Int @default(0)
   /** { time, title, detail? }[] */
   programme  Json @default("[]")

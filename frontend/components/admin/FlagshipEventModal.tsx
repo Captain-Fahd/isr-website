@@ -97,6 +97,25 @@ function Fieldset({ title, children }: { title: string; children: React.ReactNod
   )
 }
 
+/** Preview of a speaker's card photo — a silhouette when no photo has been uploaded, matching the public page. */
+function SpeakerThumb({ image, name }: { image: string; name: string }) {
+  if (image?.trim()) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={image} alt={name || 'Speaker photo'} className="size-16 shrink-0 rounded-md object-cover" />
+  }
+  return (
+    <div
+      className="flex size-16 shrink-0 items-end justify-center overflow-hidden rounded-md bg-muted"
+      title="No photo — a silhouette will be shown"
+    >
+      <svg viewBox="0 0 100 100" className="h-4/5 w-4/5 fill-muted-foreground opacity-40" aria-hidden="true">
+        <circle cx="50" cy="36" r="20" />
+        <path d="M10 100c0-24 18-40 40-40s40 16 40 40z" />
+      </svg>
+    </div>
+  )
+}
+
 export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
   const isEdit = event !== null
 
@@ -119,6 +138,7 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
   const [ogImage, setOgImage] = useState(event?.ogImage ?? '')
   const [theme, setTheme] = useState<FlagshipEvent['theme']>(event?.theme ?? emptyTheme)
   const [highlights, setHighlights] = useState<Highlight[]>(event?.highlights ?? [])
+  const [showSpeakers, setShowSpeakers] = useState(event?.showSpeakers ?? false)
   const [speakers, setSpeakers] = useState<Speaker[]>(event?.speakers ?? [])
   const [speakerPlaceholderCount, setSpeakerPlaceholderCount] = useState(
     event?.speakerPlaceholderCount ?? 0,
@@ -148,6 +168,7 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
     setOgImage(event?.ogImage ?? '')
     setTheme(event?.theme ?? emptyTheme)
     setHighlights(event?.highlights ?? [])
+    setShowSpeakers(event?.showSpeakers ?? false)
     setSpeakers(event?.speakers ?? [])
     setSpeakerPlaceholderCount(event?.speakerPlaceholderCount ?? 0)
     setProgramme(event?.programme ?? [])
@@ -200,6 +221,7 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
         ogImage,
         theme,
         highlights,
+        showSpeakers,
         speakers,
         speakerPlaceholderCount,
         programme,
@@ -516,20 +538,33 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
           </Fieldset>
 
           <Fieldset title="Speakers">
+            <div className="flex items-center gap-2">
+              <Switch checked={showSpeakers} onCheckedChange={setShowSpeakers} id="fe-show-speakers" />
+              <Label htmlFor="fe-show-speakers">Show speakers section</Label>
+            </div>
+            {!showSpeakers && (
+              <p className="text-xs text-muted-foreground">
+                The speakers section is hidden from the event page. Speakers entered below are kept.
+              </p>
+            )}
             <div className="space-y-1.5">
-              <Label htmlFor="fe-speaker-placeholders">Placeholder count (shown while `speakers` is empty)</Label>
+              <Label htmlFor="fe-speaker-placeholders">Number of speakers</Label>
               <Input
                 id="fe-speaker-placeholders"
                 type="number"
                 min={0}
                 value={speakerPlaceholderCount}
-                onChange={(e) => setSpeakerPlaceholderCount(Number(e.target.value) || 0)}
+                onChange={(e) => setSpeakerPlaceholderCount(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
                 className="w-24"
               />
+              <p className="text-xs text-muted-foreground">
+                Slots not filled by a speaker below show as &quot;To be announced&quot;.
+              </p>
             </div>
             <div className="space-y-3">
               {speakers.map((speaker, index) => (
                 <div key={index} className="flex gap-2 rounded-lg border p-3">
+                  <SpeakerThumb image={speaker.image} name={speaker.name} />
                   <div className="flex-1 space-y-2">
                     <div className="grid gap-2 sm:grid-cols-2">
                       <Input
