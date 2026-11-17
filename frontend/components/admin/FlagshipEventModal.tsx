@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -29,7 +29,16 @@ interface Props {
   open: boolean
   event: FlagshipEvent | null
   onClose: () => void
+  /** Saves straight to the live event (creating it if new). */
   onSubmit: (payload: FlagshipEventInput) => Promise<void>
+  /** Existing events only: the form is showing an unpublished draft. */
+  hasDraft?: boolean
+  /** Existing events only: where the protected preview of this event lives. */
+  previewHref?: string
+  /** Existing events only: saves the form as a draft without touching the live event. */
+  onSaveDraft?: (payload: FlagshipEventInput) => Promise<void>
+  /** Existing events only: throws the draft away and reloads the live content. */
+  onDiscardDraft?: () => Promise<void>
 }
 
 const PHASES: { value: EventPhase; label: string }[] = [
@@ -116,7 +125,16 @@ function SpeakerThumb({ image, name }: { image: string; name: string }) {
   )
 }
 
-export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
+export function FlagshipEventModal({
+  open,
+  event,
+  onClose,
+  onSubmit,
+  hasDraft = false,
+  previewHref,
+  onSaveDraft,
+  onDiscardDraft,
+}: Props) {
   const isEdit = event !== null
 
   const [slug, setSlug] = useState(event?.slug ?? '')
@@ -147,6 +165,7 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
   const [faqs, setFaqs] = useState<Faq[]>(event?.faqs ?? [])
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [notice, setNotice] = useState('')
 
   useEffect(() => {
     setSlug(event?.slug ?? '')
@@ -176,7 +195,14 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
     setError('')
   }, [event, open])
 
-  async function handleSave() {
+  // Kept separate from the reset above: discarding a draft reloads the form but
+  // should still show its "draft discarded" notice.
+  useEffect(() => {
+    if (open) setNotice('')
+  }, [open])
+
+  // Validates the form and returns its payload, or null (with an error shown).
+  function collectPayload(): FlagshipEventInput | null {
     if (
       !slug ||
       !name ||
@@ -195,13 +221,10 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
       setError(
         'Please fill in all required fields: basics, schedule, venue name & address, banner image, OG image, and backdrop image.',
       )
-      return
+      return null
     }
 
-    setError('')
-    setSubmitting(true)
-    try {
-      await onSubmit({
+    return {
         slug,
         name,
         tagline,
@@ -226,8 +249,71 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
         speakerPlaceholderCount,
         programme,
         faqs,
-      })
+    }
+  }
+
+  async function handleSave() {
+    const payload = collectPayload()
+    if (!payload) return
+
+    if (isEdit && payload.released) {
+      const confirmed = window.confirm(
+        'Publish these changes? The event is released, so they will be visible to the public.',
+      )
+      if (!confirmed) return
+    }
+
+    setError('')
+    setNotice('')
+    setSubmitting(true)
+    try {
+      await onSubmit(payload)
       onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleSaveDraft() {
+    if (!onSaveDraft || !previewHref) return
+    const payload = collectPayload()
+    if (!payload) return
+
+    // Open the tab now, while we still have the click's user gesture — browsers
+    // block window.open after an await. It's pointed at the preview once saved.
+    const previewTab = window.open('', '_blank')
+
+    setError('')
+    setNotice('')
+    setSubmitting(true)
+    try {
+      await onSaveDraft(payload)
+      if (previewTab) {
+        previewTab.location.href = previewHref
+        setNotice('Draft saved — the preview opened in a new tab. Keep editing and save again to refresh it.')
+      } else {
+        setNotice('Draft saved. Use “Open preview” to see it.')
+      }
+    } catch (err) {
+      previewTab?.close()
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleDiscardDraft() {
+    if (!onDiscardDraft) return
+    if (!window.confirm('Discard all unpublished changes to this event?')) return
+
+    setError('')
+    setNotice('')
+    setSubmitting(true)
+    try {
+      await onDiscardDraft()
+      setNotice('Draft discarded — the form now shows the live content.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
@@ -243,6 +329,29 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {isEdit && hasDraft && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-isr-turquoise/40 bg-isr-turquoise/10 px-3 py-2 text-sm text-isr-dark-red">
+              <span>You’re editing unpublished draft changes. The live page hasn’t changed yet.</span>
+              <div className="flex gap-2">
+                {previewHref && (
+                  <a
+                    href={previewHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={buttonVariants({ size: 'sm', variant: 'outline' })}
+                  >
+                    Open preview
+                  </a>
+                )}
+                {onDiscardDraft && (
+                  <Button size="sm" variant="outline" onClick={handleDiscardDraft} disabled={submitting}>
+                    Discard draft
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           <Fieldset title="Basics">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
@@ -690,18 +799,31 @@ export function FlagshipEventModal({ open, event, onClose, onSubmit }: Props) {
           </Fieldset>
 
           {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+          {notice && (
+            <p className="text-sm text-isr-dark-red bg-isr-turquoise/10 rounded-lg px-3 py-2">{notice}</p>
+          )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
+          {isEdit && onSaveDraft && (
+            <Button
+              variant="outline"
+              onClick={handleSaveDraft}
+              disabled={submitting}
+              className="border-isr-turquoise text-isr-turquoise hover:bg-isr-turquoise/10"
+            >
+              Save Draft &amp; Preview
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             disabled={submitting}
             className="bg-isr-dark-red hover:bg-isr-dark-red/90 text-isr-cream"
           >
-            {submitting ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Flagship Event'}
+            {submitting ? 'Saving…' : isEdit ? 'Publish' : 'Create Flagship Event'}
           </Button>
         </DialogFooter>
       </DialogContent>

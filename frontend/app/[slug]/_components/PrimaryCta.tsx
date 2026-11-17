@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useFlagshipEvents } from '@/lib/flagship/live'
+import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
 import type { EventPhase } from '@/lib/flagship/types'
 import { lightButton, plateButton, solidButton } from './flagshipStyle'
 
@@ -54,13 +54,12 @@ export default function PrimaryCta({
   variant = 'default',
 }: Props) {
   const [ref, setRef] = useState<string | null>(null)
-  const { events } = useFlagshipEvents()
+  const liveEvent = useLiveFlagshipEvent(slug)
 
   useEffect(() => {
     setRef(new URLSearchParams(window.location.search).get('ref'))
   }, [])
 
-  const liveEvent = events.find((event) => event.slug === slug)
   const ticketsOnSale = respectLiveToggle
     ? liveEvent?.ticketsOnSale ?? builtTicketsOnSale
     : builtTicketsOnSale

@@ -1,7 +1,7 @@
 'use client'
 
 import { CAMPUS } from '@/lib/campus'
-import { useFlagshipEvents } from '@/lib/flagship/live'
+import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
 import PrimaryCta from './PrimaryCta'
 import { Eyebrow, Ornament, serif } from './flagshipStyle'
 import type { EventPhase } from '@/lib/flagship/types'
@@ -26,8 +26,7 @@ export default function TicketsCtaSection({
   ticketsOnSale: builtTicketsOnSale,
   secondaryBtnClassName,
 }: Props) {
-  const { events } = useFlagshipEvents()
-  const ticketsOnSale = events.find((event) => event.slug === slug)?.ticketsOnSale ?? builtTicketsOnSale
+  const ticketsOnSale = useLiveFlagshipEvent(slug)?.ticketsOnSale ?? builtTicketsOnSale
   const isBooking = phase === 'booking' && Boolean(ticketUrl)
   const ticketsLive = isBooking || ticketsOnSale
 

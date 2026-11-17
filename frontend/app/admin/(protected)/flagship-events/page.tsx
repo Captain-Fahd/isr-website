@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { PlusIcon, PencilIcon, Trash2Icon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useEffect, useMemo, useState } from 'react'
+import { PlusIcon, PencilIcon, Trash2Icon, EyeIcon } from 'lucide-react'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -16,12 +16,17 @@ import { FlagshipEventModal } from '@/components/admin/FlagshipEventModal'
 import { ConfirmDeleteDialog } from '@/components/admin/ConfirmDeleteDialog'
 import { getToken } from '@/lib/auth'
 import {
-  fetchAllFlagshipEvents,
+  fetchAdminFlagshipEvents,
   createFlagshipEvent,
   updateFlagshipEvent,
   deleteFlagshipEvent,
+  saveFlagshipEventDraft,
+  discardFlagshipEventDraft,
+  withDraftApplied,
+  flagshipPreviewPath,
+  type AdminFlagshipEvent,
+  type FlagshipEventInput,
 } from '@/lib/admin-api'
-import type { FlagshipEvent } from '@/lib/flagship'
 
 function formatDate(iso: string): string {
   return new Intl.DateTimeFormat('en-AU', {
@@ -31,18 +36,32 @@ function formatDate(iso: string): string {
 }
 
 export default function AdminFlagshipEventsPage() {
-  const [events, setEvents] = useState<FlagshipEvent[]>([])
+  const [events, setEvents] = useState<AdminFlagshipEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
 
   const [modalOpen, setModalOpen] = useState(false)
-  const [selectedEvent, setSelectedEvent] = useState<FlagshipEvent | null>(null)
+  // Snapshot taken when the modal opens; the form is filled from it (draft applied).
+  const [selectedEvent, setSelectedEvent] = useState<AdminFlagshipEvent | null>(null)
 
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const [eventToDelete, setEventToDelete] = useState<FlagshipEvent | null>(null)
+  const [eventToDelete, setEventToDelete] = useState<AdminFlagshipEvent | null>(null)
+
+  const formEvent = useMemo(
+    () => (selectedEvent ? withDraftApplied(selectedEvent) : null),
+    [selectedEvent],
+  )
+  // Read from the list (not the snapshot) so it updates as drafts are saved/discarded.
+  const selectedHasDraft = Boolean(
+    selectedEvent && events.find((e) => e.id === selectedEvent.id)?.draft,
+  )
+
+  function replaceEvent(updated: AdminFlagshipEvent) {
+    setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)))
+  }
 
   useEffect(() => {
-    fetchAllFlagshipEvents()
+    fetchAdminFlagshipEvents(getToken()!)
       .then(setEvents)
       .catch(() => setLoadError('Failed to load flagship events'))
       .finally(() => setLoading(false))
@@ -53,12 +72,12 @@ export default function AdminFlagshipEventsPage() {
     setModalOpen(true)
   }
 
-  function openEdit(event: FlagshipEvent) {
+  function openEdit(event: AdminFlagshipEvent) {
     setSelectedEvent(event)
     setModalOpen(true)
   }
 
-  function openDelete(event: FlagshipEvent) {
+  function openDelete(event: AdminFlagshipEvent) {
     setEventToDelete(event)
     setDeleteOpen(true)
   }
@@ -72,15 +91,26 @@ export default function AdminFlagshipEventsPage() {
     setEventToDelete(null)
   }
 
-  async function handleSubmit(payload: Omit<FlagshipEvent, 'id'>) {
+  async function handleSubmit(payload: FlagshipEventInput) {
     const token = getToken()!
     if (selectedEvent) {
+      // Publishing straight from the form also clears any pending draft.
       const updated = await updateFlagshipEvent(token, selectedEvent.id, payload)
-      setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)))
+      replaceEvent({ ...updated, draft: null })
     } else {
       const created = await createFlagshipEvent(token, payload)
-      setEvents((prev) => [...prev, created])
+      setEvents((prev) => [...prev, { ...created, draft: null }])
     }
+  }
+
+  async function handleSaveDraft(payload: FlagshipEventInput) {
+    replaceEvent(await saveFlagshipEventDraft(getToken()!, selectedEvent!.id, payload))
+  }
+
+  async function handleDiscardDraft() {
+    const updated = await discardFlagshipEventDraft(getToken()!, selectedEvent!.id)
+    replaceEvent(updated)
+    setSelectedEvent(updated) // reloads the form with the live content
   }
 
   async function handleDelete() {
@@ -117,7 +147,7 @@ export default function AdminFlagshipEventsPage() {
                 <TableHead>Slug</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-24 text-right">Actions</TableHead>
+                <TableHead className="w-32 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -146,6 +176,11 @@ export default function AdminFlagshipEventsPage() {
                             Hidden
                           </Badge>
                         )}
+                        {event.draft && (
+                          <Badge className="bg-isr-yellow text-isr-dark-red hover:bg-isr-yellow border-0">
+                            Unpublished changes
+                          </Badge>
+                        )}
                         {event.featuredOnHome && (
                           <Badge variant="outline" className="text-muted-foreground">
                             On home
@@ -155,6 +190,15 @@ export default function AdminFlagshipEventsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1 justify-end">
+                        <a
+                          href={flagshipPreviewPath(event.slug)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={event.draft ? 'Preview unpublished changes' : 'Preview page'}
+                          className={buttonVariants({ size: 'icon-sm', variant: 'ghost' })}
+                        >
+                          <EyeIcon />
+                        </a>
                         <Button
                           size="icon-sm"
                           variant="ghost"
@@ -182,7 +226,16 @@ export default function AdminFlagshipEventsPage() {
         </div>
       )}
 
-      <FlagshipEventModal open={modalOpen} event={selectedEvent} onClose={closeModal} onSubmit={handleSubmit} />
+      <FlagshipEventModal
+        open={modalOpen}
+        event={formEvent}
+        onClose={closeModal}
+        onSubmit={handleSubmit}
+        hasDraft={selectedHasDraft}
+        previewHref={selectedEvent ? flagshipPreviewPath(selectedEvent.slug) : undefined}
+        onSaveDraft={selectedEvent ? handleSaveDraft : undefined}
+        onDiscardDraft={selectedEvent ? handleDiscardDraft : undefined}
+      />
 
       <ConfirmDeleteDialog
         open={deleteOpen}

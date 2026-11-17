@@ -37,6 +37,10 @@ import {
     updateFlagshipEvent,
     deleteFlagshipEvent,
     uploadFlagshipEventImage,
+    listFlagshipEventsAdmin,
+    saveFlagshipEventDraft,
+    discardFlagshipEventDraft,
+    publishFlagshipEventDraft,
 } from '../controllers/flagshipEventsController';
 
 afterEach(() => {
@@ -79,7 +83,7 @@ test('listFlagshipEvents returns events ordered by start', async () => {
 
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({ data: events });
-    expect(mockFindMany).toHaveBeenCalledWith({ orderBy: { start: 'asc' } });
+    expect(mockFindMany).toHaveBeenCalledWith({ orderBy: { start: 'asc' }, omit: { draft: true } });
 });
 
 test('listFlagshipEvents returns 500 on db error', async () => {
@@ -107,7 +111,7 @@ test('getFlagshipEventBySlug returns the event', async () => {
 
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({ data: event });
-    expect(mockFindUnique).toHaveBeenCalledWith({ where: { slug: 'sacred-union' } });
+    expect(mockFindUnique).toHaveBeenCalledWith({ where: { slug: 'sacred-union' }, omit: { draft: true } });
 });
 
 test('getFlagshipEventBySlug returns 404 when not found', async () => {
@@ -375,4 +379,212 @@ test('uploadFlagshipEventImage returns 500 on failure', async () => {
 
     expect(status).toHaveBeenCalledWith(500);
     expect(json).toHaveBeenCalledWith({ error: 'Failed to upload image' });
+});
+
+// --- updateFlagshipEvent + drafts ---
+
+test('updateFlagshipEvent clears any pending draft and keeps its images out of the diff', async () => {
+    const existing = { id: 1, ...baseBody, draft: { ...baseBody, banner: { ...baseBody.banner, src: 'https://cdn/draft-banner.webp' } } };
+    const updated = { ...existing, name: 'Renamed', draft: null };
+    mockFindUnique.mockResolvedValue(existing);
+    mockUpdate.mockResolvedValue(updated);
+    mockCollectFlagshipImageUrls.mockImplementation((event: any) => [event.banner.src]);
+
+    const req = { params: { id: '1' }, body: { name: 'Renamed' } } as unknown as Request;
+    const { res, status } = mockRes();
+
+    await updateFlagshipEvent(req, res);
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { name: 'Renamed', draft: Prisma.DbNull },
+    });
+    // The draft's banner is no longer referenced once the draft is cleared.
+    expect(mockDeleteFlagshipImages).toHaveBeenCalledWith(['https://cdn/draft-banner.webp']);
+    expect(status).toHaveBeenCalledWith(200);
+});
+
+// --- listFlagshipEventsAdmin ---
+
+test('listFlagshipEventsAdmin returns events including drafts', async () => {
+    const events = [{ id: 1, slug: 'sacred-union', draft: { name: 'Draft' } }];
+    mockFindMany.mockResolvedValue(events);
+
+    const { res, json, status } = mockRes();
+    await listFlagshipEventsAdmin({} as Request, res);
+
+    expect(mockFindMany).toHaveBeenCalledWith({ orderBy: { start: 'asc' } });
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).toHaveBeenCalledWith({ data: events });
+});
+
+// --- saveFlagshipEventDraft ---
+
+test('saveFlagshipEventDraft returns 400 for non-integer id', async () => {
+    const req = { params: { id: 'abc' }, body: baseBody } as unknown as Request;
+    const { res, status } = mockRes();
+
+    await saveFlagshipEventDraft(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+});
+
+test('saveFlagshipEventDraft returns 400 when a required field is missing', async () => {
+    const { name: _name, ...body } = baseBody;
+    const req = { params: { id: '1' }, body } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await saveFlagshipEventDraft(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'name is required' });
+});
+
+test('saveFlagshipEventDraft returns 404 when not found', async () => {
+    mockFindUnique.mockResolvedValue(null);
+
+    const req = { params: { id: '99' }, body: baseBody } as unknown as Request;
+    const { res, status } = mockRes();
+
+    await saveFlagshipEventDraft(req, res);
+
+    expect(status).toHaveBeenCalledWith(404);
+    expect(mockUpdate).not.toHaveBeenCalled();
+});
+
+test('saveFlagshipEventDraft rejects a slug already used by another event', async () => {
+    mockFindUnique
+        .mockResolvedValueOnce({ id: 1, ...baseBody })
+        .mockResolvedValueOnce({ id: 2, slug: 'taken' });
+
+    const req = { params: { id: '1' }, body: { ...baseBody, slug: 'taken' } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await saveFlagshipEventDraft(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'A flagship event with that slug already exists' });
+    expect(mockUpdate).not.toHaveBeenCalled();
+});
+
+test('saveFlagshipEventDraft stores only editable fields and leaves live fields alone', async () => {
+    const existing = { id: 1, ...baseBody, draft: null };
+    mockFindUnique.mockResolvedValue(existing);
+    mockUpdate.mockImplementation(async ({ data }: any) => ({ ...existing, ...data }));
+    mockCollectFlagshipImageUrls.mockReturnValue([]);
+
+    const req = {
+        params: { id: '1' },
+        body: { ...baseBody, name: 'Draft name', id: 5, createdAt: 'x' },
+    } as unknown as Request;
+    const { res, status } = mockRes();
+
+    await saveFlagshipEventDraft(req, res);
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { draft: { ...baseBody, name: 'Draft name' } },
+    });
+    expect(status).toHaveBeenCalledWith(200);
+});
+
+test('saveFlagshipEventDraft cleans up images from a replaced draft', async () => {
+    const existing = { id: 1, ...baseBody, draft: { ...baseBody, ogImage: 'https://cdn/old-draft-og.png' } };
+    mockFindUnique.mockResolvedValue(existing);
+    mockUpdate.mockImplementation(async ({ data }: any) => ({ ...existing, ...data }));
+    mockCollectFlagshipImageUrls.mockImplementation((event: any) => [event.ogImage]);
+
+    const req = { params: { id: '1' }, body: { ...baseBody, ogImage: 'https://cdn/new-draft-og.png' } } as unknown as Request;
+    const { res } = mockRes();
+
+    await saveFlagshipEventDraft(req, res);
+
+    expect(mockDeleteFlagshipImages).toHaveBeenCalledWith(['https://cdn/old-draft-og.png']);
+});
+
+// --- discardFlagshipEventDraft ---
+
+test('discardFlagshipEventDraft clears the draft and its images', async () => {
+    const existing = { id: 1, ...baseBody, draft: { ...baseBody, ogImage: 'https://cdn/draft-og.png' } };
+    mockFindUnique.mockResolvedValue(existing);
+    mockUpdate.mockResolvedValue({ ...existing, draft: null });
+    mockCollectFlagshipImageUrls.mockImplementation((event: any) => [event.ogImage]);
+
+    const req = { params: { id: '1' } } as unknown as Request;
+    const { res, status } = mockRes();
+
+    await discardFlagshipEventDraft(req, res);
+
+    expect(mockUpdate).toHaveBeenCalledWith({ where: { id: 1 }, data: { draft: Prisma.DbNull } });
+    expect(mockDeleteFlagshipImages).toHaveBeenCalledWith(['https://cdn/draft-og.png']);
+    expect(status).toHaveBeenCalledWith(200);
+});
+
+test('discardFlagshipEventDraft returns 404 when not found', async () => {
+    mockFindUnique.mockResolvedValue(null);
+
+    const req = { params: { id: '1' } } as unknown as Request;
+    const { res, status } = mockRes();
+
+    await discardFlagshipEventDraft(req, res);
+
+    expect(status).toHaveBeenCalledWith(404);
+});
+
+// --- publishFlagshipEventDraft ---
+
+test('publishFlagshipEventDraft returns 400 when there is no draft', async () => {
+    mockFindUnique.mockResolvedValue({ id: 1, ...baseBody, draft: null });
+
+    const req = { params: { id: '1' } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await publishFlagshipEventDraft(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'There are no draft changes to publish' });
+    expect(mockUpdate).not.toHaveBeenCalled();
+});
+
+test('publishFlagshipEventDraft applies the draft and clears it', async () => {
+    const existing = {
+        id: 1,
+        ...baseBody,
+        ogImage: 'https://cdn/old-og.png',
+        draft: { ...baseBody, name: 'Published name', ogImage: 'https://cdn/new-og.png' },
+    };
+    const published = { ...existing, ...existing.draft, draft: null };
+    mockFindUnique.mockResolvedValue(existing);
+    mockUpdate.mockResolvedValue(published);
+    mockCollectFlagshipImageUrls.mockImplementation((event: any) => [event.ogImage]);
+
+    const req = { params: { id: '1' } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await publishFlagshipEventDraft(req, res);
+
+    const { data } = mockUpdate.mock.calls[0][0];
+    expect(data.name).toBe('Published name');
+    expect(data.ogImage).toBe('https://cdn/new-og.png');
+    expect(data.start).toEqual(new Date(baseBody.start));
+    expect(data.draft).toBe(Prisma.DbNull);
+    expect(mockDeleteFlagshipImages).toHaveBeenCalledWith(['https://cdn/old-og.png']);
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).toHaveBeenCalledWith({ data: published });
+});
+
+test('publishFlagshipEventDraft returns 400 on a slug clash', async () => {
+    mockFindUnique.mockResolvedValue({ id: 1, ...baseBody, draft: { ...baseBody, slug: 'taken' } });
+    mockUpdate.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('dup', { code: 'P2002', clientVersion: 'x' }),
+    );
+
+    const req = { params: { id: '1' } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await publishFlagshipEventDraft(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'A flagship event with that slug already exists' });
 });

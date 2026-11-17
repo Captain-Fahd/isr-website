@@ -1,8 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import { useFlagshipEvents } from '@/lib/flagship/live'
-import type { FlagshipEvent, ProgrammeItem } from '@/lib/flagship/types'
+import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
+import type { ProgrammeItem } from '@/lib/flagship/types'
 import { SectionHeading, plate, serif } from './flagshipStyle'
 
 type Props = {
@@ -64,8 +64,7 @@ function formatDuration(total: number): string {
  * page without a rebuild — the build-time props are only the fallback.
  */
 export default function ProgrammeSection({ slug, programme: builtProgramme, dateLabel, timeLabel, venueName, backdrop }: Props) {
-  const { events } = useFlagshipEvents()
-  const live: FlagshipEvent | undefined = events.find((event) => event.slug === slug)
+  const live = useLiveFlagshipEvent(slug)
   const programme = (live?.programme ?? builtProgramme).filter((item) => item.title.trim())
   const date = live?.dateLabel ?? dateLabel
   const time = live?.timeLabel ?? timeLabel

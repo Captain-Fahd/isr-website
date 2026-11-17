@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import type { ReactNode } from 'react'
-import { useFlagshipEvents } from '@/lib/flagship/live'
+import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
 import SpeakerCarousel from './SpeakerCarousel'
 import type { Speaker } from '@/lib/flagship/types'
 import { frostedCard, serif } from './flagshipStyle'
@@ -39,8 +39,7 @@ export default function SpeakersSection({
   speakerPlaceholderCount: builtPlaceholderCount,
   heading,
 }: Props) {
-  const { events } = useFlagshipEvents()
-  const live = events.find((event) => event.slug === slug)
+  const live = useLiveFlagshipEvent(slug)
   const showSpeakers = live?.showSpeakers ?? builtShowSpeakers
   const speakers = (live?.speakers ?? builtSpeakers).filter((speaker) => speaker.name.trim())
   const slotCount = live?.speakerPlaceholderCount ?? builtPlaceholderCount
