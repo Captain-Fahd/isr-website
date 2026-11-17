@@ -14,8 +14,17 @@ import StickyCtaBar from './_components/StickyCtaBar'
 import TicketsCtaSection from './_components/TicketsCtaSection'
 import SpeakersSection from './_components/SpeakersSection'
 import ProgrammeSection from './_components/ProgrammeSection'
+import {
+  SectionHeading,
+  Eyebrow,
+  Ornament,
+  serif,
+  plateButton,
+  outlineButton,
+  frostedCard,
+  splitInlineList,
+} from './_components/flagshipStyle'
 import HeroBackdrop from '@/components/flagship/HeroBackdrop'
-import GeometricPattern from '@/components/flagship/GeometricPattern'
 import FlagshipReleaseGate from '@/components/flagship/FlagshipReleaseGate'
 
 type Params = { slug: string }
@@ -62,20 +71,6 @@ export async function generateMetadata({
 
 const secondaryBtn =
   'inline-flex min-h-11 items-center justify-center rounded-lg border border-current px-5 py-3 text-sm font-semibold transition hover:bg-current/10'
-
-function SectionHeading({ eyebrow, title }: { eyebrow: string; title: string }) {
-  return (
-    <div className="mb-10 text-center">
-      <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-(--su-accent)">
-        {eyebrow}
-      </p>
-      <h2 className="text-3xl font-bold md:text-4xl" style={{ textWrap: 'balance' } as React.CSSProperties}>
-        {title}
-      </h2>
-      <div className="mx-auto mt-5 h-1 w-16 bg-(--su-primary)" />
-    </div>
-  )
-}
 
 export default async function FlagshipEventPage({
   params,
@@ -184,19 +179,46 @@ export default async function FlagshipEventPage({
         <section className="px-4 py-16 sm:py-20">
           <div className="container-isr">
             <SectionHeading eyebrow="About the event" title={`What is ${event.name}?`} />
-            <div className="mx-auto mb-12 max-w-2xl space-y-5 text-center text-lg leading-relaxed opacity-85">
-              {event.description.split(/\n\s*\n/).map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
+            <div className="mx-auto mb-14 max-w-2xl space-y-5 text-center text-lg leading-relaxed">
+              {event.description.split(/\n\s*\n/).map((paragraph, index) => {
+                const list = splitInlineList(paragraph)
+                if (list) {
+                  return (
+                    <div key={paragraph} className={`${frostedCard} px-6 py-6 text-left sm:px-8`}>
+                      <p className={`${serif.className} mb-4 text-center text-xl font-bold italic text-(--su-dark)`}>
+                        {list.intro}
+                      </p>
+                      <ul className="space-y-3">
+                        {list.items.map((item) => (
+                          <li key={item} className="flex gap-3 opacity-90">
+                            <span aria-hidden="true" className="mt-0.5 text-sm text-(--su-primary)">✦</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                }
+                return (
+                  <p
+                    key={paragraph}
+                    className={index === 0 ? `${serif.className} text-xl font-semibold italic text-(--su-dark) sm:text-2xl` : 'opacity-85'}
+                  >
+                    {paragraph}
+                  </p>
+                )
+              })}
             </div>
             <div className="grid gap-6 md:grid-cols-3">
-              {event.highlights.map((item) => (
-                <article
-                  key={item.title}
-                  className="rounded-2xl bg-white/70 p-6 shadow-sm ring-1 ring-(--su-on-light)/10"
-                >
-                  <div className="mb-4 h-1 w-10 rounded-full bg-(--su-accent)" />
-                  <h3 className="mb-2 text-lg font-semibold">{item.title}</h3>
+              {event.highlights.map((item, index) => (
+                <article key={item.title} className={`${frostedCard} relative p-6 pt-10`}>
+                  <span
+                    aria-hidden="true"
+                    className={`${serif.className} absolute -top-4 left-6 bg-linear-to-r from-(--su-dark) to-[color-mix(in_srgb,var(--su-dark)_45%,var(--su-primary))] px-3 py-1 text-lg font-bold italic text-white shadow-md`}
+                  >
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <h3 className={`${serif.className} mb-2 text-xl font-bold leading-snug text-(--su-dark)`}>{item.title}</h3>
                   <p className="leading-relaxed opacity-80">{item.body}</p>
                 </article>
               ))}
@@ -226,38 +248,42 @@ export default async function FlagshipEventPage({
         <section className="bg-white/50 px-4 py-16 sm:py-20">
           <div className="container-isr grid items-center gap-10 md:grid-cols-2">
             <div>
-              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-(--su-accent)">Venue</p>
-              <h2 className="mb-2 text-3xl font-bold">{event.venue.name}</h2>
-              <p className="mb-6 text-lg opacity-85">{event.venue.address}</p>
-              <ul className="mb-8 space-y-2 opacity-85">
+              <Eyebrow className="text-(--su-dark)">The Venue</Eyebrow>
+              <h2 className={`${serif.className} mb-3 text-4xl font-extrabold italic leading-tight text-(--su-dark) md:text-5xl`}>
+                {event.venue.name}
+              </h2>
+              <Ornament className="mb-5 justify-start" />
+              <p className={`${serif.className} mb-6 text-lg italic text-(--su-dark) opacity-90`}>
+                {event.venue.address}
+              </p>
+              <ul className="mb-8 space-y-3 opacity-90">
                 {event.venue.notes.map((note) => (
                   <li key={note} className="flex gap-3">
-                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--su-primary)" aria-hidden="true" />
+                    <span aria-hidden="true" className="mt-0.5 text-sm text-(--su-primary)">✦</span>
                     <span>{note}</span>
                   </li>
                 ))}
               </ul>
               {event.venue.mapUrl && (
-                <a
-                  href={event.venue.mapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-11 items-center rounded-lg bg-(--su-primary) px-6 py-3 text-sm font-semibold text-(--su-on-primary) transition hover:brightness-110"
-                >
+                <a href={event.venue.mapUrl} target="_blank" rel="noopener noreferrer" className={plateButton}>
                   Open in Google Maps
                 </a>
               )}
             </div>
             {event.venue.image ? (
-              <Image
-                src={event.venue.image.src}
-                alt={event.venue.image.alt}
-                width={event.venue.image.width}
-                height={event.venue.image.height}
-                className="aspect-[4/3] h-auto w-full rounded-2xl object-cover shadow-sm ring-1 ring-(--su-on-light)/10"
-              />
+              <div className="relative">
+                {/* Offset frame, like the poster's outlined boxes */}
+                <div aria-hidden="true" className="absolute inset-0 translate-x-3 translate-y-3 border border-(--su-dark)/50" />
+                <Image
+                  src={event.venue.image.src}
+                  alt={event.venue.image.alt}
+                  width={event.venue.image.width}
+                  height={event.venue.image.height}
+                  className="relative aspect-[4/3] h-auto w-full object-cover shadow-lg"
+                />
+              </div>
             ) : (
-              <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border-2 border-dashed border-(--su-on-light)/20 bg-(--su-on-light)/5 text-sm opacity-60">
+              <div className="flex aspect-[4/3] items-center justify-center border-2 border-dashed border-(--su-on-light)/20 bg-(--su-on-light)/5 text-sm opacity-60">
                 Venue photo
               </div>
             )}
@@ -270,17 +296,19 @@ export default async function FlagshipEventPage({
             <SectionHeading eyebrow="FAQ" title="Good to know" />
             <div className="space-y-3">
               {event.faqs.map((faq) => (
-                <details
-                  key={faq.question}
-                  className="group rounded-xl bg-white p-5 shadow-sm ring-1 ring-(--su-on-light)/10"
-                >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
+                <details key={faq.question} className={`${frostedCard} group border-l-4 border-(--su-dark) p-5 open:border-(--su-primary)`}>
+                  <summary
+                    className={`${serif.className} flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-bold text-(--su-dark) [&::-webkit-details-marker]:hidden`}
+                  >
                     {faq.question}
-                    <span className="text-xl text-(--su-accent) transition-transform group-open:rotate-45" aria-hidden="true">
+                    <span
+                      aria-hidden="true"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center border border-(--su-dark)/40 font-sans text-base text-(--su-primary) transition-transform group-open:rotate-45"
+                    >
                       +
                     </span>
                   </summary>
-                  <p className="mt-3 leading-relaxed opacity-80">{faq.answer}</p>
+                  <p className="mt-3 leading-relaxed opacity-85">{faq.answer}</p>
                 </details>
               ))}
             </div>
@@ -290,16 +318,19 @@ export default async function FlagshipEventPage({
         {/* ── Final CTA / notify ──────────────────────────────────── */}
         <section
           id="notify"
-          className="relative isolate scroll-mt-24 overflow-hidden bg-(--su-dark) px-4 py-16 text-(--su-on-dark) sm:py-20"
+          className="relative isolate scroll-mt-24 overflow-hidden bg-(--su-dark) px-4 py-16 text-(--su-on-dark) sm:py-24"
         >
-          <GeometricPattern className="absolute inset-0 -z-10 h-full w-full text-(--su-accent) opacity-10" />
+          {event.theme.hero.backdrop && (
+            <Image src={event.theme.hero.backdrop} alt="" fill sizes="100vw" className="-z-20 object-cover opacity-40 mix-blend-luminosity" />
+          )}
+          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-linear-to-br from-(--su-dark)/85 via-(--su-dark)/75 to-[color-mix(in_srgb,var(--su-dark)_60%,var(--su-primary))]/80" />
           <div className="container-isr grid items-center gap-10 md:grid-cols-2">
             <TicketsCtaSection
               slug={event.slug}
               phase={event.phase}
               ticketUrl={event.ticketUrl}
               ticketsOnSale={event.ticketsOnSale}
-              secondaryBtnClassName={secondaryBtn}
+              secondaryBtnClassName={outlineButton}
             />
             <NewsletterSignup
               title={`${event.name} updates`}

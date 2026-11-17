@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useFlagshipEvents } from '@/lib/flagship/live'
 import type { EventPhase } from '@/lib/flagship/types'
+import { lightButton, plateButton, solidButton } from './flagshipStyle'
 
 type Props = {
   phase: EventPhase
@@ -20,6 +21,8 @@ type Props = {
    */
   respectLiveToggle?: boolean
   className?: string
+  /** Poster-style square buttons used below the hero; `default` is the hero's rounded button. */
+  variant?: 'default' | 'plate' | 'solid' | 'light'
 }
 
 /**
@@ -38,6 +41,9 @@ function withRef(url: string, ref: string | null): string {
   }
 }
 
+const defaultBase =
+  'inline-flex min-h-11 items-center justify-center rounded-lg bg-(--su-primary) px-6 py-3 text-sm font-semibold text-(--su-on-primary) shadow-lg transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--su-accent)'
+
 export default function PrimaryCta({
   phase,
   ticketUrl,
@@ -45,6 +51,7 @@ export default function PrimaryCta({
   ticketsOnSale: builtTicketsOnSale,
   respectLiveToggle = true,
   className = '',
+  variant = 'default',
 }: Props) {
   const [ref, setRef] = useState<string | null>(null)
   const { events } = useFlagshipEvents()
@@ -58,8 +65,7 @@ export default function PrimaryCta({
     ? liveEvent?.ticketsOnSale ?? builtTicketsOnSale
     : builtTicketsOnSale
 
-  const base =
-    'inline-flex min-h-11 items-center justify-center rounded-lg bg-(--su-primary) px-6 py-3 text-sm font-semibold text-(--su-on-primary) shadow-lg transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--su-accent)'
+  const base = { default: defaultBase, plate: plateButton, solid: solidButton, light: lightButton }[variant]
 
   if (phase === 'booking' && ticketUrl) {
     return (
