@@ -70,11 +70,11 @@ export type FlagshipEvent = {
   /** TryBooking event URL. Leave empty until booking opens. */
   ticketUrl: string
   /**
-   * TryBooking event ID (`data-eid`) for the booking widget on
-   * /<slug>/tickets/. A placeholder is shown while empty.
+   * TryBooking event ID (`data-eid`) for the booking widget at the foot of
+   * /<slug>/. A placeholder is shown while empty.
    */
   ticketEventId: string
-  /** Switches the CTA buttons from the external "Notify me" link to the internal /<slug>/tickets/ page. */
+  /** Reveals the booking section on /<slug>/ and points the CTA buttons at it, instead of the external "Notify me" link. */
   ticketsOnSale: boolean
   /** ISO 8601 with Melbourne offset (AEDT is +11:00). */
   start: string

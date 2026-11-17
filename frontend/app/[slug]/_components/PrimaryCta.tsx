@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
 import type { EventPhase } from '@/lib/flagship/types'
 import { lightButton, plateButton, solidButton } from './flagshipStyle'
@@ -14,10 +13,9 @@ type Props = {
   ticketsOnSale: boolean
   /**
    * Set false to pin `ticketsOnSale` to the prop above instead of the live value.
-   * Used by the /tickets/ page's own "not on sale yet" fallback, which only
-   * renders when the (also build-time-baked) ticketEventId is empty — if the
-   * live ticketsOnSale flipped true in the meantime, following it here would
-   * link this CTA back to the very page it's on.
+   * Used by the booking section's own "not on sale yet" fallback, which only
+   * renders when the (build-time-baked) ticketEventId is empty — following the
+   * live value there would anchor this CTA back to the section it sits in.
    */
   respectLiveToggle?: boolean
   className?: string
@@ -79,11 +77,13 @@ export default function PrimaryCta({
     )
   }
 
+  // The booking widget lives at the foot of the event page (#booking), so this
+  // is a scroll rather than a navigation.
   if (ticketsOnSale) {
     return (
-      <Link href={`/${slug}/tickets/`} className={`${base} ${className}`}>
+      <a href="#booking" className={`${base} ${className}`}>
         Get tickets
-      </Link>
+      </a>
     )
   }
 

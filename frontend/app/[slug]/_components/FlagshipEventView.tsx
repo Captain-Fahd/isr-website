@@ -10,6 +10,7 @@ import Countdown from '@/components/flagship/Countdown'
 import PrimaryCta from './PrimaryCta'
 import StickyCtaBar from './StickyCtaBar'
 import TicketsCtaSection from './TicketsCtaSection'
+import TicketsSection from './TicketsSection'
 import SpeakersSection from './SpeakersSection'
 import ProgrammeSection from './ProgrammeSection'
 import {
@@ -288,6 +289,15 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
             />
           </div>
         </section>
+
+        {/* ── Booking widget ──────────────────────────────────────── */}
+        <TicketsSection
+          slug={event.slug}
+          phase={event.phase}
+          ticketUrl={event.ticketUrl}
+          ticketEventId={event.ticketEventId}
+          ticketsOnSale={event.ticketsOnSale}
+        />
       </main>
 
       <Footer />

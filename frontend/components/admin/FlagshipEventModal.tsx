@@ -429,8 +429,8 @@ export function FlagshipEventModal({
             </div>
             {ticketsOnSale && (
               <p className="text-xs text-muted-foreground">
-                CTA buttons will link to /{slug || '<slug>'}/tickets/ instead of the external &quot;Notify
-                me&quot; link.
+                The booking section appears at the foot of /{slug || '<slug>'}/ and the CTA buttons
+                scroll to it, instead of opening the external &quot;Notify me&quot; link.
               </p>
             )}
           </Fieldset>
