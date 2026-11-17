@@ -3,6 +3,15 @@ import type { Event } from '@/lib/events'
 import type { Announcement } from '@/lib/announcements'
 import type { FlagshipEvent } from '@/lib/flagship'
 import type { CommunityFormsPage } from '@/lib/communityFormsPage'
+import { expireSession } from '@/lib/auth'
+
+// A 401 on an authenticated request means the session is no longer valid
+// (expired or revoked); end it so the admin layout redirects to the login page.
+async function authFetch(input: string, init: RequestInit): Promise<Response> {
+  const res = await fetch(input, init)
+  if (res.status === 401) expireSession()
+  return res
+}
 
 function authHeaders(token: string): HeadersInit {
   return { Authorization: `Bearer ${token}` }
@@ -27,7 +36,7 @@ export async function fetchAllEvents(): Promise<Event[]> {
 }
 
 export async function createEvent(token: string, formData: FormData): Promise<Event> {
-  const res = await fetch(`${API_BASE_URL}/api/events`, {
+  const res = await authFetch(`${API_BASE_URL}/api/events`, {
     method: 'POST',
     headers: authHeaders(token),
     body: formData,
@@ -42,7 +51,7 @@ export async function updateEvent(
   id: number,
   formData: FormData,
 ): Promise<Event> {
-  const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+  const res = await authFetch(`${API_BASE_URL}/api/events/${id}`, {
     method: 'PUT',
     headers: authHeaders(token),
     body: formData,
@@ -53,7 +62,7 @@ export async function updateEvent(
 }
 
 export async function deleteEvent(token: string, id: number): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+  const res = await authFetch(`${API_BASE_URL}/api/events/${id}`, {
     method: 'DELETE',
     headers: authHeaders(token),
   })
@@ -74,7 +83,7 @@ export async function createAnnouncement(
   token: string,
   formData: FormData,
 ): Promise<Announcement> {
-  const res = await fetch(`${API_BASE_URL}/api/announcements`, {
+  const res = await authFetch(`${API_BASE_URL}/api/announcements`, {
     method: 'POST',
     headers: authHeaders(token),
     body: formData,
@@ -89,7 +98,7 @@ export async function updateAnnouncement(
   id: number,
   formData: FormData,
 ): Promise<Announcement> {
-  const res = await fetch(`${API_BASE_URL}/api/announcements/${id}`, {
+  const res = await authFetch(`${API_BASE_URL}/api/announcements/${id}`, {
     method: 'PUT',
     headers: authHeaders(token),
     body: formData,
@@ -100,7 +109,7 @@ export async function updateAnnouncement(
 }
 
 export async function deleteAnnouncement(token: string, id: number): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/api/announcements/${id}`, {
+  const res = await authFetch(`${API_BASE_URL}/api/announcements/${id}`, {
     method: 'DELETE',
     headers: authHeaders(token),
   })
@@ -124,7 +133,7 @@ export async function createFlagshipEvent(
   token: string,
   payload: Omit<FlagshipEvent, 'id'>,
 ): Promise<FlagshipEvent> {
-  const res = await fetch(`${API_BASE_URL}/api/flagship-events`, {
+  const res = await authFetch(`${API_BASE_URL}/api/flagship-events`, {
     method: 'POST',
     headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -139,7 +148,7 @@ export async function updateFlagshipEvent(
   id: number,
   payload: Partial<Omit<FlagshipEvent, 'id'>>,
 ): Promise<FlagshipEvent> {
-  const res = await fetch(`${API_BASE_URL}/api/flagship-events/${id}`, {
+  const res = await authFetch(`${API_BASE_URL}/api/flagship-events/${id}`, {
     method: 'PUT',
     headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -150,7 +159,7 @@ export async function updateFlagshipEvent(
 }
 
 export async function deleteFlagshipEvent(token: string, id: number): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/api/flagship-events/${id}`, {
+  const res = await authFetch(`${API_BASE_URL}/api/flagship-events/${id}`, {
     method: 'DELETE',
     headers: authHeaders(token),
   })
@@ -163,7 +172,7 @@ export async function deleteFlagshipEvent(token: string, id: number): Promise<vo
 export async function uploadFlagshipImage(token: string, file: File): Promise<string> {
   const formData = new FormData()
   formData.set('image', file)
-  const res = await fetch(`${API_BASE_URL}/api/flagship-events/upload-image`, {
+  const res = await authFetch(`${API_BASE_URL}/api/flagship-events/upload-image`, {
     method: 'POST',
     headers: authHeaders(token),
     body: formData,
@@ -184,7 +193,7 @@ export async function updateCommunityFormsPage(
   token: string,
   payload: Partial<CommunityFormsPage>,
 ): Promise<CommunityFormsPage> {
-  const res = await fetch(`${API_BASE_URL}/api/community-forms-page`, {
+  const res = await authFetch(`${API_BASE_URL}/api/community-forms-page`, {
     method: 'PUT',
     headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
