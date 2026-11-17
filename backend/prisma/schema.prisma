@@ -115,6 +115,13 @@ model FlagshipEvent {
   /** { question, answer }[] */
   faqs       Json @default("[]")
 
+  /**
+   * Unpublished edits: a full copy of the editable fields above, saved from the admin
+   * panel so they can be previewed before going live. Null = no pending changes.
+   * Never returned by the public endpoints.
+   */
+  draft Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

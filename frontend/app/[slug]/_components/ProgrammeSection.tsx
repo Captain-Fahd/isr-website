@@ -1,11 +1,9 @@
 'use client'
 
 import Image from 'next/image'
-import { Playfair_Display } from 'next/font/google'
-import { useFlagshipEvents } from '@/lib/flagship/live'
-import type { FlagshipEvent, ProgrammeItem } from '@/lib/flagship/types'
-
-const serif = Playfair_Display({ subsets: ['latin'], weight: ['600', '700', '800'], style: ['normal', 'italic'] })
+import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
+import type { ProgrammeItem } from '@/lib/flagship/types'
+import { SectionHeading, plate, serif } from './flagshipStyle'
 
 type Props = {
   slug: string
@@ -59,9 +57,6 @@ function formatDuration(total: number): string {
   return minutes === 0 ? `${hours} hr` : `${hours} hr ${minutes} min`
 }
 
-// The poster's name plates: dark wine fading into crimson, square corners.
-const plate = 'bg-linear-to-r from-(--su-dark) to-[color-mix(in_srgb,var(--su-dark)_45%,var(--su-primary))] text-white'
-
 /**
  * Programme, styled after the event's banner and poster: silk backdrop, gradient
  * name-plate times, letterspaced serif headings, outlined boxes for doors/close.
@@ -69,8 +64,7 @@ const plate = 'bg-linear-to-r from-(--su-dark) to-[color-mix(in_srgb,var(--su-da
  * page without a rebuild — the build-time props are only the fallback.
  */
 export default function ProgrammeSection({ slug, programme: builtProgramme, dateLabel, timeLabel, venueName, backdrop }: Props) {
-  const { events } = useFlagshipEvents()
-  const live: FlagshipEvent | undefined = events.find((event) => event.slug === slug)
+  const live = useLiveFlagshipEvent(slug)
   const programme = (live?.programme ?? builtProgramme).filter((item) => item.title.trim())
   const date = live?.dateLabel ?? dateLabel
   const time = live?.timeLabel ?? timeLabel
@@ -96,17 +90,7 @@ export default function ProgrammeSection({ slug, programme: builtProgramme, date
       />
 
       <div className="container-isr max-w-3xl">
-        <header className="mb-10 text-center">
-          <p className={`${serif.className} mb-2 text-sm font-bold uppercase tracking-[0.35em] text-(--su-dark)`}>
-            The Programme
-          </p>
-          <h2
-            className={`${serif.className} text-4xl font-extrabold italic text-(--su-dark) md:text-5xl`}
-            style={{ textWrap: 'balance' } as React.CSSProperties}
-          >
-            On the Night
-          </h2>
-        </header>
+        <SectionHeading eyebrow="The Programme" title="On the Night" />
 
         {/* Date bar, as on the poster */}
         <p className={`${plate} mb-8 px-4 py-3 text-center text-sm font-extrabold uppercase tracking-[0.12em] shadow-lg sm:text-lg`}>

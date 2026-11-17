@@ -86,7 +86,7 @@ export default function SpeakerCarousel({ children }: { children: ReactNode }) {
   }, [autoplay, active, goTo])
 
   const arrowClass =
-    'flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl text-(--su-on-light) shadow-sm ring-1 ring-(--su-on-light)/10 transition hover:bg-(--su-on-light)/5'
+    'flex h-10 w-10 items-center justify-center border border-(--su-dark)/40 bg-white/70 text-xl text-(--su-dark) shadow-sm transition hover:bg-(--su-dark) hover:text-white'
 
   return (
     <div
@@ -137,8 +137,8 @@ export default function SpeakerCarousel({ children }: { children: ReactNode }) {
                 className="flex h-8 items-center px-1"
               >
                 <span
-                  className={`block h-1.5 rounded-full transition-all ${
-                    i === active ? 'w-8 bg-(--su-accent)' : 'w-3 bg-(--su-on-light)/25'
+                  className={`block h-1.5 transition-all ${
+                    i === active ? 'w-8 bg-(--su-primary)' : 'w-3 bg-(--su-dark)/25'
                   }`}
                 />
               </button>

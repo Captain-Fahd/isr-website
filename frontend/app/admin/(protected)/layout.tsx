@@ -1,14 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import {
-  getToken,
-  getTokenExpiry,
-  removeToken,
-  SESSION_EXPIRED_EVENT,
-} from '@/lib/auth'
+import { removeToken } from '@/lib/auth'
+import { useAdminSession } from '@/lib/useAdminSession'
 
 const NAV_LINKS = [
   { href: '/admin/events', label: 'Events' },
@@ -24,43 +19,7 @@ export default function AdminProtectedLayout({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    function toLogin() {
-      removeToken()
-      router.replace('/admin/login')
-    }
-
-    const token = getToken()
-    if (!token) {
-      toLogin()
-      return
-    }
-    setReady(true)
-
-    // Redirect the moment the token expires, even if the admin is idle on the page.
-    // (Capped because setTimeout overflows past ~24.8 days.)
-    const expiry = getTokenExpiry(token)
-    const delay = expiry === null ? 0 : Math.max(0, expiry - Date.now())
-    const timer = window.setTimeout(toLogin, Math.min(delay, 2 ** 31 - 1))
-
-    // Timers are throttled/paused in background tabs and during sleep, so
-    // re-check when the admin comes back to the tab.
-    function recheck() {
-      if (document.visibilityState === 'visible' && !getToken()) toLogin()
-    }
-
-    window.addEventListener(SESSION_EXPIRED_EVENT, toLogin)
-    document.addEventListener('visibilitychange', recheck)
-    window.addEventListener('focus', recheck)
-    return () => {
-      window.clearTimeout(timer)
-      window.removeEventListener(SESSION_EXPIRED_EVENT, toLogin)
-      document.removeEventListener('visibilitychange', recheck)
-      window.removeEventListener('focus', recheck)
-    }
-  }, [router])
+  const ready = useAdminSession()
 
   if (!ready) {
     return (

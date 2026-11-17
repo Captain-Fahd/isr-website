@@ -40,11 +40,117 @@ function isUniqueConstraintError(err: unknown): boolean {
   );
 }
 
+// Every field an admin can edit — the shape stored in `draft` and the only keys
+// `buildUpdateData` reads.
+const EDITABLE_FIELDS = [
+  "slug",
+  "name",
+  "tagline",
+  "description",
+  "phase",
+  "featuredOnHome",
+  "released",
+  "ticketUrl",
+  "ticketEventId",
+  "ticketsOnSale",
+  "start",
+  "end",
+  "dateLabel",
+  "timeLabel",
+  "venue",
+  "banner",
+  "ogImage",
+  "theme",
+  "highlights",
+  "showSpeakers",
+  "speakers",
+  "speakerPlaceholderCount",
+  "programme",
+  "faqs",
+] as const;
+
+// Public reads never expose unpublished drafts.
+const PUBLIC_OMIT = { draft: true } as const;
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function pickEditable(body: Record<string, unknown>): Record<string, unknown> {
+  const picked: Record<string, unknown> = {};
+  for (const field of EDITABLE_FIELDS) {
+    if (body[field] !== undefined) picked[field] = body[field];
+  }
+  return picked;
+}
+
+// Maps a (partial) payload onto Prisma update data — only the keys present are set.
+function buildUpdateData(body: Record<string, unknown>): Prisma.FlagshipEventUpdateInput {
+  const json = (value: unknown) => value as Prisma.InputJsonValue;
+  return {
+    ...(body.slug !== undefined && { slug: String(body.slug) }),
+    ...(body.name !== undefined && { name: String(body.name) }),
+    ...(body.tagline !== undefined && { tagline: String(body.tagline) }),
+    ...(body.description !== undefined && { description: String(body.description) }),
+    ...(body.phase !== undefined && { phase: String(body.phase) }),
+    ...(body.featuredOnHome !== undefined && { featuredOnHome: Boolean(body.featuredOnHome) }),
+    ...(body.released !== undefined && { released: Boolean(body.released) }),
+    ...(body.ticketUrl !== undefined && { ticketUrl: String(body.ticketUrl) }),
+    ...(body.ticketEventId !== undefined && { ticketEventId: String(body.ticketEventId) }),
+    ...(body.ticketsOnSale !== undefined && { ticketsOnSale: Boolean(body.ticketsOnSale) }),
+    ...(body.start !== undefined && { start: new Date(body.start as string) }),
+    ...(body.end !== undefined && { end: new Date(body.end as string) }),
+    ...(body.dateLabel !== undefined && { dateLabel: String(body.dateLabel) }),
+    ...(body.timeLabel !== undefined && { timeLabel: String(body.timeLabel) }),
+    ...(body.venue !== undefined && { venue: json(body.venue) }),
+    ...(body.banner !== undefined && { banner: json(body.banner) }),
+    ...(body.ogImage !== undefined && { ogImage: String(body.ogImage) }),
+    ...(body.theme !== undefined && { theme: json(body.theme) }),
+    ...(body.highlights !== undefined && { highlights: json(body.highlights) }),
+    ...(body.showSpeakers !== undefined && { showSpeakers: Boolean(body.showSpeakers) }),
+    ...(body.speakers !== undefined && { speakers: json(body.speakers) }),
+    ...(body.speakerPlaceholderCount !== undefined && {
+      speakerPlaceholderCount: Number(body.speakerPlaceholderCount),
+    }),
+    ...(body.programme !== undefined && { programme: json(body.programme) }),
+    ...(body.faqs !== undefined && { faqs: json(body.faqs) }),
+  };
+}
+
+// Image URLs referenced by an event row, including any pending draft.
+type ImageFields = Parameters<typeof collectFlagshipImageUrls>[0];
+
+function referencedImageUrls(event: object): Set<string> {
+  const urls = collectFlagshipImageUrls(event as ImageFields);
+  const draft = (event as { draft?: unknown }).draft;
+  if (draft) urls.push(...collectFlagshipImageUrls(asRecord(draft) as ImageFields));
+  return new Set(urls);
+}
+
+// Deletes uploads referenced by `before` (live or draft) but not by `after`.
+async function cleanUpOrphanedImages(before: object, after: object): Promise<void> {
+  const next = referencedImageUrls(after);
+  const orphaned = [...referencedImageUrls(before)].filter((url) => !next.has(url));
+  if (orphaned.length > 0) {
+    await deleteFlagshipImages(orphaned);
+  }
+}
+
+function parseId(raw: unknown): number | null {
+  const id = Number(raw);
+  return Number.isInteger(id) ? id : null;
+}
+
 // GET /api/flagship-events  (public) — every row, released or not; the frontend
 // decides what to show live (see FlagshipReleaseGate / useFlagshipEvents).
 export const listFlagshipEvents = async (_req: Request, res: Response) => {
   try {
-    const events = await prisma.flagshipEvent.findMany({ orderBy: { start: "asc" } });
+    const events = await prisma.flagshipEvent.findMany({
+      orderBy: { start: "asc" },
+      omit: PUBLIC_OMIT,
+    });
     return res.status(200).json({ data: events });
   } catch (err) {
     console.error("listFlagshipEvents failed:", err);
@@ -57,6 +163,7 @@ export const getFlagshipEventBySlug = async (req: Request, res: Response) => {
   try {
     const event = await prisma.flagshipEvent.findUnique({
       where: { slug: String(req.params.slug) },
+      omit: PUBLIC_OMIT,
     });
     if (!event) {
       return res.status(404).json({ error: "Flagship event not found" });
@@ -137,48 +244,17 @@ export const updateFlagshipEvent = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Flagship event not found" });
     }
 
+    // Saving straight to live supersedes any pending draft.
     const event = await prisma.flagshipEvent.update({
       where: { id },
-      data: {
-        ...(body.slug !== undefined && { slug: body.slug }),
-        ...(body.name !== undefined && { name: body.name }),
-        ...(body.tagline !== undefined && { tagline: body.tagline }),
-        ...(body.description !== undefined && { description: body.description }),
-        ...(body.phase !== undefined && { phase: body.phase }),
-        ...(body.featuredOnHome !== undefined && { featuredOnHome: Boolean(body.featuredOnHome) }),
-        ...(body.released !== undefined && { released: Boolean(body.released) }),
-        ...(body.ticketUrl !== undefined && { ticketUrl: body.ticketUrl }),
-        ...(body.ticketEventId !== undefined && { ticketEventId: body.ticketEventId }),
-        ...(body.ticketsOnSale !== undefined && { ticketsOnSale: Boolean(body.ticketsOnSale) }),
-        ...(body.start !== undefined && { start: new Date(body.start) }),
-        ...(body.end !== undefined && { end: new Date(body.end) }),
-        ...(body.dateLabel !== undefined && { dateLabel: body.dateLabel }),
-        ...(body.timeLabel !== undefined && { timeLabel: body.timeLabel }),
-        ...(body.venue !== undefined && { venue: body.venue }),
-        ...(body.banner !== undefined && { banner: body.banner }),
-        ...(body.ogImage !== undefined && { ogImage: body.ogImage }),
-        ...(body.theme !== undefined && { theme: body.theme }),
-        ...(body.highlights !== undefined && { highlights: body.highlights }),
-        ...(body.showSpeakers !== undefined && { showSpeakers: Boolean(body.showSpeakers) }),
-        ...(body.speakers !== undefined && { speakers: body.speakers }),
-        ...(body.speakerPlaceholderCount !== undefined && {
-          speakerPlaceholderCount: body.speakerPlaceholderCount,
-        }),
-        ...(body.programme !== undefined && { programme: body.programme }),
-        ...(body.faqs !== undefined && { faqs: body.faqs }),
-      },
+      data: { ...buildUpdateData(body), draft: Prisma.DbNull },
     });
 
     // The admin form uploads each image independently before submitting the rest of
     // the form, so by the time we get here any image slot that changed already points
-    // at a new URL — anything referenced by `existing` but not by the saved `event` is
-    // an orphaned upload that can be cleaned up now.
-    const previousUrls = new Set(collectFlagshipImageUrls(existing));
-    const nextUrls = new Set(collectFlagshipImageUrls(event));
-    const orphaned = [...previousUrls].filter((url) => !nextUrls.has(url));
-    if (orphaned.length > 0) {
-      await deleteFlagshipImages(orphaned);
-    }
+    // at a new URL — anything referenced by `existing` (live or its draft) but not by
+    // the saved `event` is an orphaned upload that can be cleaned up now.
+    await cleanUpOrphanedImages(existing, event);
 
     return res.status(200).json({ data: event });
   } catch (err) {
@@ -204,7 +280,7 @@ export const deleteFlagshipEvent = async (req: Request, res: Response) => {
     }
 
     await prisma.flagshipEvent.delete({ where: { id } });
-    await deleteFlagshipImages(collectFlagshipImageUrls(existing));
+    await deleteFlagshipImages([...referencedImageUrls(existing)]);
     return res.status(200).json({ data: { id } });
   } catch (err) {
     console.error("deleteFlagshipEvent failed:", err);
@@ -224,5 +300,118 @@ export const uploadFlagshipEventImage = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("uploadFlagshipEventImage failed:", err);
     return res.status(500).json({ error: "Failed to upload image" });
+  }
+};
+
+// GET /api/flagship-events/admin  (admin) — every row including its pending draft.
+export const listFlagshipEventsAdmin = async (_req: Request, res: Response) => {
+  try {
+    const events = await prisma.flagshipEvent.findMany({ orderBy: { start: "asc" } });
+    return res.status(200).json({ data: events });
+  } catch (err) {
+    console.error("listFlagshipEventsAdmin failed:", err);
+    return res.status(500).json({ error: "Failed to fetch flagship events" });
+  }
+};
+
+// PUT /api/flagship-events/:id/draft  (admin, JSON) — saves the full form as a draft
+// for preview; the live event is untouched until it's published.
+export const saveFlagshipEventDraft = async (req: Request, res: Response) => {
+  const id = parseId(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ error: "Invalid flagship event id" });
+  }
+
+  const body = req.body ?? {};
+  const missing = missingRequiredField(body);
+  if (missing) {
+    return res.status(400).json({ error: `${missing} is required` });
+  }
+  if (!PHASES.includes(body.phase)) {
+    return res.status(400).json({ error: `phase must be one of: ${PHASES.join(", ")}` });
+  }
+
+  try {
+    const existing = await prisma.flagshipEvent.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: "Flagship event not found" });
+    }
+
+    // Catch a slug clash now rather than at publish time.
+    if (body.slug !== existing.slug) {
+      const clash = await prisma.flagshipEvent.findUnique({ where: { slug: String(body.slug) } });
+      if (clash) {
+        return res.status(400).json({ error: "A flagship event with that slug already exists" });
+      }
+    }
+
+    const draft = pickEditable(body) as Prisma.InputJsonValue;
+    const event = await prisma.flagshipEvent.update({ where: { id }, data: { draft } });
+
+    // Images uploaded for a previous draft and since replaced are no longer needed.
+    await cleanUpOrphanedImages(existing, event);
+
+    return res.status(200).json({ data: event });
+  } catch (err) {
+    console.error("saveFlagshipEventDraft failed:", err);
+    return res.status(500).json({ error: "Failed to save draft" });
+  }
+};
+
+// DELETE /api/flagship-events/:id/draft  (admin) — throws the pending draft away.
+export const discardFlagshipEventDraft = async (req: Request, res: Response) => {
+  const id = parseId(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ error: "Invalid flagship event id" });
+  }
+
+  try {
+    const existing = await prisma.flagshipEvent.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: "Flagship event not found" });
+    }
+
+    const event = await prisma.flagshipEvent.update({
+      where: { id },
+      data: { draft: Prisma.DbNull },
+    });
+    await cleanUpOrphanedImages(existing, event);
+
+    return res.status(200).json({ data: event });
+  } catch (err) {
+    console.error("discardFlagshipEventDraft failed:", err);
+    return res.status(500).json({ error: "Failed to discard draft" });
+  }
+};
+
+// POST /api/flagship-events/:id/publish  (admin) — makes the pending draft live.
+export const publishFlagshipEventDraft = async (req: Request, res: Response) => {
+  const id = parseId(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ error: "Invalid flagship event id" });
+  }
+
+  try {
+    const existing = await prisma.flagshipEvent.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: "Flagship event not found" });
+    }
+    if (!existing.draft) {
+      return res.status(400).json({ error: "There are no draft changes to publish" });
+    }
+
+    const event = await prisma.flagshipEvent.update({
+      where: { id },
+      data: { ...buildUpdateData(asRecord(existing.draft)), draft: Prisma.DbNull },
+    });
+    await cleanUpOrphanedImages(existing, event);
+
+    return res.status(200).json({ data: event });
+  } catch (err) {
+    if (isUniqueConstraintError(err)) {
+      return res.status(400).json({ error: "A flagship event with that slug already exists" });
+    }
+    console.error("publishFlagshipEventDraft failed:", err);
+    return res.status(500).json({ error: "Failed to publish draft" });
   }
 };

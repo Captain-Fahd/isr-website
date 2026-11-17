@@ -2,9 +2,10 @@
 
 import Image from 'next/image'
 import type { ReactNode } from 'react'
-import { useFlagshipEvents } from '@/lib/flagship/live'
+import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
 import SpeakerCarousel from './SpeakerCarousel'
 import type { Speaker } from '@/lib/flagship/types'
+import { frostedCard, serif } from './flagshipStyle'
 
 type Props = {
   slug: string
@@ -38,8 +39,7 @@ export default function SpeakersSection({
   speakerPlaceholderCount: builtPlaceholderCount,
   heading,
 }: Props) {
-  const { events } = useFlagshipEvents()
-  const live = events.find((event) => event.slug === slug)
+  const live = useLiveFlagshipEvent(slug)
   const showSpeakers = live?.showSpeakers ?? builtShowSpeakers
   const speakers = (live?.speakers ?? builtSpeakers).filter((speaker) => speaker.name.trim())
   const slotCount = live?.speakerPlaceholderCount ?? builtPlaceholderCount
@@ -48,14 +48,14 @@ export default function SpeakersSection({
   if (!showSpeakers || speakers.length + placeholders === 0) return null
 
   return (
-    <section className="bg-white/50 px-4 py-16 sm:py-20">
+    <section className="bg-white/40 px-4 py-16 sm:py-20">
       <div className="container-isr">
         {heading}
         <SpeakerCarousel>
           {speakers.map((speaker, index) => (
             <article
               key={`${speaker.name}-${index}`}
-              className="h-full overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-(--su-on-light)/10"
+              className={`${frostedCard} h-full overflow-hidden border-b-4 border-(--su-dark)`}
             >
               {speaker.image?.trim() ? (
                 <Image
@@ -69,21 +69,23 @@ export default function SpeakersSection({
                 <Silhouette />
               )}
               <div className="p-5">
-                <h3 className="text-lg font-semibold">{speaker.name}</h3>
-                <p className="text-sm opacity-75">{speaker.title}</p>
-                {speaker.topic && <p className="mt-2 text-sm font-medium text-(--su-accent)">{speaker.topic}</p>}
+                <h3 className={`${serif.className} text-xl font-bold text-(--su-dark)`}>{speaker.name}</h3>
+                <p className="mt-0.5 text-xs font-semibold uppercase tracking-[0.18em] opacity-70">{speaker.title}</p>
+                {speaker.topic && (
+                  <p className={`${serif.className} mt-3 border-t border-(--su-dark)/15 pt-3 italic text-(--su-primary)`}>{speaker.topic}</p>
+                )}
               </div>
             </article>
           ))}
           {Array.from({ length: placeholders }, (_, index) => (
             <article
               key={`placeholder-${index}`}
-              className="h-full overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-(--su-on-light)/10"
+              className={`${frostedCard} h-full overflow-hidden border-b-4 border-(--su-dark)`}
             >
               <Silhouette />
               <div className="p-5">
-                <h3 className="text-lg font-semibold">Speaker to be announced</h3>
-                <p className="text-sm opacity-75">Stay tuned</p>
+                <h3 className={`${serif.className} text-xl font-bold text-(--su-dark)`}>Speaker to be announced</h3>
+                <p className="mt-0.5 text-xs font-semibold uppercase tracking-[0.18em] opacity-70">Stay tuned</p>
               </div>
             </article>
           ))}

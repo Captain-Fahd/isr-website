@@ -1,8 +1,9 @@
 'use client'
 
 import { CAMPUS } from '@/lib/campus'
-import { useFlagshipEvents } from '@/lib/flagship/live'
+import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
 import PrimaryCta from './PrimaryCta'
+import { Eyebrow, Ornament, serif } from './flagshipStyle'
 import type { EventPhase } from '@/lib/flagship/types'
 
 type Props = {
@@ -25,27 +26,31 @@ export default function TicketsCtaSection({
   ticketsOnSale: builtTicketsOnSale,
   secondaryBtnClassName,
 }: Props) {
-  const { events } = useFlagshipEvents()
-  const ticketsOnSale = events.find((event) => event.slug === slug)?.ticketsOnSale ?? builtTicketsOnSale
+  const ticketsOnSale = useLiveFlagshipEvent(slug)?.ticketsOnSale ?? builtTicketsOnSale
   const isBooking = phase === 'booking' && Boolean(ticketUrl)
   const ticketsLive = isBooking || ticketsOnSale
 
   return (
     <div>
-      <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-(--su-accent)">
-        {ticketsLive ? 'Don’t miss out' : 'Be first to know'}
-      </p>
-      <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+      <Eyebrow>{ticketsLive ? 'Don’t miss out' : 'Be first to know'}</Eyebrow>
+      <h2 className={`${serif.className} mb-3 text-4xl font-extrabold italic leading-tight md:text-5xl`}>
         {ticketsLive ? 'Secure your seat' : 'Tickets open soon on TryBooking'}
       </h2>
-      <p className="mb-6 text-lg opacity-85">
+      <Ornament className="mb-5 justify-start" />
+      <p className="mb-8 text-lg opacity-85">
         {ticketsLive
           ? 'Seats are limited — book today.'
           : 'Join our WhatsApp community or mailing list and we’ll message you the moment booking opens.'}
       </p>
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {ticketsLive && (
-          <PrimaryCta phase={phase} ticketUrl={ticketUrl} slug={slug} ticketsOnSale={builtTicketsOnSale} />
+          <PrimaryCta
+            phase={phase}
+            ticketUrl={ticketUrl}
+            slug={slug}
+            ticketsOnSale={builtTicketsOnSale}
+            variant="solid"
+          />
         )}
         <a href={CAMPUS.whatsappUrl} target="_blank" rel="noopener noreferrer" className={secondaryBtnClassName}>
           Message us on WhatsApp

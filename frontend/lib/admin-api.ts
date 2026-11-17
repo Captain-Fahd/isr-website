@@ -119,13 +119,6 @@ export async function deleteAnnouncement(token: string, id: number): Promise<voi
   }
 }
 
-export async function fetchAllFlagshipEvents(): Promise<FlagshipEvent[]> {
-  const res = await fetch(`${API_BASE_URL}/api/flagship-events`, { cache: 'no-store' })
-  const json = await res.json()
-  if (!res.ok) throw new Error(json.error ?? 'Failed to fetch flagship events')
-  return json.data as FlagshipEvent[]
-}
-
 // Unlike createEvent/createAnnouncement, this takes a plain JSON payload — a flagship
 // event has too many images for one multipart request; each is uploaded independently
 // via uploadFlagshipImage first, and the resulting URLs go in the payload below.
@@ -201,4 +194,72 @@ export async function updateCommunityFormsPage(
   const json = await res.json()
   if (!res.ok) throw new Error(json.error ?? 'Failed to update community forms page')
   return json.data as CommunityFormsPage
+}
+
+// --- Flagship drafts & preview ---
+
+export type FlagshipEventInput = Omit<FlagshipEvent, 'id'>
+
+/** A flagship event as the admin API returns it, with any unpublished draft. */
+export type AdminFlagshipEvent = FlagshipEvent & { draft: FlagshipEventInput | null }
+
+/** The event as it will look once its draft (if any) is published. */
+export function withDraftApplied(event: AdminFlagshipEvent): FlagshipEvent {
+  return event.draft ? { ...event, ...event.draft, id: event.id } : event
+}
+
+/** Protected, client-rendered preview of the event's draft (or live content if none). */
+export function flagshipPreviewPath(slug: string): string {
+  return `/admin/flagship-preview/?slug=${encodeURIComponent(slug)}`
+}
+
+export async function fetchAdminFlagshipEvents(token: string): Promise<AdminFlagshipEvent[]> {
+  const res = await authFetch(`${API_BASE_URL}/api/flagship-events/admin`, {
+    headers: authHeaders(token),
+    cache: 'no-store',
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Failed to fetch flagship events')
+  return json.data as AdminFlagshipEvent[]
+}
+
+export async function saveFlagshipEventDraft(
+  token: string,
+  id: number,
+  payload: FlagshipEventInput,
+): Promise<AdminFlagshipEvent> {
+  const res = await authFetch(`${API_BASE_URL}/api/flagship-events/${id}/draft`, {
+    method: 'PUT',
+    headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Failed to save draft')
+  return json.data as AdminFlagshipEvent
+}
+
+export async function discardFlagshipEventDraft(
+  token: string,
+  id: number,
+): Promise<AdminFlagshipEvent> {
+  const res = await authFetch(`${API_BASE_URL}/api/flagship-events/${id}/draft`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Failed to discard draft')
+  return json.data as AdminFlagshipEvent
+}
+
+export async function publishFlagshipEventDraft(
+  token: string,
+  id: number,
+): Promise<AdminFlagshipEvent> {
+  const res = await authFetch(`${API_BASE_URL}/api/flagship-events/${id}/publish`, {
+    method: 'POST',
+    headers: authHeaders(token),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Failed to publish draft')
+  return json.data as AdminFlagshipEvent
 }
