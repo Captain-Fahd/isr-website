@@ -13,6 +13,7 @@ import PrimaryCta from './_components/PrimaryCta'
 import StickyCtaBar from './_components/StickyCtaBar'
 import TicketsCtaSection from './_components/TicketsCtaSection'
 import SpeakersSection from './_components/SpeakersSection'
+import ProgrammeSection from './_components/ProgrammeSection'
 import HeroBackdrop from '@/components/flagship/HeroBackdrop'
 import GeometricPattern from '@/components/flagship/GeometricPattern'
 import FlagshipReleaseGate from '@/components/flagship/FlagshipReleaseGate'
@@ -211,23 +212,15 @@ export default async function FlagshipEventPage({
           heading={<SectionHeading eyebrow="Speakers" title="Who you’ll hear from" />}
         />
 
-        {event.programme.length > 0 && (
-          <section className="px-4 py-16 sm:py-20">
-            <div className="container-isr max-w-3xl">
-              <SectionHeading eyebrow="Programme" title="On the night" />
-              <ol className="relative space-y-8 border-l-2 border-(--su-accent)/40 pl-8">
-                {event.programme.map((item) => (
-                  <li key={`${item.time}-${item.title}`} className="relative">
-                    <span className="absolute -left-[2.55rem] top-1.5 h-4 w-4 rounded-full border-4 border-(--su-light) bg-(--su-accent)" />
-                    <p className="text-sm font-semibold uppercase tracking-wider text-(--su-accent)">{item.time}</p>
-                    <h3 className="text-lg font-semibold">{item.title}</h3>
-                    {item.detail && <p className="opacity-80">{item.detail}</p>}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </section>
-        )}
+        <ProgrammeSection
+          slug={event.slug}
+          programme={event.programme}
+          dateLabel={event.dateLabel}
+          timeLabel={event.timeLabel}
+          venueName={event.venue.name}
+          backdrop={event.theme.hero.backdrop}
+        />
+
 
         {/* ── Venue ───────────────────────────────────────────────── */}
         <section className="bg-white/50 px-4 py-16 sm:py-20">
