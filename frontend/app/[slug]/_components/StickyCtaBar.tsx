@@ -1,29 +1,37 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { FlagshipEvent } from '@/lib/flagship'
+import { useTicketPrice } from '@/components/flagship/TicketsStatusLabel'
 import PrimaryCta from './PrimaryCta'
 import { plate, serif } from './flagshipStyle'
-import type { EventPhase } from '@/lib/flagship/types'
 
-type Props = {
-  phase: EventPhase
-  ticketUrl: string
-  slug: string
-  ticketsOnSale: boolean
-  name: string
-  dateLabel: string
-}
-
-/** Phone-only bottom bar that appears once the hero CTA scrolls out of view. */
-export default function StickyCtaBar({ phase, ticketUrl, slug, ticketsOnSale, name, dateLabel }: Props) {
+/**
+ * Phone-only bottom bar, shown whenever the hero's buttons (#hero-cta) are off
+ * screen — including on first load, when the banner pushes them below the fold —
+ * and hidden again once the booking section (#booking) scrolls into view.
+ * Measured on scroll rather than observed, as #booking mounts only once the live
+ * "on sale" switch has been read.
+ */
+export default function StickyCtaBar({ event }: { event: FlagshipEvent }) {
   const [visible, setVisible] = useState(false)
+  const price = useTicketPrice(event)
 
   useEffect(() => {
-    const hero = document.getElementById('hero')
-    if (!hero) return
-    const observer = new IntersectionObserver(([entry]) => setVisible(!entry.isIntersecting))
-    observer.observe(hero)
-    return () => observer.disconnect()
+    const update = () => {
+      const cta = document.getElementById('hero-cta')?.getBoundingClientRect()
+      const booking = document.getElementById('booking')?.getBoundingClientRect()
+      const ctaOnScreen = cta ? cta.bottom > 0 && cta.top < window.innerHeight : false
+      const bookingOnScreen = booking ? booking.top < window.innerHeight : false
+      setVisible(!ctaOnScreen && !bookingOnScreen)
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
   }, [])
 
   return (
@@ -36,16 +44,20 @@ export default function StickyCtaBar({ phase, ticketUrl, slug, ticketsOnSale, na
     >
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className={`${serif.className} truncate text-base font-bold italic`}>{name}</p>
-          <p className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.15em] opacity-80">{dateLabel}</p>
+          <p className={`${serif.className} truncate text-base font-bold italic`}>{event.name}</p>
+          <p className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.15em] opacity-80">
+            {/* Price first: the date is the part that can be truncated */}
+            {[price, event.dateLabel].filter(Boolean).join(' · ')}
+          </p>
         </div>
         <PrimaryCta
-          phase={phase}
-          ticketUrl={ticketUrl}
-          slug={slug}
-          ticketsOnSale={ticketsOnSale}
+          phase={event.phase}
+          ticketUrl={event.ticketUrl}
+          slug={event.slug}
+          ticketsOnSale={event.ticketsOnSale}
           variant="light"
           className="shrink-0 px-4"
+          placement="sticky"
         />
       </div>
     </div>

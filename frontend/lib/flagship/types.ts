@@ -90,6 +90,11 @@ export type FlagshipEvent = {
   ticketEventId: string
   /** Reveals the booking section on /<slug>/ and points the CTA buttons at it, instead of the external "Notify me" link. */
   ticketsOnSale: boolean
+  /**
+   * Short price line, e.g. "From $15 · Early bird", shown in the hero, sticky bar
+   * and booking prompts once tickets are on sale. Hidden while empty.
+   */
+  priceLabel: string
   /** ISO 8601 with Melbourne offset (AEDT is +11:00). */
   start: string
   end: string
