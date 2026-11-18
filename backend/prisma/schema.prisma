@@ -87,6 +87,8 @@ model FlagshipEvent {
   ticketEventId String @default("")
   /** Switches the hero/CTA buttons from the external "Notify me" link to the internal /<slug>/tickets/ page. */
   ticketsOnSale Boolean @default(false)
+  /** Short price line, e.g. "From $15 · Early bird"; shown once tickets are on sale. Empty = hidden. */
+  priceLabel String @default("")
 
   start     DateTime
   end       DateTime

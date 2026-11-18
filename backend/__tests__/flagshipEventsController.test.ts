@@ -170,6 +170,7 @@ test('createFlagshipEvent creates with defaults applied', async () => {
                 released: false,
                 ticketUrl: '',
                 ticketEventId: '',
+                priceLabel: '',
                 highlights: [],
                 showSpeakers: false,
                 speakers: [],
