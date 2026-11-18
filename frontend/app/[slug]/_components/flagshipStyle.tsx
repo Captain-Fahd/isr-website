@@ -28,9 +28,6 @@ export const solidButton = `${squareButton} bg-(--su-primary) text-(--su-on-prim
 /** Square light button, for use on a wine-gradient bar. */
 export const lightButton = `${squareButton} bg-white text-(--su-dark)`
 
-export const outlineButton =
-  'inline-flex whitespace-nowrap min-h-11 items-center justify-center border border-current px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] transition hover:bg-current/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current'
-
 /** Frosted, square card used for highlights, speakers and FAQs. */
 export const frostedCard = 'bg-white/70 shadow-sm ring-1 ring-(--su-dark)/10 backdrop-blur-md'
 

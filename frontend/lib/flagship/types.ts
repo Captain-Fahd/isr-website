@@ -2,6 +2,9 @@
 
 export type EventPhase = 'save-the-date' | 'booking'
 
+/** How speaker cards are laid out: rows of 3, then 2, then 2, or a rotating carousel. */
+export type SpeakerLayout = 'rows' | 'carousel'
+
 /**
  * Page colour scheme. These default to the ISR palette and should be
  * re-picked from the event banner once it's uploaded, so the page matches it.
@@ -41,6 +44,11 @@ export type Speaker = {
   name: string
   title: string
   topic?: string
+  /**
+   * Who the session is for, e.g. "Brothers" or "Sisters". In the rows layout, a row
+   * where every speaker has one is shown as simultaneous sessions.
+   */
+  audience?: string
   image: string
 }
 
@@ -54,6 +62,12 @@ export type Faq = {
   question: string
   answer: string
 }
+
+/** A page section that admins can move; the hero stays first and booking last. */
+export type FlagshipSectionId = 'about' | 'speakers' | 'programme' | 'venue' | 'faqs'
+
+/** A block inside the about section that admins can move. */
+export type AboutBlockId = 'description' | 'highlights'
 
 export type FlagshipEvent = {
   id: number
@@ -70,11 +84,11 @@ export type FlagshipEvent = {
   /** TryBooking event URL. Leave empty until booking opens. */
   ticketUrl: string
   /**
-   * TryBooking event ID (`data-eid`) for the booking widget on
-   * /<slug>/tickets/. A placeholder is shown while empty.
+   * TryBooking event ID (`data-eid`) for the booking widget at the foot of
+   * /<slug>/. A placeholder is shown while empty.
    */
   ticketEventId: string
-  /** Switches the CTA buttons from the external "Notify me" link to the internal /<slug>/tickets/ page. */
+  /** Reveals the booking section on /<slug>/ and points the CTA buttons at it, instead of the external "Notify me" link. */
   ticketsOnSale: boolean
   /** ISO 8601 with Melbourne offset (AEDT is +11:00). */
   start: string
@@ -105,9 +119,14 @@ export type FlagshipEvent = {
   /** Show the speakers section. Off = the whole section is hidden. */
   showSpeakers: boolean
   speakers: Speaker[]
+  speakerLayout: SpeakerLayout
   /** Total speaker slots; any not filled by `speakers` show as "To be announced". */
   speakerPlaceholderCount: number
   /** Hidden while empty. */
   programme: ProgrammeItem[]
   faqs: Faq[]
+  /** Order of the sections between the hero and the booking section. */
+  sectionOrder: FlagshipSectionId[]
+  /** Order of the description and highlights inside the about section. */
+  aboutOrder: AboutBlockId[]
 }

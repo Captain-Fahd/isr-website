@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "nodemon --exec tsx index.ts",
     "build": "prisma generate && esbuild index.ts --bundle --platform=node --format=esm --outdir=dist --packages=external",
+    "postinstall": "prisma generate",
     "start": "node server.js",
     "start:e2e": "tsx test/start-e2e-server.ts",
     "seed": "tsx prisma/seed.ts",

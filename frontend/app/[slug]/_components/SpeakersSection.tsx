@@ -4,13 +4,15 @@ import Image from 'next/image'
 import type { ReactNode } from 'react'
 import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
 import SpeakerCarousel from './SpeakerCarousel'
-import type { Speaker } from '@/lib/flagship/types'
+import SpeakerRows from './SpeakerRows'
+import type { Speaker, SpeakerLayout } from '@/lib/flagship/types'
 import { frostedCard, serif } from './flagshipStyle'
 
 type Props = {
   slug: string
   showSpeakers: boolean
   speakers: Speaker[]
+  speakerLayout: SpeakerLayout
   speakerPlaceholderCount: number
   heading: ReactNode
 }
@@ -27,8 +29,8 @@ function Silhouette() {
 }
 
 /**
- * Speaker cards plus "To be announced" placeholders for any unfilled slots.
- * `showSpeakers`, `speakers` and the slot count are read live (see
+ * Speaker cards plus "To be announced" placeholders for any unfilled slots, in rows
+ * or a carousel. `showSpeakers`, `speakers`, the layout and the slot count are read live (see
  * lib/flagship/live.ts) so admin changes reach this static-exported page without a
  * rebuild — same reasoning as `released` and `ticketsOnSale`.
  */
@@ -36,14 +38,21 @@ export default function SpeakersSection({
   slug,
   showSpeakers: builtShowSpeakers,
   speakers: builtSpeakers,
+  speakerLayout: builtLayout,
   speakerPlaceholderCount: builtPlaceholderCount,
   heading,
 }: Props) {
   const live = useLiveFlagshipEvent(slug)
   const showSpeakers = live?.showSpeakers ?? builtShowSpeakers
   const speakers = (live?.speakers ?? builtSpeakers).filter((speaker) => speaker.name.trim())
+  const Layout = (live?.speakerLayout ?? builtLayout) === 'carousel' ? SpeakerCarousel : SpeakerRows
   const slotCount = live?.speakerPlaceholderCount ?? builtPlaceholderCount
   const placeholders = Math.max(0, slotCount - speakers.length)
+  // One per card, placeholders included, so the rows can spot simultaneous sessions.
+  const audiences = [
+    ...speakers.map((speaker) => speaker.audience?.trim() || undefined),
+    ...Array<undefined>(placeholders).fill(undefined),
+  ]
 
   if (!showSpeakers || speakers.length + placeholders === 0) return null
 
@@ -51,7 +60,7 @@ export default function SpeakersSection({
     <section className="bg-white/40 px-4 py-16 sm:py-20">
       <div className="container-isr">
         {heading}
-        <SpeakerCarousel>
+        <Layout audiences={audiences}>
           {speakers.map((speaker, index) => (
             <article
               key={`${speaker.name}-${index}`}
@@ -69,6 +78,11 @@ export default function SpeakersSection({
                 <Silhouette />
               )}
               <div className="p-5">
+                {speaker.audience?.trim() && (
+                  <p className="mb-2 inline-block bg-(--su-primary)/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--su-primary)">
+                    {speaker.audience}
+                  </p>
+                )}
                 <h3 className={`${serif.className} text-xl font-bold text-(--su-dark)`}>{speaker.name}</h3>
                 <p className="mt-0.5 text-xs font-semibold uppercase tracking-[0.18em] opacity-70">{speaker.title}</p>
                 {speaker.topic && (
@@ -89,7 +103,7 @@ export default function SpeakersSection({
               </div>
             </article>
           ))}
-        </SpeakerCarousel>
+        </Layout>
       </div>
     </section>
   )

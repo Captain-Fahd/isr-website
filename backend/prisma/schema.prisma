@@ -108,12 +108,18 @@ model FlagshipEvent {
   showSpeakers Boolean @default(false)
   /** { name, title, topic?, image }[] */
   speakers   Json @default("[]")
+  /** 'rows' (3, then 2, then 2 per row) | 'carousel' — validated in the controller, not the DB. */
+  speakerLayout String @default("rows")
   /** Total speaker slots; any not filled by `speakers` show as "To be announced". */
   speakerPlaceholderCount Int @default(0)
   /** { time, title, detail? }[] */
   programme  Json @default("[]")
   /** { question, answer }[] */
   faqs       Json @default("[]")
+  /** Order of the movable page sections: a permutation of "about", "speakers", "programme", "venue", "faqs". The hero stays first and the booking section last. */
+  sectionOrder Json @default("[\"about\",\"speakers\",\"programme\",\"venue\",\"faqs\"]")
+  /** Order of the blocks inside the about section: a permutation of "description", "highlights". */
+  aboutOrder Json @default("[\"description\",\"highlights\"]")
 
   /**
    * Unpublished edits: a full copy of the editable fields above, saved from the admin
