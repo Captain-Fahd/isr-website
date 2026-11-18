@@ -10,6 +10,8 @@ import PrimaryCta from './PrimaryCta'
 import StickyCtaBar from './StickyCtaBar'
 import TicketsSection from './TicketsSection'
 import LiveOrder from './LiveOrder'
+import TicketsArrow from './TicketsArrow'
+import TicketsStatusLabel from '@/components/flagship/TicketsStatusLabel'
 import SpeakersSection from './SpeakersSection'
 import ProgrammeSection from './ProgrammeSection'
 import {
@@ -235,7 +237,7 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
             {/* Frosted panel keeps text legible over the backdrop's dark lower half */}
             <div className="rounded-2xl bg-(--su-light)/75 p-6 shadow-xl ring-1 ring-current/10 backdrop-blur-md sm:p-8 lg:flex lg:flex-col lg:justify-center lg:p-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700 motion-safe:delay-150">
               <p className="mb-4 text-xl font-semibold uppercase tracking-[0.2em] text-(--su-hero-heading) sm:hidden">
-                {isBooking ? 'Tickets on sale' : 'Save the date'}
+                <TicketsStatusLabel event={event} />
               </p>
               <h1
                 className="mb-4 text-4xl font-bold leading-tight text-(--su-hero-heading) sm:text-5xl lg:mb-2 lg:text-4xl"
@@ -282,6 +284,7 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
               </div>
             </div>
           </div>
+          <TicketsArrow event={event} />
         </section>
 
         <LiveOrder slug={event.slug} field="sectionOrder" builtOrder={event.sectionOrder} blocks={sections} />

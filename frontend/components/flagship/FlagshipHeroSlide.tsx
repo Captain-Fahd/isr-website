@@ -2,6 +2,7 @@ import { getImageProps } from 'next/image'
 import Link from 'next/link'
 import HeroBackdrop from '@/components/flagship/HeroBackdrop'
 import Countdown from '@/components/flagship/Countdown'
+import TicketsStatusLabel from '@/components/flagship/TicketsStatusLabel'
 import type { FlagshipEvent } from '@/lib/flagship'
 import { themeVars } from '@/lib/flagship/theme'
 
@@ -50,7 +51,7 @@ export default function FlagshipHeroSlide({ event }: { event: FlagshipEvent }) {
         {/* Frosted panel keeps text legible over the backdrop's dark lower half; on mobile it shows only the countdown and button */}
         <div className="rounded-2xl bg-(--su-light)/75 p-5 text-center shadow-xl ring-1 ring-current/10 backdrop-blur-md sm:p-8 lg:flex lg:flex-col lg:items-start lg:justify-center lg:p-6 lg:text-left">
           <p className="mb-4 text-xl font-semibold uppercase tracking-[0.2em] text-(--su-hero-heading) sm:hidden">
-            {isBooking ? 'Tickets on sale' : 'Save the date'}
+            <TicketsStatusLabel event={event} />
           </p>
           <h2
             className="mb-3 text-4xl font-bold leading-tight text-(--su-hero-heading) max-sm:sr-only sm:text-5xl lg:mb-2"
