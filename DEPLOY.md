@@ -107,9 +107,12 @@ As of this release production is missing `20261117000000_add_flagship_draft`
 
 ## 4. Deploy the frontend
 
-1. Clear the app directory, **including any `.env` or `.env.local`**. Those outrank the
-   `.env.production` in the package and would bake the wrong `NEXT_PUBLIC_API_URL` into
-   the bundle.
+1. Clear the app directory, **including any `.env.local` or `.env.production.local`**.
+   Next loads env values in the order `process.env` → `.env.production.local` →
+   `.env.local` → `.env.production` → `.env`, so either file would outrank the
+   `.env.production` in the package and bake the wrong `NEXT_PUBLIC_API_URL` into the
+   bundle. For the same reason, don't set `NEXT_PUBLIC_API_URL` in the panel's
+   environment variables unless you mean it to win. A stray `.env` is harmless; it ranks last.
 2. Upload and extract `frontend-deploy.zip`.
 3. Trigger the build. It installs from the lockfile and exports 159 files to `out/`.
 4. After publishing, confirm `/sacred-union/tickets/` is gone from the served output. If

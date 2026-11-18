@@ -63,7 +63,8 @@ package_frontend() {
 
   grep -q "^NEXT_PUBLIC_API_URL=$API_URL$" "$stage/.env.production" \
     || fail ".env.production does not set NEXT_PUBLIC_API_URL to $API_URL"
-  if [ -e "$stage/.env.local" ] || [ -e "$stage/.env" ]; then
+  # Next ranks .env.production.local and .env.local above .env.production.
+  if [ -e "$stage/.env.local" ] || [ -e "$stage/.env.production.local" ]; then
     fail "a local env file reached the staging dir — it would override .env.production"
   fi
   [ -f "$stage/public/.htaccess" ] || fail "public/.htaccess missing — 404 handling would be lost"
