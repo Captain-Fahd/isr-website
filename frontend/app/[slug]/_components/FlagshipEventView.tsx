@@ -1,21 +1,15 @@
-import { Fragment } from 'react'
 import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { absoluteUrl, eventJsonLd } from '@/lib/seo'
-import {
-  normalizeAboutOrder,
-  normalizeSectionOrder,
-  type AboutBlockId,
-  type FlagshipEvent,
-  type FlagshipSectionId,
-} from '@/lib/flagship'
+import type { AboutBlockId, FlagshipEvent, FlagshipSectionId } from '@/lib/flagship'
 import { googleCalendarUrl, icsDataUri } from '@/lib/flagship/calendar'
 import { themeVars } from '@/lib/flagship/theme'
 import Countdown from '@/components/flagship/Countdown'
 import PrimaryCta from './PrimaryCta'
 import StickyCtaBar from './StickyCtaBar'
 import TicketsSection from './TicketsSection'
+import LiveOrder from './LiveOrder'
 import SpeakersSection from './SpeakersSection'
 import ProgrammeSection from './ProgrammeSection'
 import {
@@ -50,7 +44,7 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
     ticketUrl: isBooking ? event.ticketUrl : null,
   })
 
-  // The about section's description and highlights, rendered in `aboutOrder`.
+  // The about section's description and highlights, rendered in `aboutOrder` (read live).
   const aboutBlocks: Record<AboutBlockId, React.ReactNode> = {
     description: (
       <div className="mx-auto max-w-2xl space-y-5 text-center text-lg leading-relaxed">
@@ -102,7 +96,7 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
     ),
   }
 
-  // The sections between the hero and the booking widget, rendered in `sectionOrder`.
+  // The sections between the hero and the booking widget, rendered in `sectionOrder` (read live).
   const sections: Record<FlagshipSectionId, React.ReactNode> = {
     // ── About ─────────────────────────────────────────────────
     about: (
@@ -110,9 +104,7 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
         <div className="container-isr">
           <SectionHeading eyebrow="About the event" title={`What is ${event.name}?`} />
           <div className="space-y-14">
-            {normalizeAboutOrder(event.aboutOrder).map((id) => (
-              <Fragment key={id}>{aboutBlocks[id]}</Fragment>
-            ))}
+            <LiveOrder slug={event.slug} field="aboutOrder" builtOrder={event.aboutOrder} blocks={aboutBlocks} />
           </div>
         </div>
       </section>
@@ -292,9 +284,7 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
           </div>
         </section>
 
-        {normalizeSectionOrder(event.sectionOrder).map((id) => (
-          <Fragment key={id}>{sections[id]}</Fragment>
-        ))}
+        <LiveOrder slug={event.slug} field="sectionOrder" builtOrder={event.sectionOrder} blocks={sections} />
 
         {/* ── Booking widget ──────────────────────────────────────── */}
         <TicketsSection
