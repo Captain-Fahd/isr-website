@@ -8,6 +8,34 @@ import {
 } from "../lib/storage";
 
 const PHASES = ["save-the-date", "booking"];
+const SPEAKER_LAYOUTS = ["rows", "carousel"];
+
+// The page sections an admin can reorder; the hero stays first and booking last.
+const SECTIONS = ["about", "speakers", "programme", "venue", "faqs"];
+// The blocks inside the about section, which can be reordered too.
+const ABOUT_BLOCKS = ["description", "highlights"];
+
+// An order must list every id exactly once.
+function isPermutationOf(ids: string[], value: unknown): boolean {
+  return Array.isArray(value) && value.length === ids.length && ids.every((id) => value.includes(id));
+}
+
+// Validates the fields with a fixed set of values; returns an error message or null.
+function invalidFieldError(body: Record<string, unknown>, partial: boolean): string | null {
+  if ((!partial || body.phase !== undefined) && !PHASES.includes(body.phase as string)) {
+    return `phase must be one of: ${PHASES.join(", ")}`;
+  }
+  if (body.speakerLayout !== undefined && !SPEAKER_LAYOUTS.includes(body.speakerLayout as string)) {
+    return `speakerLayout must be one of: ${SPEAKER_LAYOUTS.join(", ")}`;
+  }
+  if (body.sectionOrder !== undefined && !isPermutationOf(SECTIONS, body.sectionOrder)) {
+    return `sectionOrder must list each of: ${SECTIONS.join(", ")}`;
+  }
+  if (body.aboutOrder !== undefined && !isPermutationOf(ABOUT_BLOCKS, body.aboutOrder)) {
+    return `aboutOrder must list each of: ${ABOUT_BLOCKS.join(", ")}`;
+  }
+  return null;
+}
 
 const REQUIRED_FIELDS = [
   "slug",
@@ -64,9 +92,12 @@ const EDITABLE_FIELDS = [
   "highlights",
   "showSpeakers",
   "speakers",
+  "speakerLayout",
   "speakerPlaceholderCount",
   "programme",
   "faqs",
+  "sectionOrder",
+  "aboutOrder",
 ] as const;
 
 // Public reads never expose unpublished drafts.
@@ -111,11 +142,14 @@ function buildUpdateData(body: Record<string, unknown>): Prisma.FlagshipEventUpd
     ...(body.highlights !== undefined && { highlights: json(body.highlights) }),
     ...(body.showSpeakers !== undefined && { showSpeakers: Boolean(body.showSpeakers) }),
     ...(body.speakers !== undefined && { speakers: json(body.speakers) }),
+    ...(body.speakerLayout !== undefined && { speakerLayout: String(body.speakerLayout) }),
     ...(body.speakerPlaceholderCount !== undefined && {
       speakerPlaceholderCount: Number(body.speakerPlaceholderCount),
     }),
     ...(body.programme !== undefined && { programme: json(body.programme) }),
     ...(body.faqs !== undefined && { faqs: json(body.faqs) }),
+    ...(body.sectionOrder !== undefined && { sectionOrder: json(body.sectionOrder) }),
+    ...(body.aboutOrder !== undefined && { aboutOrder: json(body.aboutOrder) }),
   };
 }
 
@@ -183,8 +217,9 @@ export const createFlagshipEvent = async (req: Request, res: Response) => {
   if (missing) {
     return res.status(400).json({ error: `${missing} is required` });
   }
-  if (!PHASES.includes(body.phase)) {
-    return res.status(400).json({ error: `phase must be one of: ${PHASES.join(", ")}` });
+  const invalid = invalidFieldError(body, false);
+  if (invalid) {
+    return res.status(400).json({ error: invalid });
   }
 
   try {
@@ -211,9 +246,12 @@ export const createFlagshipEvent = async (req: Request, res: Response) => {
         highlights: body.highlights ?? [],
         showSpeakers: Boolean(body.showSpeakers),
         speakers: body.speakers ?? [],
+        speakerLayout: body.speakerLayout ?? "rows",
         speakerPlaceholderCount: body.speakerPlaceholderCount ?? 0,
         programme: body.programme ?? [],
         faqs: body.faqs ?? [],
+        sectionOrder: body.sectionOrder ?? SECTIONS,
+        aboutOrder: body.aboutOrder ?? ABOUT_BLOCKS,
       },
     });
     return res.status(201).json({ data: event });
@@ -234,8 +272,9 @@ export const updateFlagshipEvent = async (req: Request, res: Response) => {
   }
 
   const body = req.body ?? {};
-  if (body.phase !== undefined && !PHASES.includes(body.phase)) {
-    return res.status(400).json({ error: `phase must be one of: ${PHASES.join(", ")}` });
+  const invalid = invalidFieldError(body, true);
+  if (invalid) {
+    return res.status(400).json({ error: invalid });
   }
 
   try {
@@ -327,8 +366,9 @@ export const saveFlagshipEventDraft = async (req: Request, res: Response) => {
   if (missing) {
     return res.status(400).json({ error: `${missing} is required` });
   }
-  if (!PHASES.includes(body.phase)) {
-    return res.status(400).json({ error: `phase must be one of: ${PHASES.join(", ")}` });
+  const invalid = invalidFieldError(body, false);
+  if (invalid) {
+    return res.status(400).json({ error: invalid });
   }
 
   try {

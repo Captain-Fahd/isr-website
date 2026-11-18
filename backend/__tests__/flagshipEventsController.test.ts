@@ -173,12 +173,30 @@ test('createFlagshipEvent creates with defaults applied', async () => {
                 highlights: [],
                 showSpeakers: false,
                 speakers: [],
+                speakerLayout: 'rows',
                 speakerPlaceholderCount: 0,
                 programme: [],
                 faqs: [],
+                sectionOrder: ['about', 'speakers', 'programme', 'venue', 'faqs'],
+                aboutOrder: ['description', 'highlights'],
             }),
         }),
     );
+});
+
+test('createFlagshipEvent returns 400 when sectionOrder does not list every section once', async () => {
+    const req = {
+        body: { ...baseBody, sectionOrder: ['about', 'about', 'programme', 'venue', 'faqs'] },
+    } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await createFlagshipEvent(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({
+        error: 'sectionOrder must list each of: about, speakers, programme, venue, faqs',
+    });
+    expect(mockCreate).not.toHaveBeenCalled();
 });
 
 test('createFlagshipEvent returns 400 on duplicate slug', async () => {
@@ -221,6 +239,55 @@ test('updateFlagshipEvent returns 400 for non-integer id', async () => {
     expect(status).toHaveBeenCalledWith(400);
     expect(json).toHaveBeenCalledWith({ error: 'Invalid flagship event id' });
     expect(mockFindUnique).not.toHaveBeenCalled();
+});
+
+test('updateFlagshipEvent returns 400 for an invalid sectionOrder', async () => {
+    const req = { params: { id: '1' }, body: { sectionOrder: ['faqs'] } } as unknown as Request;
+    const { res, status } = mockRes();
+
+    await updateFlagshipEvent(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+});
+
+test('updateFlagshipEvent returns 400 for an unknown speakerLayout', async () => {
+    const req = { params: { id: '1' }, body: { speakerLayout: 'grid' } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await updateFlagshipEvent(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'speakerLayout must be one of: rows, carousel' });
+    expect(mockUpdate).not.toHaveBeenCalled();
+});
+
+test('updateFlagshipEvent returns 400 for an invalid aboutOrder', async () => {
+    const req = { params: { id: '1' }, body: { aboutOrder: ['highlights', 'faqs'] } } as unknown as Request;
+    const { res, json, status } = mockRes();
+
+    await updateFlagshipEvent(req, res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'aboutOrder must list each of: description, highlights' });
+    expect(mockUpdate).not.toHaveBeenCalled();
+});
+
+test('updateFlagshipEvent saves a reordered sectionOrder', async () => {
+    const sectionOrder = ['venue', 'about', 'faqs', 'speakers', 'programme'];
+    mockFindUnique.mockResolvedValue({ id: 1, ...baseBody });
+    mockUpdate.mockResolvedValue({ id: 1, ...baseBody, sectionOrder });
+    mockCollectFlagshipImageUrls.mockReturnValue([]);
+
+    const req = { params: { id: '1' }, body: { sectionOrder } } as unknown as Request;
+    const { res, status } = mockRes();
+
+    await updateFlagshipEvent(req, res);
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ sectionOrder }) }),
+    );
 });
 
 test('updateFlagshipEvent returns 404 when not found', async () => {
