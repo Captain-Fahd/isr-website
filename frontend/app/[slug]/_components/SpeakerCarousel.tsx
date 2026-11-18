@@ -3,10 +3,10 @@
 import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
 const ROTATE_MS = 5000
-/** Cards per page on tablet/desktop, repeated if there are more cards than this covers. */
-const PAGE_PATTERN = [3, 2, 2]
+/** Cards per page (or row) on tablet/desktop, repeated if there are more cards than this covers. */
+export const PAGE_PATTERN = [3, 2, 2]
 
-function paginate<T>(items: T[], pattern: number[]): T[][] {
+export function paginate<T>(items: T[], pattern: number[]): T[][] {
   const pages: T[][] = []
   for (let i = 0, p = 0; i < items.length; p++) {
     const size = pattern[p % pattern.length]
@@ -24,7 +24,7 @@ function paginate<T>(items: T[], pattern: number[]): T[][] {
  * pauses on hover or keyboard focus, and doesn't auto-rotate for reduced-motion
  * users. With a single page it renders as a plain row with no controls.
  */
-export default function SpeakerCarousel({ children }: { children: ReactNode }) {
+export default function SpeakerCarousel({ children }: { children: ReactNode; audiences?: (string | undefined)[] }) {
   const slides = Children.toArray(children)
   const trackRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)

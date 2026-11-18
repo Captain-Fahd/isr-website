@@ -1,8 +1,15 @@
+import { Fragment } from 'react'
 import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { absoluteUrl, eventJsonLd } from '@/lib/seo'
-import type { FlagshipEvent } from '@/lib/flagship'
+import {
+  normalizeAboutOrder,
+  normalizeSectionOrder,
+  type AboutBlockId,
+  type FlagshipEvent,
+  type FlagshipSectionId,
+} from '@/lib/flagship'
 import { googleCalendarUrl, icsDataUri } from '@/lib/flagship/calendar'
 import { themeVars } from '@/lib/flagship/theme'
 import Countdown from '@/components/flagship/Countdown'
@@ -42,6 +49,168 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
     url: absoluteUrl(pagePath),
     ticketUrl: isBooking ? event.ticketUrl : null,
   })
+
+  // The about section's description and highlights, rendered in `aboutOrder`.
+  const aboutBlocks: Record<AboutBlockId, React.ReactNode> = {
+    description: (
+      <div className="mx-auto max-w-2xl space-y-5 text-center text-lg leading-relaxed">
+        {event.description.split(/\n\s*\n/).map((paragraph, index) => {
+          const list = splitInlineList(paragraph)
+          if (list) {
+            return (
+              <div key={paragraph} className={`${frostedCard} px-6 py-6 text-left sm:px-8`}>
+                <p className={`${serif.className} mb-4 text-center text-xl font-bold italic text-(--su-dark)`}>
+                  {list.intro}
+                </p>
+                <ul className="space-y-3">
+                  {list.items.map((item) => (
+                    <li key={item} className="flex gap-3 opacity-90">
+                      <span aria-hidden="true" className="mt-0.5 text-sm text-(--su-primary)">✦</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          }
+          return (
+            <p
+              key={paragraph}
+              className={index === 0 ? `${serif.className} text-xl font-semibold italic text-(--su-dark) sm:text-2xl` : 'opacity-85'}
+            >
+              {paragraph}
+            </p>
+          )
+        })}
+      </div>
+    ),
+    highlights: event.highlights.length > 0 && (
+      <div className="grid gap-6 md:grid-cols-3">
+        {event.highlights.map((item, index) => (
+          <article key={item.title} className={`${frostedCard} relative p-6 pt-10`}>
+            <span
+              aria-hidden="true"
+              className={`${serif.className} absolute -top-4 left-6 bg-linear-to-r from-(--su-dark) to-[color-mix(in_srgb,var(--su-dark)_45%,var(--su-primary))] px-3 py-1 text-lg font-bold italic text-white shadow-md`}
+            >
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <h3 className={`${serif.className} mb-2 text-xl font-bold leading-snug text-(--su-dark)`}>{item.title}</h3>
+            <p className="leading-relaxed opacity-80">{item.body}</p>
+          </article>
+        ))}
+      </div>
+    ),
+  }
+
+  // The sections between the hero and the booking widget, rendered in `sectionOrder`.
+  const sections: Record<FlagshipSectionId, React.ReactNode> = {
+    // ── About ─────────────────────────────────────────────────
+    about: (
+      <section className="px-4 py-16 sm:py-20">
+        <div className="container-isr">
+          <SectionHeading eyebrow="About the event" title={`What is ${event.name}?`} />
+          <div className="space-y-14">
+            {normalizeAboutOrder(event.aboutOrder).map((id) => (
+              <Fragment key={id}>{aboutBlocks[id]}</Fragment>
+            ))}
+          </div>
+        </div>
+      </section>
+    ),
+    speakers: (
+      <SpeakersSection
+        slug={event.slug}
+        showSpeakers={event.showSpeakers}
+        speakers={event.speakers}
+        speakerLayout={event.speakerLayout}
+        speakerPlaceholderCount={event.speakerPlaceholderCount}
+        heading={<SectionHeading eyebrow="Speakers" title="Who you’ll hear from" />}
+      />
+    ),
+    programme: (
+      <ProgrammeSection
+        slug={event.slug}
+        programme={event.programme}
+        dateLabel={event.dateLabel}
+        timeLabel={event.timeLabel}
+        venueName={event.venue.name}
+        backdrop={event.theme.hero.backdrop}
+      />
+    ),
+    // ── Venue ─────────────────────────────────────────────────
+    venue: (
+      <section className="bg-white/50 px-4 py-16 sm:py-20">
+        <div className="container-isr grid items-center gap-10 md:grid-cols-2">
+          <div>
+            <Eyebrow className="text-(--su-dark)">The Venue</Eyebrow>
+            <h2 className={`${serif.className} mb-3 text-4xl font-extrabold italic leading-tight text-(--su-dark) md:text-5xl`}>
+              {event.venue.name}
+            </h2>
+            <Ornament className="mb-5 justify-start" />
+            <p className={`${serif.className} mb-6 text-lg italic text-(--su-dark) opacity-90`}>
+              {event.venue.address}
+            </p>
+            <ul className="mb-8 space-y-3 opacity-90">
+              {event.venue.notes.map((note) => (
+                <li key={note} className="flex gap-3">
+                  <span aria-hidden="true" className="mt-0.5 text-sm text-(--su-primary)">✦</span>
+                  <span>{note}</span>
+                </li>
+              ))}
+            </ul>
+            {event.venue.mapUrl && (
+              <a href={event.venue.mapUrl} target="_blank" rel="noopener noreferrer" className={plateButton}>
+                Open in Google Maps
+              </a>
+            )}
+          </div>
+          {event.venue.image ? (
+            <div className="relative">
+              {/* Offset frame, like the poster's outlined boxes */}
+              <div aria-hidden="true" className="absolute inset-0 translate-x-3 translate-y-3 border border-(--su-dark)/50" />
+              <Image
+                src={event.venue.image.src}
+                alt={event.venue.image.alt}
+                width={event.venue.image.width}
+                height={event.venue.image.height}
+                className="relative aspect-[4/3] h-auto w-full object-cover shadow-lg"
+              />
+            </div>
+          ) : (
+            <div className="flex aspect-[4/3] items-center justify-center border-2 border-dashed border-(--su-on-light)/20 bg-(--su-on-light)/5 text-sm opacity-60">
+              Venue photo
+            </div>
+          )}
+        </div>
+      </section>
+    ),
+    // ── FAQ ───────────────────────────────────────────────────
+    faqs: (
+      <section className="bg-white/50 px-4 py-16 sm:py-20">
+        <div className="container-isr max-w-3xl">
+          <SectionHeading eyebrow="FAQ" title="Good to know" />
+          <div className="space-y-3">
+            {event.faqs.map((faq) => (
+              <details key={faq.question} className={`${frostedCard} group border-l-4 border-(--su-dark) p-5 open:border-(--su-primary)`}>
+                <summary
+                  className={`${serif.className} flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-bold text-(--su-dark) [&::-webkit-details-marker]:hidden`}
+                >
+                  {faq.question}
+                  <span
+                    aria-hidden="true"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center border border-(--su-dark)/40 font-sans text-base text-(--su-primary) transition-transform group-open:rotate-45"
+                  >
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 leading-relaxed opacity-85">{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+    ),
+  }
 
   return (
     <div style={themeVars(event)} className="min-h-screen bg-(--su-light) text-(--su-on-light)">
@@ -123,145 +292,9 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
           </div>
         </section>
 
-        {/* ── About ───────────────────────────────────────────────── */}
-        <section className="px-4 py-16 sm:py-20">
-          <div className="container-isr">
-            <SectionHeading eyebrow="About the event" title={`What is ${event.name}?`} />
-            <div className="mx-auto mb-14 max-w-2xl space-y-5 text-center text-lg leading-relaxed">
-              {event.description.split(/\n\s*\n/).map((paragraph, index) => {
-                const list = splitInlineList(paragraph)
-                if (list) {
-                  return (
-                    <div key={paragraph} className={`${frostedCard} px-6 py-6 text-left sm:px-8`}>
-                      <p className={`${serif.className} mb-4 text-center text-xl font-bold italic text-(--su-dark)`}>
-                        {list.intro}
-                      </p>
-                      <ul className="space-y-3">
-                        {list.items.map((item) => (
-                          <li key={item} className="flex gap-3 opacity-90">
-                            <span aria-hidden="true" className="mt-0.5 text-sm text-(--su-primary)">✦</span>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )
-                }
-                return (
-                  <p
-                    key={paragraph}
-                    className={index === 0 ? `${serif.className} text-xl font-semibold italic text-(--su-dark) sm:text-2xl` : 'opacity-85'}
-                  >
-                    {paragraph}
-                  </p>
-                )
-              })}
-            </div>
-            <div className="grid gap-6 md:grid-cols-3">
-              {event.highlights.map((item, index) => (
-                <article key={item.title} className={`${frostedCard} relative p-6 pt-10`}>
-                  <span
-                    aria-hidden="true"
-                    className={`${serif.className} absolute -top-4 left-6 bg-linear-to-r from-(--su-dark) to-[color-mix(in_srgb,var(--su-dark)_45%,var(--su-primary))] px-3 py-1 text-lg font-bold italic text-white shadow-md`}
-                  >
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <h3 className={`${serif.className} mb-2 text-xl font-bold leading-snug text-(--su-dark)`}>{item.title}</h3>
-                  <p className="leading-relaxed opacity-80">{item.body}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <SpeakersSection
-          slug={event.slug}
-          showSpeakers={event.showSpeakers}
-          speakers={event.speakers}
-          speakerPlaceholderCount={event.speakerPlaceholderCount}
-          heading={<SectionHeading eyebrow="Speakers" title="Who you’ll hear from" />}
-        />
-
-        <ProgrammeSection
-          slug={event.slug}
-          programme={event.programme}
-          dateLabel={event.dateLabel}
-          timeLabel={event.timeLabel}
-          venueName={event.venue.name}
-          backdrop={event.theme.hero.backdrop}
-        />
-
-
-        {/* ── Venue ───────────────────────────────────────────────── */}
-        <section className="bg-white/50 px-4 py-16 sm:py-20">
-          <div className="container-isr grid items-center gap-10 md:grid-cols-2">
-            <div>
-              <Eyebrow className="text-(--su-dark)">The Venue</Eyebrow>
-              <h2 className={`${serif.className} mb-3 text-4xl font-extrabold italic leading-tight text-(--su-dark) md:text-5xl`}>
-                {event.venue.name}
-              </h2>
-              <Ornament className="mb-5 justify-start" />
-              <p className={`${serif.className} mb-6 text-lg italic text-(--su-dark) opacity-90`}>
-                {event.venue.address}
-              </p>
-              <ul className="mb-8 space-y-3 opacity-90">
-                {event.venue.notes.map((note) => (
-                  <li key={note} className="flex gap-3">
-                    <span aria-hidden="true" className="mt-0.5 text-sm text-(--su-primary)">✦</span>
-                    <span>{note}</span>
-                  </li>
-                ))}
-              </ul>
-              {event.venue.mapUrl && (
-                <a href={event.venue.mapUrl} target="_blank" rel="noopener noreferrer" className={plateButton}>
-                  Open in Google Maps
-                </a>
-              )}
-            </div>
-            {event.venue.image ? (
-              <div className="relative">
-                {/* Offset frame, like the poster's outlined boxes */}
-                <div aria-hidden="true" className="absolute inset-0 translate-x-3 translate-y-3 border border-(--su-dark)/50" />
-                <Image
-                  src={event.venue.image.src}
-                  alt={event.venue.image.alt}
-                  width={event.venue.image.width}
-                  height={event.venue.image.height}
-                  className="relative aspect-[4/3] h-auto w-full object-cover shadow-lg"
-                />
-              </div>
-            ) : (
-              <div className="flex aspect-[4/3] items-center justify-center border-2 border-dashed border-(--su-on-light)/20 bg-(--su-on-light)/5 text-sm opacity-60">
-                Venue photo
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* ── FAQ ─────────────────────────────────────────────────── */}
-        <section className="bg-white/50 px-4 py-16 sm:py-20">
-          <div className="container-isr max-w-3xl">
-            <SectionHeading eyebrow="FAQ" title="Good to know" />
-            <div className="space-y-3">
-              {event.faqs.map((faq) => (
-                <details key={faq.question} className={`${frostedCard} group border-l-4 border-(--su-dark) p-5 open:border-(--su-primary)`}>
-                  <summary
-                    className={`${serif.className} flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-bold text-(--su-dark) [&::-webkit-details-marker]:hidden`}
-                  >
-                    {faq.question}
-                    <span
-                      aria-hidden="true"
-                      className="flex h-7 w-7 shrink-0 items-center justify-center border border-(--su-dark)/40 font-sans text-base text-(--su-primary) transition-transform group-open:rotate-45"
-                    >
-                      +
-                    </span>
-                  </summary>
-                  <p className="mt-3 leading-relaxed opacity-85">{faq.answer}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
+        {normalizeSectionOrder(event.sectionOrder).map((id) => (
+          <Fragment key={id}>{sections[id]}</Fragment>
+        ))}
 
         {/* ── Booking widget ──────────────────────────────────────── */}
         <TicketsSection
