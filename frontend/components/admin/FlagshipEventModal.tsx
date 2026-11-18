@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { PlusIcon, Trash2Icon } from 'lucide-react'
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
+import { ChevronDownIcon, ChevronUpIcon, GripVerticalIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,17 @@ import { Switch } from '@/components/ui/switch'
 import { StringListField } from '@/components/admin/StringListField'
 import { ImageUploadField } from '@/components/admin/ImageUploadField'
 import { toDatetimeLocalValue, fromDatetimeLocalValue } from '@/lib/events'
-import type { EventPhase, FlagshipEvent } from '@/lib/flagship'
+import {
+  ABOUT_BLOCKS,
+  FLAGSHIP_SECTIONS,
+  normalizeAboutOrder,
+  normalizeSectionOrder,
+  type EventPhase,
+  type FlagshipEvent,
+  type AboutBlockId,
+  type FlagshipSectionId,
+  type SpeakerLayout,
+} from '@/lib/flagship'
 
 type FlagshipEventInput = Omit<FlagshipEvent, 'id'>
 type Highlight = FlagshipEvent['highlights'][number]
@@ -46,6 +56,11 @@ const PHASES: { value: EventPhase; label: string }[] = [
   { value: 'booking', label: 'Booking open' },
 ]
 
+const SPEAKER_LAYOUTS: { value: SpeakerLayout; label: string }[] = [
+  { value: 'rows', label: 'Rows (3, then 2, then 2)' },
+  { value: 'carousel', label: 'Carousel (rotating)' },
+]
+
 const emptyVenue: FlagshipEvent['venue'] = { name: '', address: '', mapUrl: '', notes: [] }
 const emptyBanner: FlagshipEvent['banner'] = { src: '', alt: '', width: 0, height: 0 }
 const emptyTheme: FlagshipEvent['theme'] = {
@@ -65,6 +80,12 @@ function updateAt<T>(items: T[], index: number, patch: Partial<T>): T[] {
 
 function removeAt<T>(items: T[], index: number): T[] {
   return items.filter((_, i) => i !== index)
+}
+
+function moveAt<T>(items: T[], from: number, to: number): T[] {
+  const next = [...items]
+  next.splice(to, 0, ...next.splice(from, 1))
+  return next
 }
 
 function ColorField({
@@ -101,6 +122,149 @@ function Fieldset({ title, children }: { title: string; children: React.ReactNod
       <legend className="-mt-6 bg-popover px-1.5 text-sm font-semibold text-isr-dark-red">
         {title}
       </legend>
+      {children}
+    </fieldset>
+  )
+}
+
+type MovableProps = {
+  index: number
+  count: number
+  /** An item of this list is being dragged — only then does the fieldset accept drops. */
+  sorting: boolean
+  dragging: boolean
+  dropTarget: boolean
+  onMove: (to: number) => void
+  onDragStart: () => void
+  onDragEnd: () => void
+  onDragOver: () => void
+  onDrop: () => void
+}
+
+/**
+ * Drag-and-drop and arrow reordering for one list of ids. Returns the props for the
+ * `MovableFieldset` showing the item `id` at position `index`.
+ */
+function useReorder<T extends string>(order: T[], setOrder: Dispatch<SetStateAction<T[]>>) {
+  const [dragging, setDragging] = useState<T | null>(null)
+  const [dropTarget, setDropTarget] = useState<T | null>(null)
+
+  function move(id: T, to: number) {
+    setOrder((current) => {
+      const next = current.filter((item) => item !== id)
+      next.splice(Math.max(0, Math.min(to, next.length)), 0, id)
+      return next
+    })
+  }
+
+  return (id: T, index: number): MovableProps => ({
+    index,
+    count: order.length,
+    sorting: dragging !== null,
+    dragging: dragging === id,
+    dropTarget: dropTarget === id && dragging !== id,
+    onMove: (to) => move(id, to),
+    onDragStart: () => setDragging(id),
+    onDragEnd: () => {
+      setDragging(null)
+      setDropTarget(null)
+    },
+    onDragOver: () => setDropTarget(id),
+    onDrop: () => {
+      if (dragging) move(dragging, index)
+    },
+  })
+}
+
+/**
+ * A fieldset that can be dragged by its handle or moved with the arrows; the form
+ * lists these in the order they appear on the page. `nested` is the smaller style
+ * for blocks inside a section.
+ */
+function MovableFieldset({
+  title,
+  nested = false,
+  index,
+  count,
+  sorting,
+  dragging,
+  dropTarget,
+  onMove,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
+  children,
+}: MovableProps & {
+  title: string
+  nested?: boolean
+  children: React.ReactNode
+}) {
+  const ref = useRef<HTMLFieldSetElement>(null)
+
+  return (
+    <fieldset
+      ref={ref}
+      // stopPropagation keeps a nested list's drag from reaching the section around it.
+      onDragOver={(e) => {
+        if (!sorting) return
+        e.preventDefault()
+        e.stopPropagation()
+        onDragOver()
+      }}
+      onDrop={(e) => {
+        if (!sorting) return
+        e.preventDefault()
+        e.stopPropagation()
+        onDrop()
+      }}
+      className={`relative rounded-lg border transition ${nested ? 'space-y-3 border-dashed p-3' : 'space-y-4 p-4'} ${
+        dragging ? 'opacity-50' : ''
+      } ${dropTarget ? 'border-isr-turquoise ring-2 ring-isr-turquoise/40' : ''}`}
+    >
+      <legend
+        className={`flex items-center gap-1 bg-popover px-1.5 ${
+          nested ? '-mt-5 text-xs font-medium text-foreground' : '-mt-6 text-sm font-semibold text-isr-dark-red'
+        }`}
+      >
+        <span
+          draggable
+          onDragStart={(e) => {
+            e.stopPropagation()
+            e.dataTransfer.effectAllowed = 'move'
+            if (ref.current) e.dataTransfer.setDragImage(ref.current, 16, 16)
+            onDragStart()
+          }}
+          onDragEnd={onDragEnd}
+          className="cursor-grab text-muted-foreground active:cursor-grabbing"
+          title={`Drag to move ${title}`}
+        >
+          <GripVerticalIcon className="size-4" aria-hidden="true" />
+        </span>
+        {title}
+      </legend>
+      <div className={`absolute right-3 flex gap-0.5 bg-popover px-1 ${nested ? '-top-3' : '-top-3.5'}`}>
+        <Button
+          type="button"
+          size="icon-xs"
+          variant="ghost"
+          onClick={() => onMove(index - 1)}
+          disabled={index === 0}
+          aria-label={`Move ${title} up`}
+        >
+          <ChevronUpIcon />
+        </Button>
+        <Button
+          type="button"
+          size="icon-xs"
+          variant="ghost"
+          onClick={() => onMove(index + 1)}
+          disabled={index === count - 1}
+          aria-label={`Move ${title} down`}
+        >
+          <ChevronDownIcon />
+        </Button>
+      </div>
       {children}
     </fieldset>
   )
@@ -158,11 +322,16 @@ export function FlagshipEventModal({
   const [highlights, setHighlights] = useState<Highlight[]>(event?.highlights ?? [])
   const [showSpeakers, setShowSpeakers] = useState(event?.showSpeakers ?? false)
   const [speakers, setSpeakers] = useState<Speaker[]>(event?.speakers ?? [])
+  const [speakerLayout, setSpeakerLayout] = useState<SpeakerLayout>(event?.speakerLayout ?? 'rows')
   const [speakerPlaceholderCount, setSpeakerPlaceholderCount] = useState(
     event?.speakerPlaceholderCount ?? 0,
   )
   const [programme, setProgramme] = useState<ProgrammeItem[]>(event?.programme ?? [])
   const [faqs, setFaqs] = useState<Faq[]>(event?.faqs ?? [])
+  const [sectionOrder, setSectionOrder] = useState(() => normalizeSectionOrder(event?.sectionOrder))
+  const [aboutOrder, setAboutOrder] = useState(() => normalizeAboutOrder(event?.aboutOrder))
+  const sectionProps = useReorder(sectionOrder, setSectionOrder)
+  const aboutProps = useReorder(aboutOrder, setAboutOrder)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [notice, setNotice] = useState('')
@@ -189,9 +358,12 @@ export function FlagshipEventModal({
     setHighlights(event?.highlights ?? [])
     setShowSpeakers(event?.showSpeakers ?? false)
     setSpeakers(event?.speakers ?? [])
+    setSpeakerLayout(event?.speakerLayout ?? 'rows')
     setSpeakerPlaceholderCount(event?.speakerPlaceholderCount ?? 0)
     setProgramme(event?.programme ?? [])
     setFaqs(event?.faqs ?? [])
+    setSectionOrder(normalizeSectionOrder(event?.sectionOrder))
+    setAboutOrder(normalizeAboutOrder(event?.aboutOrder))
     setError('')
   }, [event, open])
 
@@ -246,9 +418,12 @@ export function FlagshipEventModal({
         highlights,
         showSpeakers,
         speakers,
+        speakerLayout,
         speakerPlaceholderCount,
         programme,
         faqs,
+        sectionOrder,
+        aboutOrder,
     }
   }
 
@@ -321,6 +496,341 @@ export function FlagshipEventModal({
     }
   }
 
+  // The fields for each block inside the about section, shown in the page's order.
+  const aboutFields: Record<AboutBlockId, React.ReactNode> = {
+    description: (
+      <div className="space-y-1.5">
+        <Label htmlFor="fe-description" className="sr-only">Description</Label>
+        <Textarea
+          id="fe-description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+          placeholder="Separate paragraphs with a blank line…"
+        />
+      </div>
+    ),
+    highlights: (
+      <>
+        <div className="space-y-3">
+          {highlights.map((highlight, index) => (
+            <div key={index} className="flex gap-2 rounded-lg border p-3">
+              <div className="flex-1 space-y-2">
+                <Input
+                  value={highlight.title}
+                  placeholder="Title"
+                  onChange={(e) => setHighlights(updateAt(highlights, index, { title: e.target.value }))}
+                />
+                <Textarea
+                  value={highlight.body}
+                  placeholder="Body"
+                  rows={2}
+                  onChange={(e) => setHighlights(updateAt(highlights, index, { body: e.target.value }))}
+                />
+              </div>
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => setHighlights(removeAt(highlights, index))}
+                className="text-destructive hover:bg-destructive/10"
+              >
+                <Trash2Icon />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button type="button" size="sm" variant="outline" onClick={() => setHighlights([...highlights, { title: '', body: '' }])}>
+          <PlusIcon className="size-4" />
+          Add highlight
+        </Button>
+      </>
+    ),
+  }
+
+  // The fields for each movable page section, shown in the page's order.
+  const sectionFields: Record<FlagshipSectionId, React.ReactNode> = {
+    about: (
+      <>
+        {aboutOrder.map((id, index) => (
+          <MovableFieldset
+            key={id}
+            nested
+            title={ABOUT_BLOCKS.find((block) => block.id === id)!.title}
+            {...aboutProps(id, index)}
+          >
+            {aboutFields[id]}
+          </MovableFieldset>
+        ))}
+      </>
+    ),
+    speakers: (
+      <>
+        <div className="flex items-center gap-2">
+          <Switch checked={showSpeakers} onCheckedChange={setShowSpeakers} id="fe-show-speakers" />
+          <Label htmlFor="fe-show-speakers">Show speakers section</Label>
+        </div>
+        {!showSpeakers && (
+          <p className="text-xs text-muted-foreground">
+            The speakers section is hidden from the event page. Speakers entered below are kept.
+          </p>
+        )}
+        <div className="space-y-1.5">
+          <Label htmlFor="fe-speaker-layout">Layout</Label>
+          <select
+            id="fe-speaker-layout"
+            value={speakerLayout}
+            onChange={(e) => setSpeakerLayout(e.target.value as SpeakerLayout)}
+            className="flex h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:w-64"
+          >
+            {SPEAKER_LAYOUTS.map((layout) => (
+              <option key={layout.value} value={layout.value}>
+                {layout.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            On phones both show one speaker at a time: stacked for rows, swipeable for the carousel.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="fe-speaker-placeholders">Number of speakers</Label>
+          <Input
+            id="fe-speaker-placeholders"
+            type="number"
+            min={0}
+            value={speakerPlaceholderCount}
+            onChange={(e) => setSpeakerPlaceholderCount(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+            className="w-24"
+          />
+          <p className="text-xs text-muted-foreground">
+            Slots not filled by a speaker below show as &quot;To be announced&quot;.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            In rows, speakers fill a row of 3, then rows of 2, in the order below. Give every speaker
+            in a row an audience (e.g. Brothers, Sisters) to mark it as simultaneous sessions.
+          </p>
+        </div>
+        <div className="space-y-3">
+          {speakers.map((speaker, index) => (
+            <div key={index} className="flex gap-2 rounded-lg border p-3">
+              <SpeakerThumb image={speaker.image} name={speaker.name} />
+              <div className="flex-1 space-y-2">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    value={speaker.name}
+                    placeholder="Name"
+                    onChange={(e) => setSpeakers(updateAt(speakers, index, { name: e.target.value }))}
+                  />
+                  <Input
+                    value={speaker.title}
+                    placeholder="Title"
+                    onChange={(e) => setSpeakers(updateAt(speakers, index, { title: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    value={speaker.topic ?? ''}
+                    placeholder="Topic (optional)"
+                    onChange={(e) => setSpeakers(updateAt(speakers, index, { topic: e.target.value }))}
+                  />
+                  <Input
+                    value={speaker.audience ?? ''}
+                    placeholder="Audience, e.g. Brothers (optional)"
+                    onChange={(e) => setSpeakers(updateAt(speakers, index, { audience: e.target.value }))}
+                  />
+                </div>
+                <ImageUploadField
+                  id={`fe-speaker-image-${index}`}
+                  label="Photo"
+                  value={speaker.image}
+                  onChange={(image) => setSpeakers(updateAt(speakers, index, { image }))}
+                />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="ghost"
+                  onClick={() => setSpeakers(moveAt(speakers, index, index - 1))}
+                  disabled={index === 0}
+                  aria-label={`Move ${speaker.name || 'speaker'} up`}
+                >
+                  <ChevronUpIcon />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="ghost"
+                  onClick={() => setSpeakers(moveAt(speakers, index, index + 1))}
+                  disabled={index === speakers.length - 1}
+                  aria-label={`Move ${speaker.name || 'speaker'} down`}
+                >
+                  <ChevronDownIcon />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="ghost"
+                  onClick={() => setSpeakers(removeAt(speakers, index))}
+                  className="text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2Icon />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => setSpeakers([...speakers, { name: '', title: '', topic: '', image: '' }])}
+        >
+          <PlusIcon className="size-4" />
+          Add speaker
+        </Button>
+      </>
+    ),
+    programme: (
+      <>
+        <div className="space-y-3">
+          {programme.map((item, index) => (
+            <div key={index} className="flex gap-2 rounded-lg border p-3">
+              <div className="flex-1 space-y-2">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    value={item.time}
+                    placeholder="Time, e.g. 1:30 pm"
+                    onChange={(e) => setProgramme(updateAt(programme, index, { time: e.target.value }))}
+                  />
+                  <Input
+                    value={item.title}
+                    placeholder="Title"
+                    onChange={(e) => setProgramme(updateAt(programme, index, { title: e.target.value }))}
+                  />
+                </div>
+                <Input
+                  value={item.detail ?? ''}
+                  placeholder="Detail (optional)"
+                  onChange={(e) => setProgramme(updateAt(programme, index, { detail: e.target.value }))}
+                />
+              </div>
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => setProgramme(removeAt(programme, index))}
+                className="text-destructive hover:bg-destructive/10"
+              >
+                <Trash2Icon />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button type="button" size="sm" variant="outline" onClick={() => setProgramme([...programme, { time: '', title: '' }])}>
+          <PlusIcon className="size-4" />
+          Add item
+        </Button>
+      </>
+    ),
+    venue: (
+      <>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="fe-venue-name">Venue name</Label>
+            <Input
+              id="fe-venue-name"
+              value={venue.name}
+              onChange={(e) => setVenue({ ...venue, name: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="fe-venue-address">Venue address</Label>
+            <Input
+              id="fe-venue-address"
+              value={venue.address}
+              onChange={(e) => setVenue({ ...venue, address: e.target.value })}
+            />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="fe-venue-map">Google Maps link (optional)</Label>
+          <Input
+            id="fe-venue-map"
+            value={venue.mapUrl}
+            onChange={(e) => setVenue({ ...venue, mapUrl: e.target.value })}
+          />
+        </div>
+        <StringListField
+          label="Venue notes"
+          values={venue.notes}
+          onChange={(notes) => setVenue({ ...venue, notes })}
+          placeholder="e.g. Prayer space available on site"
+          addLabel="Add note"
+        />
+        <ImageUploadField
+          id="fe-venue-image"
+          label="Venue photo"
+          value={venue.image?.src ?? ''}
+          optional
+          onChange={(src) =>
+            setVenue({ ...venue, image: { src, alt: venue.image?.alt ?? '', width: venue.image?.width ?? 0, height: venue.image?.height ?? 0 } })
+          }
+          onDimensions={({ width, height }) =>
+            setVenue((v) => ({ ...v, image: v.image ? { ...v.image, width, height } : { src: '', alt: '', width, height } }))
+          }
+        />
+        {venue.image && (
+          <div className="space-y-1.5">
+            <Label htmlFor="fe-venue-image-alt">Venue photo alt text</Label>
+            <Input
+              id="fe-venue-image-alt"
+              value={venue.image.alt}
+              onChange={(e) => setVenue({ ...venue, image: { ...venue.image!, alt: e.target.value } })}
+            />
+          </div>
+        )}
+      </>
+    ),
+    faqs: (
+      <>
+        <div className="space-y-3">
+          {faqs.map((faq, index) => (
+            <div key={index} className="flex gap-2 rounded-lg border p-3">
+              <div className="flex-1 space-y-2">
+                <Input
+                  value={faq.question}
+                  placeholder="Question"
+                  onChange={(e) => setFaqs(updateAt(faqs, index, { question: e.target.value }))}
+                />
+                <Textarea
+                  value={faq.answer}
+                  placeholder="Answer"
+                  rows={2}
+                  onChange={(e) => setFaqs(updateAt(faqs, index, { answer: e.target.value }))}
+                />
+              </div>
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => setFaqs(removeAt(faqs, index))}
+                className="text-destructive hover:bg-destructive/10"
+              >
+                <Trash2Icon />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button type="button" size="sm" variant="outline" onClick={() => setFaqs([...faqs, { question: '', answer: '' }])}>
+          <PlusIcon className="size-4" />
+          Add FAQ
+        </Button>
+      </>
+    ),
+  }
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto" showCloseButton={false}>
@@ -352,7 +862,7 @@ export function FlagshipEventModal({
             </div>
           )}
 
-          <Fieldset title="Basics">
+          <Fieldset title="Hero: basics">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="fe-slug">Slug</Label>
@@ -373,16 +883,6 @@ export function FlagshipEventModal({
               <Label htmlFor="fe-tagline">Tagline</Label>
               <Input id="fe-tagline" value={tagline} onChange={(e) => setTagline(e.target.value)} />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="fe-description">Description</Label>
-              <Textarea
-                id="fe-description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={4}
-                placeholder="Separate paragraphs with a blank line…"
-              />
-            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="fe-phase">Phase</Label>
@@ -399,19 +899,6 @@ export function FlagshipEventModal({
                   ))}
                 </select>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="fe-ticket-url">TryBooking URL (optional)</Label>
-                <Input id="fe-ticket-url" value={ticketUrl} onChange={(e) => setTicketUrl(e.target.value)} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="fe-ticket-event-id">TryBooking event id (optional)</Label>
-              <Input
-                id="fe-ticket-event-id"
-                value={ticketEventId}
-                onChange={(e) => setTicketEventId(e.target.value)}
-                placeholder="data-eid for the booking widget"
-              />
             </div>
             <div className="flex flex-wrap gap-6">
               <div className="flex items-center gap-2">
@@ -422,20 +909,10 @@ export function FlagshipEventModal({
                 <Switch checked={released} onCheckedChange={setReleased} id="fe-released" />
                 <Label htmlFor="fe-released">Released (live)</Label>
               </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={ticketsOnSale} onCheckedChange={setTicketsOnSale} id="fe-tickets-on-sale" />
-                <Label htmlFor="fe-tickets-on-sale">Tickets on sale</Label>
-              </div>
             </div>
-            {ticketsOnSale && (
-              <p className="text-xs text-muted-foreground">
-                The booking section appears at the foot of /{slug || '<slug>'}/ and the CTA buttons
-                scroll to it, instead of opening the external &quot;Notify me&quot; link.
-              </p>
-            )}
           </Fieldset>
 
-          <Fieldset title="Schedule & Venue">
+          <Fieldset title="Hero: schedule">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="fe-start">Start</Label>
@@ -464,64 +941,9 @@ export function FlagshipEventModal({
                 />
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="fe-venue-name">Venue name</Label>
-                <Input
-                  id="fe-venue-name"
-                  value={venue.name}
-                  onChange={(e) => setVenue({ ...venue, name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="fe-venue-address">Venue address</Label>
-                <Input
-                  id="fe-venue-address"
-                  value={venue.address}
-                  onChange={(e) => setVenue({ ...venue, address: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="fe-venue-map">Google Maps link (optional)</Label>
-              <Input
-                id="fe-venue-map"
-                value={venue.mapUrl}
-                onChange={(e) => setVenue({ ...venue, mapUrl: e.target.value })}
-              />
-            </div>
-            <StringListField
-              label="Venue notes"
-              values={venue.notes}
-              onChange={(notes) => setVenue({ ...venue, notes })}
-              placeholder="e.g. Prayer space available on site"
-              addLabel="Add note"
-            />
-            <ImageUploadField
-              id="fe-venue-image"
-              label="Venue photo"
-              value={venue.image?.src ?? ''}
-              optional
-              onChange={(src) =>
-                setVenue({ ...venue, image: { src, alt: venue.image?.alt ?? '', width: venue.image?.width ?? 0, height: venue.image?.height ?? 0 } })
-              }
-              onDimensions={({ width, height }) =>
-                setVenue((v) => ({ ...v, image: v.image ? { ...v.image, width, height } : { src: '', alt: '', width, height } }))
-              }
-            />
-            {venue.image && (
-              <div className="space-y-1.5">
-                <Label htmlFor="fe-venue-image-alt">Venue photo alt text</Label>
-                <Input
-                  id="fe-venue-image-alt"
-                  value={venue.image.alt}
-                  onChange={(e) => setVenue({ ...venue, image: { ...venue.image!, alt: e.target.value } })}
-                />
-              </div>
-            )}
           </Fieldset>
 
-          <Fieldset title="Theme & Images">
+          <Fieldset title="Hero: theme & images">
             <div className="grid gap-4 sm:grid-cols-3">
               <ColorField id="fe-color-dark" label="Dark" value={theme.dark} onChange={(v) => setTheme({ ...theme, dark: v })} />
               <ColorField id="fe-color-ondark" label="On dark" value={theme.onDark} onChange={(v) => setTheme({ ...theme, onDark: v })} />
@@ -611,191 +1033,50 @@ export function FlagshipEventModal({
             <ImageUploadField id="fe-og-image" label="Link preview image (1200×630)" value={ogImage} onChange={setOgImage} />
           </Fieldset>
 
-          <Fieldset title="Highlights">
-            <div className="space-y-3">
-              {highlights.map((highlight, index) => (
-                <div key={index} className="flex gap-2 rounded-lg border p-3">
-                  <div className="flex-1 space-y-2">
-                    <Input
-                      value={highlight.title}
-                      placeholder="Title"
-                      onChange={(e) => setHighlights(updateAt(highlights, index, { title: e.target.value }))}
-                    />
-                    <Textarea
-                      value={highlight.body}
-                      placeholder="Body"
-                      rows={2}
-                      onChange={(e) => setHighlights(updateAt(highlights, index, { body: e.target.value }))}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => setHighlights(removeAt(highlights, index))}
-                    className="text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2Icon />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <Button type="button" size="sm" variant="outline" onClick={() => setHighlights([...highlights, { title: '', body: '' }])}>
-              <PlusIcon className="size-4" />
-              Add highlight
-            </Button>
-          </Fieldset>
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-isr-dark-red">Page sections</p>
+            <p className="text-xs text-muted-foreground">
+              These appear on the page in this order, between the hero and the booking section. Drag a
+              section by its handle, or use the arrows, to move it. The blocks inside About move the
+              same way.
+            </p>
+          </div>
+          {sectionOrder.map((id, index) => (
+            <MovableFieldset
+              key={id}
+              title={FLAGSHIP_SECTIONS.find((section) => section.id === id)!.title}
+              {...sectionProps(id, index)}
+            >
+              {sectionFields[id]}
+            </MovableFieldset>
+          ))}
 
-          <Fieldset title="Speakers">
-            <div className="flex items-center gap-2">
-              <Switch checked={showSpeakers} onCheckedChange={setShowSpeakers} id="fe-show-speakers" />
-              <Label htmlFor="fe-show-speakers">Show speakers section</Label>
+          <Fieldset title="Booking">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="fe-ticket-url">TryBooking URL (optional)</Label>
+                <Input id="fe-ticket-url" value={ticketUrl} onChange={(e) => setTicketUrl(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="fe-ticket-event-id">TryBooking event id (optional)</Label>
+                <Input
+                  id="fe-ticket-event-id"
+                  value={ticketEventId}
+                  onChange={(e) => setTicketEventId(e.target.value)}
+                  placeholder="data-eid for the booking widget"
+                />
+              </div>
             </div>
-            {!showSpeakers && (
+            <div className="flex items-center gap-2">
+              <Switch checked={ticketsOnSale} onCheckedChange={setTicketsOnSale} id="fe-tickets-on-sale" />
+              <Label htmlFor="fe-tickets-on-sale">Tickets on sale</Label>
+            </div>
+            {ticketsOnSale && (
               <p className="text-xs text-muted-foreground">
-                The speakers section is hidden from the event page. Speakers entered below are kept.
+                The booking section appears at the foot of /{slug || '<slug>'}/ and the CTA buttons
+                scroll to it, instead of opening the external &quot;Notify me&quot; link.
               </p>
             )}
-            <div className="space-y-1.5">
-              <Label htmlFor="fe-speaker-placeholders">Number of speakers</Label>
-              <Input
-                id="fe-speaker-placeholders"
-                type="number"
-                min={0}
-                value={speakerPlaceholderCount}
-                onChange={(e) => setSpeakerPlaceholderCount(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
-                className="w-24"
-              />
-              <p className="text-xs text-muted-foreground">
-                Slots not filled by a speaker below show as &quot;To be announced&quot;.
-              </p>
-            </div>
-            <div className="space-y-3">
-              {speakers.map((speaker, index) => (
-                <div key={index} className="flex gap-2 rounded-lg border p-3">
-                  <SpeakerThumb image={speaker.image} name={speaker.name} />
-                  <div className="flex-1 space-y-2">
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <Input
-                        value={speaker.name}
-                        placeholder="Name"
-                        onChange={(e) => setSpeakers(updateAt(speakers, index, { name: e.target.value }))}
-                      />
-                      <Input
-                        value={speaker.title}
-                        placeholder="Title"
-                        onChange={(e) => setSpeakers(updateAt(speakers, index, { title: e.target.value }))}
-                      />
-                    </div>
-                    <Input
-                      value={speaker.topic ?? ''}
-                      placeholder="Topic (optional)"
-                      onChange={(e) => setSpeakers(updateAt(speakers, index, { topic: e.target.value }))}
-                    />
-                    <ImageUploadField
-                      id={`fe-speaker-image-${index}`}
-                      label="Photo"
-                      value={speaker.image}
-                      onChange={(image) => setSpeakers(updateAt(speakers, index, { image }))}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => setSpeakers(removeAt(speakers, index))}
-                    className="text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2Icon />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setSpeakers([...speakers, { name: '', title: '', topic: '', image: '' }])}
-            >
-              <PlusIcon className="size-4" />
-              Add speaker
-            </Button>
-          </Fieldset>
-
-          <Fieldset title="Programme">
-            <div className="space-y-3">
-              {programme.map((item, index) => (
-                <div key={index} className="flex gap-2 rounded-lg border p-3">
-                  <div className="flex-1 space-y-2">
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <Input
-                        value={item.time}
-                        placeholder="Time, e.g. 1:30 pm"
-                        onChange={(e) => setProgramme(updateAt(programme, index, { time: e.target.value }))}
-                      />
-                      <Input
-                        value={item.title}
-                        placeholder="Title"
-                        onChange={(e) => setProgramme(updateAt(programme, index, { title: e.target.value }))}
-                      />
-                    </div>
-                    <Input
-                      value={item.detail ?? ''}
-                      placeholder="Detail (optional)"
-                      onChange={(e) => setProgramme(updateAt(programme, index, { detail: e.target.value }))}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => setProgramme(removeAt(programme, index))}
-                    className="text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2Icon />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <Button type="button" size="sm" variant="outline" onClick={() => setProgramme([...programme, { time: '', title: '' }])}>
-              <PlusIcon className="size-4" />
-              Add item
-            </Button>
-          </Fieldset>
-
-          <Fieldset title="FAQs">
-            <div className="space-y-3">
-              {faqs.map((faq, index) => (
-                <div key={index} className="flex gap-2 rounded-lg border p-3">
-                  <div className="flex-1 space-y-2">
-                    <Input
-                      value={faq.question}
-                      placeholder="Question"
-                      onChange={(e) => setFaqs(updateAt(faqs, index, { question: e.target.value }))}
-                    />
-                    <Textarea
-                      value={faq.answer}
-                      placeholder="Answer"
-                      rows={2}
-                      onChange={(e) => setFaqs(updateAt(faqs, index, { answer: e.target.value }))}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => setFaqs(removeAt(faqs, index))}
-                    className="text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2Icon />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <Button type="button" size="sm" variant="outline" onClick={() => setFaqs([...faqs, { question: '', answer: '' }])}>
-              <PlusIcon className="size-4" />
-              Add FAQ
-            </Button>
           </Fieldset>
 
           {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
