@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import NewsletterSignup from '@/components/NewsletterSignup'
 import { absoluteUrl, eventJsonLd } from '@/lib/seo'
 import type { FlagshipEvent } from '@/lib/flagship'
 import { googleCalendarUrl, icsDataUri } from '@/lib/flagship/calendar'
@@ -9,7 +8,6 @@ import { themeVars } from '@/lib/flagship/theme'
 import Countdown from '@/components/flagship/Countdown'
 import PrimaryCta from './PrimaryCta'
 import StickyCtaBar from './StickyCtaBar'
-import TicketsCtaSection from './TicketsCtaSection'
 import TicketsSection from './TicketsSection'
 import SpeakersSection from './SpeakersSection'
 import ProgrammeSection from './ProgrammeSection'
@@ -19,7 +17,6 @@ import {
   Ornament,
   serif,
   plateButton,
-  outlineButton,
   frostedCard,
   splitInlineList,
 } from './flagshipStyle'
@@ -263,30 +260,6 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
                 </details>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* ── Final CTA / notify ──────────────────────────────────── */}
-        <section
-          id="notify"
-          className="relative isolate scroll-mt-24 overflow-hidden bg-(--su-dark) px-4 py-16 text-(--su-on-dark) sm:py-24"
-        >
-          {event.theme.hero.backdrop && (
-            <Image src={event.theme.hero.backdrop} alt="" fill sizes="100vw" className="-z-20 object-cover opacity-40 mix-blend-luminosity" />
-          )}
-          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-linear-to-br from-(--su-dark)/85 via-(--su-dark)/75 to-[color-mix(in_srgb,var(--su-dark)_60%,var(--su-primary))]/80" />
-          <div className="container-isr grid items-center gap-10 md:grid-cols-2">
-            <TicketsCtaSection
-              slug={event.slug}
-              phase={event.phase}
-              ticketUrl={event.ticketUrl}
-              ticketsOnSale={event.ticketsOnSale}
-              secondaryBtnClassName={outlineButton}
-            />
-            <NewsletterSignup
-              title={`${event.name} updates`}
-              description="Get an email when tickets go on sale and speakers are announced."
-            />
           </div>
         </section>
 

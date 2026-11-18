@@ -17,7 +17,7 @@ type Props = {
 }
 
 /**
- * The booking embed that closes the page. Like TicketsCtaSection it reads
+ * The booking embed that closes the page. It reads
  * `ticketsOnSale` live (see lib/flagship/live.ts), so flipping the admin switch
  * reveals the widget on this static-exported page without a rebuild — and the
  * CTAs that scroll down to #booking never land on an empty section.
