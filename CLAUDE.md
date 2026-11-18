@@ -52,4 +52,4 @@ Always use these exact hex values. Do not introduce colours outside this palette
 - Admin panel requires Supabase Auth; protect all `/admin` routes server-side.
 - `main` is production. Work against `dev`; branch as `feature/*`, `fix/*`, or `chore/*`.
 - Target launch: **Semester 2, 2026**.
-- Hosting is TBD — avoid hard-coding platform-specific assumptions.
+- Hosting is Hostinger: the static frontend at `theisr.com.au`, the API at `api.theisr.com.au`. Deploy steps and panel settings live in `DEPLOY.md`; keep Hostinger specifics there and in `scripts/package-deploy.sh`, not in app code.

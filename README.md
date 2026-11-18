@@ -44,7 +44,7 @@ This is a monorepo containing both the **Next.js frontend** and the **Express ba
 | Database  | [Supabase](https://supabase.com/)   |
 | Auth      | Supabase Auth (admin panel)         |
 | Prayer Times | [Aladhan API](https://aladhan.com/prayer-times-api) (or equivalent) |
-| Hosting   | TBD                                 |
+| Hosting   | [Hostinger](https://www.hostinger.com/) — see [DEPLOY.md](DEPLOY.md) |
 
 ---
 
