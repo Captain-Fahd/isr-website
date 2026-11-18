@@ -43,7 +43,8 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
     endDate: event.end,
     imageUrl: absoluteUrl(event.banner.src),
     url: absoluteUrl(pagePath),
-    ticketUrl: isBooking ? event.ticketUrl : null,
+    // Selling through the embedded widget counts too: the offer points at it.
+    ticketUrl: isBooking ? event.ticketUrl : event.ticketsOnSale ? absoluteUrl(`${pagePath}#booking`) : null,
   })
 
   // The about section's description and highlights, rendered in `aboutOrder` (read live).

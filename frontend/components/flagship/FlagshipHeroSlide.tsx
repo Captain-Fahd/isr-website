@@ -2,7 +2,7 @@ import { getImageProps } from 'next/image'
 import Link from 'next/link'
 import HeroBackdrop from '@/components/flagship/HeroBackdrop'
 import Countdown from '@/components/flagship/Countdown'
-import TicketsStatusLabel from '@/components/flagship/TicketsStatusLabel'
+import TicketsStatusLabel, { SlideCta } from '@/components/flagship/TicketsStatusLabel'
 import type { FlagshipEvent } from '@/lib/flagship'
 import { themeVars } from '@/lib/flagship/theme'
 
@@ -34,8 +34,6 @@ function BannerImage({ banner }: { banner: FlagshipEvent['banner'] }) {
 
 /** Home page carousel slide promoting a flagship event with its countdown. */
 export default function FlagshipHeroSlide({ event }: { event: FlagshipEvent }) {
-  const isBooking = event.phase === 'booking' && Boolean(event.ticketUrl)
-
   return (
     <section
       style={themeVars(event)}
@@ -66,12 +64,7 @@ export default function FlagshipHeroSlide({ event }: { event: FlagshipEvent }) {
             <Countdown start={event.start} end={event.end} />
           </div>
 
-          <Link
-            href={`/${event.slug}/`}
-            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-(--su-primary) px-8 py-3 text-base font-semibold text-(--su-on-primary) shadow-lg transition hover:brightness-110"
-          >
-            {isBooking ? 'Get tickets' : 'Find out more'}
-          </Link>
+          <SlideCta event={event} />
         </div>
       </div>
     </section>
