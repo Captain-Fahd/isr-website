@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { campaignRef, trackEvent } from '@/lib/analytics'
 import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
 import type { EventPhase } from '@/lib/flagship/types'
 import { lightButton, plateButton, solidButton } from './flagshipStyle'
@@ -21,14 +22,17 @@ type Props = {
   className?: string
   /** Poster-style square buttons used below the hero; `default` is the hero's rounded button. */
   variant?: 'default' | 'plate' | 'solid' | 'light'
+  /** Where on the page this button sits, sent with the `cta_click` analytics event. */
+  placement: 'hero' | 'sticky' | 'prompt' | 'booking'
 }
 
 /**
  * Carries a `?ref=` campaign tag (e.g. /sacred-union/?ref=poster) through to
- * the TryBooking link, so sales per channel can be compared there without
- * adding analytics to the site.
+ * an external TryBooking link, so sales per channel can be compared there. The
+ * embedded widget can't take it, so clicks are also sent to analytics with the
+ * tag (see lib/analytics.ts).
  */
-function withRef(url: string, ref: string | null): string {
+export function withRef(url: string, ref: string | null): string {
   if (!ref) return url
   try {
     const target = new URL(url)
@@ -50,12 +54,13 @@ export default function PrimaryCta({
   respectLiveToggle = true,
   className = '',
   variant = 'default',
+  placement,
 }: Props) {
   const [ref, setRef] = useState<string | null>(null)
   const liveEvent = useLiveFlagshipEvent(slug)
 
   useEffect(() => {
-    setRef(new URLSearchParams(window.location.search).get('ref'))
+    setRef(campaignRef())
   }, [])
 
   const ticketsOnSale = respectLiveToggle
@@ -63,6 +68,7 @@ export default function PrimaryCta({
     : builtTicketsOnSale
 
   const base = { default: defaultBase, plate: plateButton, solid: solidButton, light: lightButton }[variant]
+  const track = (destination: string) => () => trackEvent('cta_click', { placement, destination })
 
   if (phase === 'booking' && ticketUrl) {
     return (
@@ -70,6 +76,7 @@ export default function PrimaryCta({
         href={withRef(ticketUrl, ref)}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={track('trybooking')}
         className={`${base} ${className}`}
       >
         Get tickets on TryBooking
@@ -81,7 +88,7 @@ export default function PrimaryCta({
   // is a scroll rather than a navigation.
   if (ticketsOnSale) {
     return (
-      <a href="#booking" className={`${base} ${className}`}>
+      <a href="#booking" onClick={track('booking')} className={`${base} ${className}`}>
         Get tickets
       </a>
     )
@@ -92,6 +99,7 @@ export default function PrimaryCta({
       href={withRef('https://www.trybooking.com/au/event/1662679', ref)}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={track('notify')}
       className={`${base} ${className}`}
     >
       Notify me when tickets open

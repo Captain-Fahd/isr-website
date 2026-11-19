@@ -1,11 +1,13 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
+import { campaignRef, trackEvent } from '@/lib/analytics'
 import { CAMPUS } from '@/lib/campus'
 import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
 import type { EventPhase } from '@/lib/flagship/types'
-import PrimaryCta from './PrimaryCta'
+import PrimaryCta, { withRef } from './PrimaryCta'
 import TryBookingWidget from './TryBookingWidget'
-import { SectionHeading, plateButton } from './flagshipStyle'
+import { SectionHeading, plateButton, serif } from './flagshipStyle'
 
 type Props = {
   slug: string
@@ -14,6 +16,7 @@ type Props = {
   /** TryBooking `data-eid`; empty until the booking form is set up. */
   ticketEventId: string
   ticketsOnSale: boolean
+  priceLabel: string
 }
 
 /**
@@ -28,14 +31,42 @@ export default function TicketsSection({
   ticketUrl,
   ticketEventId,
   ticketsOnSale: builtTicketsOnSale,
+  priceLabel: builtPriceLabel,
 }: Props) {
-  const ticketsOnSale = useLiveFlagshipEvent(slug)?.ticketsOnSale ?? builtTicketsOnSale
+  const live = useLiveFlagshipEvent(slug)
+  const ticketsOnSale = live?.ticketsOnSale ?? builtTicketsOnSale
+  const price = (live?.priceLabel ?? builtPriceLabel ?? '').trim()
+  const sectionRef = useRef<HTMLElement>(null)
+  const [ref, setRef] = useState<string | null>(null)
+
+  useEffect(() => {
+    setRef(campaignRef())
+  }, [])
+
+  // Once per page view: how many visitors reach the form, to compare with sales.
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      trackEvent('booking_view')
+      observer.disconnect()
+    })
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [ticketsOnSale])
+
   if (!ticketsOnSale) return null
 
   return (
-    <section id="booking" className="scroll-mt-24 px-4 py-16 sm:py-20">
+    <section ref={sectionRef} id="booking" className="scroll-mt-24 px-4 py-16 sm:py-20">
       <div className="container-isr max-w-4xl">
         <SectionHeading eyebrow="Tickets" title="Book your seat" />
+        {price && (
+          <p className={`${serif.className} -mt-4 mb-10 text-center text-xl font-bold italic text-(--su-primary)`}>
+            {price}
+          </p>
+        )}
 
         {ticketEventId ? (
           // Full-bleed on phones: the section and container gutters leave
@@ -61,6 +92,7 @@ export default function TicketsSection({
                 ticketsOnSale={false}
                 respectLiveToggle={false}
                 variant="plate"
+                placement="booking"
               />
               <a
                 href={CAMPUS.whatsappUrl}
@@ -77,7 +109,7 @@ export default function TicketsSection({
         {ticketEventId && ticketUrl && (
           <p className="mt-8 text-center text-sm">
             <a
-              href={ticketUrl}
+              href={withRef(ticketUrl, ref)}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold underline underline-offset-4 opacity-80 hover:opacity-100"

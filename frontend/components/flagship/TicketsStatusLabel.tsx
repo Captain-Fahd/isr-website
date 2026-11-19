@@ -11,6 +11,16 @@ export function useTicketsLive(event: Pick<FlagshipEvent, 'slug' | 'phase' | 'ti
   return isBooking || (live?.ticketsOnSale ?? event.ticketsOnSale)
 }
 
+/** The admin's price line (read live) while tickets can be bought; empty otherwise. */
+export function useTicketPrice(
+  event: Pick<FlagshipEvent, 'slug' | 'phase' | 'ticketUrl' | 'ticketsOnSale' | 'priceLabel'>,
+): string {
+  const live = useLiveFlagshipEvent(event.slug)
+  const ticketsLive = useTicketsLive(event)
+  // `?? ''`: cached or pre-migration rows don't carry the field yet.
+  return ticketsLive ? (live?.priceLabel ?? event.priceLabel ?? '').trim() : ''
+}
+
 /** "Tickets on sale" once tickets are live, "Save the date" until then. */
 export default function TicketsStatusLabel({
   event,

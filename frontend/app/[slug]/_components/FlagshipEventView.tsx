@@ -3,14 +3,15 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { absoluteUrl, eventJsonLd } from '@/lib/seo'
 import type { AboutBlockId, FlagshipEvent, FlagshipSectionId } from '@/lib/flagship'
-import { googleCalendarUrl, icsDataUri } from '@/lib/flagship/calendar'
 import { themeVars } from '@/lib/flagship/theme'
 import Countdown from '@/components/flagship/Countdown'
-import PrimaryCta from './PrimaryCta'
+import HeroActions from './HeroActions'
+import HeroPrice from './HeroPrice'
+import BookingPrompt from './BookingPrompt'
 import StickyCtaBar from './StickyCtaBar'
 import TicketsSection from './TicketsSection'
 import LiveOrder from './LiveOrder'
-import TicketsArrow from './TicketsArrow'
+import TicketsArrow, { EyebrowTicketsArrow } from './TicketsArrow'
 import TicketsStatusLabel from '@/components/flagship/TicketsStatusLabel'
 import SpeakersSection from './SpeakersSection'
 import ProgrammeSection from './ProgrammeSection'
@@ -24,9 +25,6 @@ import {
   splitInlineList,
 } from './flagshipStyle'
 import HeroBackdrop from '@/components/flagship/HeroBackdrop'
-
-const secondaryBtn =
-  'inline-flex min-h-11 items-center justify-center rounded-lg border border-current px-5 py-3 text-sm font-semibold transition hover:bg-current/10'
 
 /**
  * A flagship event's landing page. Rendered at build time by /<slug>/ and, with
@@ -120,6 +118,7 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
         speakerLayout={event.speakerLayout}
         speakerPlaceholderCount={event.speakerPlaceholderCount}
         heading={<SectionHeading eyebrow="Speakers" title="Who you’ll hear from" />}
+        after={<BookingPrompt event={event} message="Hear them in person." />}
       />
     ),
     programme: (
@@ -130,6 +129,7 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
         timeLabel={event.timeLabel}
         venueName={event.venue.name}
         backdrop={event.theme.hero.backdrop}
+        after={<BookingPrompt event={event} message={`Save your seat at ${event.venue.name}.`} />}
       />
     ),
     // ── Venue ─────────────────────────────────────────────────
@@ -236,9 +236,10 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
             </div>
 
             {/* Frosted panel keeps text legible over the backdrop's dark lower half */}
-            <div className="rounded-2xl bg-(--su-light)/75 p-6 shadow-xl ring-1 ring-current/10 backdrop-blur-md sm:p-8 lg:flex lg:flex-col lg:justify-center lg:p-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700 motion-safe:delay-150">
-              <p className="mb-4 text-xl font-semibold uppercase tracking-[0.2em] text-(--su-hero-heading) sm:hidden">
+            <div className="flex flex-col rounded-2xl bg-(--su-light)/75 p-6 shadow-xl ring-1 ring-current/10 backdrop-blur-md sm:p-8 lg:justify-center lg:p-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700 motion-safe:delay-150">
+              <p className="mb-4 flex items-center gap-2 text-xl font-semibold uppercase tracking-[0.2em] text-(--su-hero-heading) sm:hidden">
                 <TicketsStatusLabel event={event} />
+                <EyebrowTicketsArrow event={event} />
               </p>
               <h1
                 className="mb-4 text-4xl font-bold leading-tight text-(--su-hero-heading) sm:text-5xl lg:mb-2 lg:text-4xl"
@@ -263,26 +264,15 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
                     {event.venue.name} · {event.venue.address}
                   </dd>
                 </div>
+                <HeroPrice event={event} />
               </dl>
 
-              <div className="mb-8 lg:mb-4">
+              {/* After the buttons on phones, where the banner already pushes them low */}
+              <div className="order-last mt-8 sm:order-none sm:mt-0 sm:mb-8 lg:mb-4">
                 <Countdown start={event.start} end={event.end} />
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:gap-2">
-                <PrimaryCta
-                  phase={event.phase}
-                  ticketUrl={event.ticketUrl}
-                  slug={event.slug}
-                  ticketsOnSale={event.ticketsOnSale}
-                />
-                <a href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer" className={`${secondaryBtn} lg:min-h-9 lg:px-3 lg:py-2 lg:text-xs`}>
-                  Add to Google Calendar
-                </a>
-                <a href={icsDataUri(event)} download={`${event.slug}.ics`} className={`${secondaryBtn} lg:min-h-9 lg:px-3 lg:py-2 lg:text-xs`}>
-                  Apple / Outlook (.ics)
-                </a>
-              </div>
+              <HeroActions event={event} />
             </div>
           </div>
           <TicketsArrow event={event} />
@@ -297,18 +287,12 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
           ticketUrl={event.ticketUrl}
           ticketEventId={event.ticketEventId}
           ticketsOnSale={event.ticketsOnSale}
+          priceLabel={event.priceLabel}
         />
       </main>
 
       <Footer />
-      <StickyCtaBar
-        phase={event.phase}
-        ticketUrl={event.ticketUrl}
-        slug={event.slug}
-        ticketsOnSale={event.ticketsOnSale}
-        name={event.name}
-        dateLabel={event.dateLabel}
-      />
+      <StickyCtaBar event={event} />
     </div>
   )
 }

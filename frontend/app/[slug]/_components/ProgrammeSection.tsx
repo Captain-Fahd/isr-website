@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import type { ReactNode } from 'react'
 import { useLiveFlagshipEvent } from '@/lib/flagship/preview'
 import type { ProgrammeItem } from '@/lib/flagship/types'
 import { SectionHeading, plate, serif } from './flagshipStyle'
@@ -12,6 +13,8 @@ type Props = {
   timeLabel: string
   venueName: string
   backdrop?: string
+  /** Rendered straight after the section, only when the section itself is shown. */
+  after?: ReactNode
 }
 
 type Kind = 'session' | 'break' | 'milestone'
@@ -63,7 +66,15 @@ function formatDuration(total: number): string {
  * Read live (see lib/flagship/live.ts) so admin edits reach this static-exported
  * page without a rebuild — the build-time props are only the fallback.
  */
-export default function ProgrammeSection({ slug, programme: builtProgramme, dateLabel, timeLabel, venueName, backdrop }: Props) {
+export default function ProgrammeSection({
+  slug,
+  programme: builtProgramme,
+  dateLabel,
+  timeLabel,
+  venueName,
+  backdrop,
+  after,
+}: Props) {
   const live = useLiveFlagshipEvent(slug)
   const programme = (live?.programme ?? builtProgramme).filter((item) => item.title.trim())
   const date = live?.dateLabel ?? dateLabel
@@ -81,105 +92,108 @@ export default function ProgrammeSection({ slug, programme: builtProgramme, date
   })
 
   return (
-    <section className="relative isolate overflow-hidden px-4 py-16 sm:py-24">
-      {backdrop && <Image src={backdrop} alt="" fill sizes="100vw" className="-z-20 object-cover" />}
-      {/* Keep the silk texture but lift the top so the heading reads cleanly */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-linear-to-b from-(--su-light)/85 via-(--su-light)/45 to-(--su-dark)/30"
-      />
+    <>
+      <section className="relative isolate overflow-hidden px-4 py-16 sm:py-24">
+        {backdrop && <Image src={backdrop} alt="" fill sizes="100vw" className="-z-20 object-cover" />}
+        {/* Keep the silk texture but lift the top so the heading reads cleanly */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-linear-to-b from-(--su-light)/85 via-(--su-light)/45 to-(--su-dark)/30"
+        />
 
-      <div className="container-isr max-w-3xl">
-        <SectionHeading eyebrow="The Programme" title="On the Night" />
+        <div className="container-isr max-w-3xl">
+          <SectionHeading eyebrow="The Programme" title="On the Night" />
 
-        {/* Date bar, as on the poster */}
-        <p className={`${plate} mb-8 px-4 py-3 text-center text-sm font-extrabold uppercase tracking-[0.12em] shadow-lg sm:text-lg`}>
-          {[date, time, venue].filter(Boolean).map((part, index) => (
-            <span key={part} className="block sm:inline">
-              {index > 0 && <span aria-hidden="true" className="mx-2 hidden opacity-60 sm:inline">·</span>}
-              {part}
-            </span>
-          ))}
-        </p>
+          {/* Date bar, as on the poster */}
+          <p className={`${plate} mb-8 px-4 py-3 text-center text-sm font-extrabold uppercase tracking-[0.12em] shadow-lg sm:text-lg`}>
+            {[date, time, venue].filter(Boolean).map((part, index) => (
+              <span key={part} className="block sm:inline">
+                {index > 0 && <span aria-hidden="true" className="mx-2 hidden opacity-60 sm:inline">·</span>}
+                {part}
+              </span>
+            ))}
+          </p>
 
-        <ol className="space-y-3">
-          {rows.map((row, index) => {
-            const key = `${row.time}-${row.title}-${index}`
+          <ol className="space-y-3">
+            {rows.map((row, index) => {
+              const key = `${row.time}-${row.title}-${index}`
 
-            if (row.kind === 'milestone') {
-              return (
-                <li key={key} className="py-2">
-                  <div className="border border-(--su-dark)/70 bg-white/70 px-4 py-3 text-center shadow-sm backdrop-blur-md">
-                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-(--su-dark) sm:text-sm">
-                      {row.title}
-                      <span className="mx-2 opacity-50">·</span>
-                      <span className="tabular-nums">{row.time}</span>
-                    </p>
-                    {row.detail && <p className="mt-1 text-sm opacity-75">{row.detail}</p>}
-                  </div>
-                </li>
-              )
-            }
+              if (row.kind === 'milestone') {
+                return (
+                  <li key={key} className="py-2">
+                    <div className="border border-(--su-dark)/70 bg-white/70 px-4 py-3 text-center shadow-sm backdrop-blur-md">
+                      <p className="text-xs font-bold uppercase tracking-[0.25em] text-(--su-dark) sm:text-sm">
+                        {row.title}
+                        <span className="mx-2 opacity-50">·</span>
+                        <span className="tabular-nums">{row.time}</span>
+                      </p>
+                      {row.detail && <p className="mt-1 text-sm opacity-75">{row.detail}</p>}
+                    </div>
+                  </li>
+                )
+              }
 
-            if (row.kind === 'break') {
-              return (
-                <li key={key} className="flex items-center gap-3 py-1 text-(--su-dark)" aria-label={`${row.time} ${row.title}`}>
-                  <span aria-hidden="true" className="h-px flex-1 bg-linear-to-r from-transparent to-(--su-dark)/40" />
-                  <p className={`${serif.className} flex flex-wrap items-center justify-center gap-x-2 text-center text-sm italic sm:text-base`}>
-                    <span className="not-italic tabular-nums opacity-60">{row.time}</span>
-                    <span aria-hidden="true" className="text-(--su-primary)">✦</span>
-                    <span className="font-semibold">{row.title}</span>
-                    {row.duration !== null && <span className="opacity-60">· {formatDuration(row.duration)}</span>}
-                    {row.tags.map((tag) => (
-                      <span key={tag} className={`${plate} px-2 py-0.5 font-sans text-xs font-semibold not-italic`}>
-                        {tag}
-                      </span>
-                    ))}
-                  </p>
-                  <span aria-hidden="true" className="h-px flex-1 bg-linear-to-l from-transparent to-(--su-dark)/40" />
-                </li>
-              )
-            }
-
-            return (
-              <li
-                key={key}
-                className="grid gap-3 bg-white/65 p-4 shadow-sm ring-1 ring-(--su-dark)/10 backdrop-blur-md sm:grid-cols-[7.5rem_minmax(0,1fr)] sm:items-start sm:gap-5 sm:p-5"
-              >
-                <time className={`${plate} justify-self-start px-3 py-1.5 text-sm italic tabular-nums shadow-md sm:justify-self-stretch sm:text-center sm:text-base`}>
-                  {row.time}
-                </time>
-                <div className="min-w-0">
-                  <h3
-                    className={`${serif.className} text-lg font-bold leading-snug text-(--su-dark) [overflow-wrap:anywhere] sm:text-xl`}
-                    style={{ textWrap: 'balance' } as React.CSSProperties}
-                  >
-                    {row.title}
-                  </h3>
-                  {row.detail && <p className="mt-1 leading-relaxed text-(--su-on-light) opacity-80">{row.detail}</p>}
-                  {(row.duration !== null || row.tags.length > 0) && (
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      {row.duration !== null && (
-                        <span className="text-xs font-semibold uppercase tracking-[0.15em] text-(--su-on-light) opacity-60">
-                          {formatDuration(row.duration)}
-                        </span>
-                      )}
+              if (row.kind === 'break') {
+                return (
+                  <li key={key} className="flex items-center gap-3 py-1 text-(--su-dark)" aria-label={`${row.time} ${row.title}`}>
+                    <span aria-hidden="true" className="h-px flex-1 bg-linear-to-r from-transparent to-(--su-dark)/40" />
+                    <p className={`${serif.className} flex flex-wrap items-center justify-center gap-x-2 text-center text-sm italic sm:text-base`}>
+                      <span className="not-italic tabular-nums opacity-60">{row.time}</span>
+                      <span aria-hidden="true" className="text-(--su-primary)">✦</span>
+                      <span className="font-semibold">{row.title}</span>
+                      {row.duration !== null && <span className="opacity-60">· {formatDuration(row.duration)}</span>}
                       {row.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="border border-(--su-dark)/60 px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-[0.18em] text-(--su-dark)"
-                        >
+                        <span key={tag} className={`${plate} px-2 py-0.5 font-sans text-xs font-semibold not-italic`}>
                           {tag}
                         </span>
                       ))}
-                    </div>
-                  )}
-                </div>
-              </li>
-            )
-          })}
-        </ol>
-      </div>
-    </section>
+                    </p>
+                    <span aria-hidden="true" className="h-px flex-1 bg-linear-to-l from-transparent to-(--su-dark)/40" />
+                  </li>
+                )
+              }
+
+              return (
+                <li
+                  key={key}
+                  className="grid gap-3 bg-white/65 p-4 shadow-sm ring-1 ring-(--su-dark)/10 backdrop-blur-md sm:grid-cols-[7.5rem_minmax(0,1fr)] sm:items-start sm:gap-5 sm:p-5"
+                >
+                  <time className={`${plate} justify-self-start px-3 py-1.5 text-sm italic tabular-nums shadow-md sm:justify-self-stretch sm:text-center sm:text-base`}>
+                    {row.time}
+                  </time>
+                  <div className="min-w-0">
+                    <h3
+                      className={`${serif.className} text-lg font-bold leading-snug text-(--su-dark) [overflow-wrap:anywhere] sm:text-xl`}
+                      style={{ textWrap: 'balance' } as React.CSSProperties}
+                    >
+                      {row.title}
+                    </h3>
+                    {row.detail && <p className="mt-1 leading-relaxed text-(--su-on-light) opacity-80">{row.detail}</p>}
+                    {(row.duration !== null || row.tags.length > 0) && (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        {row.duration !== null && (
+                          <span className="text-xs font-semibold uppercase tracking-[0.15em] text-(--su-on-light) opacity-60">
+                            {formatDuration(row.duration)}
+                          </span>
+                        )}
+                        {row.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="border border-(--su-dark)/60 px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-[0.18em] text-(--su-dark)"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
+      </section>
+      {after}
+    </>
   )
 }

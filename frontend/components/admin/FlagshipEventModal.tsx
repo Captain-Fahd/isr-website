@@ -311,6 +311,7 @@ export function FlagshipEventModal({
   const [ticketUrl, setTicketUrl] = useState(event?.ticketUrl ?? '')
   const [ticketEventId, setTicketEventId] = useState(event?.ticketEventId ?? '')
   const [ticketsOnSale, setTicketsOnSale] = useState(event?.ticketsOnSale ?? false)
+  const [priceLabel, setPriceLabel] = useState(event?.priceLabel ?? '')
   const [start, setStart] = useState(event ? toDatetimeLocalValue(event.start) : '')
   const [end, setEnd] = useState(event ? toDatetimeLocalValue(event.end) : '')
   const [dateLabel, setDateLabel] = useState(event?.dateLabel ?? '')
@@ -347,6 +348,7 @@ export function FlagshipEventModal({
     setTicketUrl(event?.ticketUrl ?? '')
     setTicketEventId(event?.ticketEventId ?? '')
     setTicketsOnSale(event?.ticketsOnSale ?? false)
+    setPriceLabel(event?.priceLabel ?? '')
     setStart(event ? toDatetimeLocalValue(event.start) : '')
     setEnd(event ? toDatetimeLocalValue(event.end) : '')
     setDateLabel(event?.dateLabel ?? '')
@@ -407,6 +409,7 @@ export function FlagshipEventModal({
         ticketUrl,
         ticketEventId,
         ticketsOnSale,
+        priceLabel,
         start: fromDatetimeLocalValue(start),
         end: fromDatetimeLocalValue(end),
         dateLabel,
@@ -1077,6 +1080,19 @@ export function FlagshipEventModal({
                 scroll to it, instead of opening the external &quot;Notify me&quot; link.
               </p>
             )}
+            <div className="space-y-1.5">
+              <Label htmlFor="fe-price-label">Price line (optional)</Label>
+              <Input
+                id="fe-price-label"
+                value={priceLabel}
+                onChange={(e) => setPriceLabel(e.target.value)}
+                placeholder="From $15 · Early bird"
+              />
+              <p className="text-xs text-muted-foreground">
+                Shown in the hero, the phone sticky bar, the booking prompts and above the booking form
+                while tickets are on sale. Keep it short and match TryBooking&apos;s prices.
+              </p>
+            </div>
           </Fieldset>
 
           {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}

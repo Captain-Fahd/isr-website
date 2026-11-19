@@ -697,6 +697,8 @@ A flagship event has the shape:
   "released": false,
   "ticketUrl": "",
   "ticketEventId": "1662679",
+  "ticketsOnSale": true,
+  "priceLabel": "From $15 · Early bird",
   "start": "2026-11-28T13:30:00.000Z",
   "end": "2026-11-28T19:30:00.000Z",
   "dateLabel": "Saturday 28 November 2026",
@@ -791,7 +793,7 @@ Upload one image and get back its Storage URL. **Admin only.** `multipart/form-d
 
 ### `POST /api/flagship-events`
 
-Create a flagship event. **Admin only.** JSON body — the full shape above, minus `id`/`createdAt`/`updatedAt`. `featuredOnHome`/`released` default to `false`; `ticketUrl`/`ticketEventId` default to `""`; `highlights`/`speakers`/`programme`/`faqs` default to `[]`; `speakerPlaceholderCount` defaults to `0`.
+Create a flagship event. **Admin only.** JSON body — the full shape above, minus `id`/`createdAt`/`updatedAt`. `featuredOnHome`/`released` default to `false`; `ticketUrl`/`ticketEventId`/`priceLabel` default to `""`; `highlights`/`speakers`/`programme`/`faqs` default to `[]`; `speakerPlaceholderCount` defaults to `0`.
 
 **Headers**
 
