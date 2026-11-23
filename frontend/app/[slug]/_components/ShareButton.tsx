@@ -4,6 +4,7 @@ import { siWhatsapp } from 'simple-icons'
 import { trackEvent } from '@/lib/analytics'
 import { absoluteUrl } from '@/lib/seo'
 import type { FlagshipEvent } from '@/lib/flagship'
+import { useLiveVenue } from '@/lib/flagship/preview'
 
 type Props = {
   event: Pick<FlagshipEvent, 'slug' | 'name' | 'dateLabel' | 'venue'>
@@ -18,8 +19,9 @@ type Props = {
  * through shares show up in the CTA analytics and on TryBooking.
  */
 export default function ShareButton({ event, placement, className = '' }: Props) {
+  const venue = useLiveVenue(event)
   const pageUrl = `${absoluteUrl(`/${event.slug}/`)}?ref=share`
-  const text = `${event.name}: ${event.dateLabel} at ${event.venue.name}. Want to come with me? ${pageUrl}`
+  const text = `${event.name}: ${event.dateLabel} at ${venue.name}. Want to come with me? ${pageUrl}`
 
   return (
     <a

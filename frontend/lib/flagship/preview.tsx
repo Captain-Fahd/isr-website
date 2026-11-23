@@ -25,3 +25,12 @@ export function useLiveFlagshipEvent(slug: string): FlagshipEvent | undefined {
   const { events } = useFlagshipEvents()
   return preview ? undefined : events.find((event) => event.slug === slug)
 }
+
+/**
+ * The event's venue, read live so a venue change in the admin panel reaches the
+ * static-exported page without a rebuild. Falls back to the build-time copy while
+ * loading, if the API can't be reached, and in preview.
+ */
+export function useLiveVenue(event: Pick<FlagshipEvent, 'slug' | 'venue'>): FlagshipEvent['venue'] {
+  return useLiveFlagshipEvent(event.slug)?.venue ?? event.venue
+}

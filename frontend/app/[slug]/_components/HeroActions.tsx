@@ -2,6 +2,7 @@
 
 import { googleCalendarUrl, icsDataUri } from '@/lib/flagship/calendar'
 import type { FlagshipEvent } from '@/lib/flagship'
+import { useLiveVenue } from '@/lib/flagship/preview'
 import { useTicketsLive } from '@/components/flagship/TicketsStatusLabel'
 import PrimaryCta from './PrimaryCta'
 import ShareButton from './ShareButton'
@@ -17,7 +18,10 @@ const textLink = 'font-semibold underline underline-offset-4 hover:opacity-100'
  * before then, saving the date is the main ask and they stay full buttons.
  * `#hero-cta` is what the phone sticky bar watches (see StickyCtaBar).
  */
-export default function HeroActions({ event }: { event: FlagshipEvent }) {
+export default function HeroActions({ event: builtEvent }: { event: FlagshipEvent }) {
+  // Calendar entries carry the venue as their location, so use the live one.
+  const venue = useLiveVenue(builtEvent)
+  const event = { ...builtEvent, venue }
   const ticketsLive = useTicketsLive(event)
   const cta = (
     <PrimaryCta
