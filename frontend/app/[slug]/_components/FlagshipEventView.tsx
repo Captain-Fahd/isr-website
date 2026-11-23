@@ -15,15 +15,9 @@ import TicketsArrow, { EyebrowTicketsArrow } from './TicketsArrow'
 import TicketsStatusLabel from '@/components/flagship/TicketsStatusLabel'
 import SpeakersSection from './SpeakersSection'
 import ProgrammeSection from './ProgrammeSection'
-import {
-  SectionHeading,
-  Eyebrow,
-  Ornament,
-  serif,
-  plateButton,
-  frostedCard,
-  splitInlineList,
-} from './flagshipStyle'
+import VenueSection from './VenueSection'
+import HeroDetails from './HeroDetails'
+import { SectionHeading, serif, frostedCard, splitInlineList } from './flagshipStyle'
 import HeroBackdrop from '@/components/flagship/HeroBackdrop'
 
 /**
@@ -129,56 +123,11 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
         timeLabel={event.timeLabel}
         venueName={event.venue.name}
         backdrop={event.theme.hero.backdrop}
-        after={<BookingPrompt event={event} message={`Save your seat at ${event.venue.name}.`} />}
+        after={<BookingPrompt event={event} message="Save your seat at {venue}." />}
       />
     ),
     // ── Venue ─────────────────────────────────────────────────
-    venue: (
-      <section className="bg-white/50 px-4 py-16 sm:py-20">
-        <div className="container-isr grid items-center gap-10 md:grid-cols-2">
-          <div>
-            <Eyebrow className="text-(--su-dark)">The Venue</Eyebrow>
-            <h2 className={`${serif.className} mb-3 text-4xl font-extrabold italic leading-tight text-(--su-dark) md:text-5xl`}>
-              {event.venue.name}
-            </h2>
-            <Ornament className="mb-5 justify-start" />
-            <p className={`${serif.className} mb-6 text-lg italic text-(--su-dark) opacity-90`}>
-              {event.venue.address}
-            </p>
-            <ul className="mb-8 space-y-3 opacity-90">
-              {event.venue.notes.map((note) => (
-                <li key={note} className="flex gap-3">
-                  <span aria-hidden="true" className="mt-0.5 text-sm text-(--su-primary)">✦</span>
-                  <span>{note}</span>
-                </li>
-              ))}
-            </ul>
-            {event.venue.mapUrl && (
-              <a href={event.venue.mapUrl} target="_blank" rel="noopener noreferrer" className={plateButton}>
-                Open in Google Maps
-              </a>
-            )}
-          </div>
-          {event.venue.image ? (
-            <div className="relative">
-              {/* Offset frame, like the poster's outlined boxes */}
-              <div aria-hidden="true" className="absolute inset-0 translate-x-3 translate-y-3 border border-(--su-dark)/50" />
-              <Image
-                src={event.venue.image.src}
-                alt={event.venue.image.alt}
-                width={event.venue.image.width}
-                height={event.venue.image.height}
-                className="relative aspect-[4/3] h-auto w-full object-cover shadow-lg"
-              />
-            </div>
-          ) : (
-            <div className="flex aspect-[4/3] items-center justify-center border-2 border-dashed border-(--su-on-light)/20 bg-(--su-on-light)/5 text-sm opacity-60">
-              Venue photo
-            </div>
-          )}
-        </div>
-      </section>
-    ),
+    venue: <VenueSection event={event} />,
     // ── FAQ ───────────────────────────────────────────────────
     faqs: (
       <section className="bg-white/50 px-4 py-16 sm:py-20">
@@ -250,20 +199,7 @@ export default function FlagshipEventView({ event }: { event: FlagshipEvent }) {
               <p className="mb-6 text-lg font-semibold italic opacity-85 lg:mb-3 lg:text-base">{event.tagline}</p>
 
               <dl className="mb-8 space-y-1 text-base lg:mb-3 lg:space-y-0 lg:text-sm">
-                <div className="flex gap-2">
-                  <dt className="sr-only">Date</dt>
-                  <dd className="font-semibold">{event.dateLabel}</dd>
-                </div>
-                <div className="flex gap-2">
-                  <dt className="sr-only">Time</dt>
-                  <dd className="opacity-85">{event.timeLabel}</dd>
-                </div>
-                <div className="flex gap-2">
-                  <dt className="sr-only">Venue</dt>
-                  <dd className="opacity-85">
-                    {event.venue.name} · {event.venue.address}
-                  </dd>
-                </div>
+                <HeroDetails event={event} />
                 <HeroPrice event={event} />
               </dl>
 
